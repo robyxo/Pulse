@@ -20,10 +20,9 @@ public partial class BaseViewModel : ObservableObject
         // il costruttore senza parametri è per compatibilità
     }
 
-    public BaseViewModel(INavigationService navigationService)
-    {
+    public BaseViewModel(INavigationService navigationService) => 
         NavigationService = navigationService;
-    }
+    
 
     // Metodo caricamento pagina
     protected async Task EseguiConCaricamento(Func<Task> action)
@@ -52,33 +51,25 @@ public partial class BaseViewModel : ObservableObject
     protected async Task NavigaConCaricamento(string route, bool animate = true)
     {
         await EseguiConCaricamento(async () =>
-        {
-            await NavigationService.NavigateToAsync(route, animate);
-        });
+        await NavigationService.NavigateToAsync(route, animate));
     }
 
     protected async Task NavigaConCaricamento(string route, Dictionary<string, object> parameters, bool animate = true)
     {
         await EseguiConCaricamento(async () =>
-        {
-            await NavigationService.NavigateToAsync(route, parameters, animate);
-        });
+        await NavigationService.NavigateToAsync(route, parameters, animate));
     }
 
     protected async Task NavigaIndietroConCaricamento(bool animate = true)
     {
-        await EseguiConCaricamento(async () =>
-        {
-            await NavigationService.NavigateBackAsync(animate);
-        });
+        await EseguiConCaricamento(async () => 
+        await NavigationService.NavigateBackAsync(animate));
     }
 
     protected async Task NavigaAllaRootConCaricamento(bool animate = true)
     {
         await EseguiConCaricamento(async () =>
-        {
-            await NavigationService.NavigateBackToRootAsync(animate);
-        });
+        await NavigationService.NavigateBackToRootAsync(animate));
     }
 }
 

@@ -20,10 +20,9 @@ public partial class MainViewModel : BaseViewModel
 
     // Esempio di comando per navigare a una pagina di dettaglio
     [RelayCommand]
-    private async Task VaiAlDettaglio()
-    {
+    private async Task VaiAlDettaglio() => 
         await NavigaConCaricamento("dettaglio");
-    }
+    
 
     // Esempio di comando con caricamento dati
     [RelayCommand]

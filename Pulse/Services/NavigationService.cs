@@ -26,57 +26,43 @@ public class NavigationService : INavigationService
     public async Task NavigateToAsync(string route, bool animate = true)
     {
         await NavigateSafely(async () =>
-        {
-            await Shell.Current.GoToAsync(route, animate);
-        });
+        await Shell.Current.GoToAsync(route, animate));
     }
 
     public async Task NavigateToAsync(string route, Dictionary<string, object> parameters, bool animate = true)
     {
         await NavigateSafely(async () =>
-        {
-            await Shell.Current.GoToAsync(route, animate, parameters);
-        });
+        await Shell.Current.GoToAsync(route, animate, parameters));
     }
 
     public async Task NavigateBackAsync(bool animate = true)
     {
         await NavigateSafely(async () =>
-        {
-            await Shell.Current.GoToAsync("..", animate);
-        });
+        await Shell.Current.GoToAsync("..", animate));
     }
 
     public async Task NavigateBackToRootAsync(bool animate = true)
     {
         await NavigateSafely(async () =>
-        {
-            await Shell.Current.GoToAsync("///", animate);
-        });
+        await Shell.Current.GoToAsync("///", animate));
     }
 
     public async Task GoToAsync(string route, bool animate = true)
     {
         await NavigateSafely(async () =>
-        {
-            await Shell.Current.GoToAsync(route, animate);
-        });
+        await Shell.Current.GoToAsync(route, animate));
     }
 
     public async Task GoToAsync(string route, Dictionary<string, object> parameters, bool animate = true)
     {
         await NavigateSafely(async () =>
-        {
-            await Shell.Current.GoToAsync(route, animate, parameters);
-        });
+        await Shell.Current.GoToAsync(route, animate, parameters));
     }
 
     public async Task PushModalAsync(string route, bool animate = true)
     {
         await NavigateSafely(async () =>
-        {
-            await Shell.Current.GoToAsync(route, animate, new Dictionary<string, object> { { "modal", true } });
-        });
+        await Shell.Current.GoToAsync(route, animate, new Dictionary<string, object> { { "modal", true } }));
     }
 
     public async Task PushModalAsync(string route, Dictionary<string, object> parameters, bool animate = true)
@@ -90,24 +76,19 @@ public class NavigationService : INavigationService
 
     public async Task PopModalAsync(bool animate = true)
     {
-        await NavigateSafely(async () =>
-        {
-            await Shell.Current.GoToAsync("..", animate);
-        });
+        await NavigateSafely(async () => 
+        await Shell.Current.GoToAsync("..", animate));
     }
 
     public async Task ShowShellAsync()
     {
-        await NavigateSafely(async () =>
-        {
-            await Shell.Current.GoToAsync("///MainPage");
-        });
+        await NavigateSafely(async () => 
+        await Shell.Current.GoToAsync("///MainPage"));
     }
 
-    public string GetCurrentRoute()
-    {
-        return Shell.Current?.CurrentState?.Location?.ToString() ?? string.Empty;
-    }
+    public string GetCurrentRoute() => 
+        Shell.Current?.CurrentState?.Location?.ToString() ?? string.Empty;
+    
 
     private async Task NavigateSafely(Func<Task> navigationAction)
     {

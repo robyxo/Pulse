@@ -6,7 +6,8 @@ public partial class ConfirmPopup : Popup
 {
     private readonly TaskCompletionSource<bool> _tcs;
 
-    public Task<bool> Result => _tcs.Task;
+    public Task<bool> Result => 
+        _tcs.Task;
 
     public ConfirmPopup(
         string title,
