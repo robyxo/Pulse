@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Pulse.Views.MainPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:Pulse.ViewModels"
+    Title="Home"
+    x:DataType="vm:MainViewModel">
+
+    <Grid>
+        <Grid.Background>
+            <SolidColorBrush Color="White" />
+        </Grid.Background>
+
+        <VerticalStackLayout
+            HorizontalOptions="Center"
+            Spacing="20"
+            VerticalOptions="Center">
+
+            <Label
+                FontSize="60"
+                HorizontalOptions="Center"
+                Text="👋" />
+
+            <Label
+                FontAttributes="Bold"
+                FontSize="32"
+                HorizontalOptions="Center"
+                Text="{Binding MessaggioBenvenuto}"
+                TextColor="#1A1A1A" />
+
+            <Label
+                FontSize="18"
+                HorizontalOptions="Center"
+                Text="{Binding Sottotitolo}"
+                TextColor="#6B7280" />
+
+        </VerticalStackLayout>
+    </Grid>
+
+</ContentPage>
