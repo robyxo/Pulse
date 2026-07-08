@@ -1,0 +1,25 @@
+﻿using System;
+using System.Collections.Generic;
+
+namespace Pulse.Models;
+
+public partial class Corsi
+{
+    public int Id { get; set; }
+
+    public string Nome { get; set; } = null!;
+
+    public string? Livello { get; set; }
+
+    public string? Descrizione { get; set; }
+
+    public string? Colore { get; set; }
+
+    public double? CostoMensile { get; set; }
+
+    public int Attivo { get; set; }
+
+    public virtual ICollection<Iscrizioni> Iscrizionis { get; set; } = new List<Iscrizioni>();
+
+    public virtual ICollection<Lezioni> Lezionis { get; set; } = new List<Lezioni>();
+}

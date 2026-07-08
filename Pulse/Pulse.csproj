@@ -53,8 +53,17 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <None Remove="DataBase\Pulse.db" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.Maui" Version="9.1.1" />
 		<PackageReference Include="CommunityToolkit.Maui.Core" Version="9.1.1" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.15" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.9">
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		  <PrivateAssets>all</PrivateAssets>
+		</PackageReference>
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.1" />
 		<PackageReference Include="CommunityToolkit.MVVM" Version="8.4.2" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.15" />
@@ -77,6 +86,12 @@
 	  <Folder Include="Helpers\" />
 	  <Folder Include="Models\" />
 	  <Folder Include="Converter\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Content Include="DataBase\Pulse.db">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
 	</ItemGroup>
 
 	<ItemGroup>

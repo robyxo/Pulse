@@ -1,7 +1,7 @@
 ﻿using CommunityToolkit.Maui;
-using Microsoft.Extensions.Configuration;
+using Pulse.Models;
 using Pulse.Services;
-using System.Reflection;
+using Microsoft.EntityFrameworkCore;
 
 
 namespace Pulse
@@ -29,8 +29,12 @@ namespace Pulse
                 fonts.AddFont("MaterialSymbols.ttf", "MaterialSymbols");
             });
 
+            // 3. Registrazione DbContext SQLite (NUOVO!)
+            var dbPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Pulse.db");
+            builder.Services.AddDbContext<PulseContext>(options =>
+                options.UseSqlite($"Data Source={dbPath}"));
             /*
-            // 3. Registrazione DbContext (MySQL)
+            // 3. Registrazione DbContext (MySQL)onfig
             var servicetecDbConnection = builder.Configuration.GetConnectionString("MySqlConnectionServicetec");
             var servicetecDbConnectionTest = builder.Configuration.GetConnectionString("MySqlConnectionServicetecTest");
 
