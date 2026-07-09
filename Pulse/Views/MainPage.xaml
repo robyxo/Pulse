@@ -8,11 +8,14 @@
     x:DataType="vm:MainViewModel">
 
     <Grid>
-        <Grid.Background>
-            <SolidColorBrush Color="White" />
-        </Grid.Background>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
 
+        <!--  Contenuto principale centrato  -->
         <VerticalStackLayout
+            Grid.Row="0"
             HorizontalOptions="Center"
             Spacing="20"
             VerticalOptions="Center">
@@ -36,6 +39,20 @@
                 TextColor="#6B7280" />
 
         </VerticalStackLayout>
+
+        <!--  Pulsante per andare al Calendario  -->
+        <Button
+            Grid.Row="1"
+            Margin="20,0,20,30"
+            BackgroundColor="#4F46E5"
+            Command="{Binding VaiAlCalendarioCommand}"
+            CornerRadius="12"
+            FontSize="18"
+            HeightRequest="60"
+            HorizontalOptions="Center"
+            Text="📅 Vedi Calendario"
+            TextColor="White"
+            WidthRequest="250" />
     </Grid>
 
 </ContentPage>

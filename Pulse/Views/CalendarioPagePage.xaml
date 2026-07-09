@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Pulse.Views.CalendarioPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:Pulse.ViewModels"
+    Title="Calendario"
+    x:DataType="vm:CalendarioViewModel"
+    BackgroundColor="#F3F4F6">
+
+    <Grid RowDefinitions="Auto,Auto,*">
+        <!--  HEADER - Navigazione settimana  -->
+        <VerticalStackLayout
+            Grid.Row="0"
+            Padding="10,5"
+            BackgroundColor="White"
+            Spacing="5">
+            <HorizontalStackLayout HorizontalOptions="Center" Spacing="10">
+                <Button
+                    BackgroundColor="#4F46E5"
+                    Command="{Binding SettimanaPrecedente}"
+                    CornerRadius="8"
+                    HeightRequest="40"
+                    Text="◀"
+                    TextColor="White"
+                    WidthRequest="40" />
+
+                <Button
+                    Padding="15,0"
+                    BackgroundColor="#10B981"
+                    Command="{Binding VaiOggi}"
+                    CornerRadius="8"
+                    HeightRequest="40"
+                    Text="📅 Oggi"
+                    TextColor="White" />
+
+                <Label
+                    FontAttributes="Bold"
+                    FontSize="16"
+                    HorizontalTextAlignment="Center"
+                    Text="{Binding SettimanaCorrente, StringFormat='{0:dd/MM/yyyy}'}"
+                    VerticalOptions="Center"
+                    WidthRequest="120" />
+
+                <Button
+                    BackgroundColor="#4F46E5"
+                    Command="{Binding SettimanaSuccessiva}"
+                    CornerRadius="8"
+                    HeightRequest="40"
+                    Text="▶"
+                    TextColor="White"
+                    WidthRequest="40" />
+            </HorizontalStackLayout>
+
+            <Label
+                FontSize="12"
+                HorizontalOptions="Center"
+                Text="Orari: 10:00 - 24:00"
+                TextColor="#6B7280" />
+        </VerticalStackLayout>
+
+        <!--  CALENDARIO  -->
+        <ScrollView
+            Grid.Row="2"
+            HorizontalScrollBarVisibility="Always"
+            Orientation="Both"
+            VerticalScrollBarVisibility="Always">
+
+            <Grid
+                x:Name="CalendarioGrid"
+                Padding="2"
+                BackgroundColor="White">
+                <!--  Le colonne e righe saranno generate dinamicamente  -->
+            </Grid>
+        </ScrollView>
+
+        <!--  ACTIVITY INDICATOR (durante il caricamento)  -->
+        <ActivityIndicator
+            Grid.RowSpan="3"
+            HorizontalOptions="Center"
+            IsRunning="{Binding IsBusy}"
+            IsVisible="{Binding IsBusy}"
+            VerticalOptions="Center" />
+    </Grid>
+</ContentPage>

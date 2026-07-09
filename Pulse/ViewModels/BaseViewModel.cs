@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using Pulse.Services;
 using Pulse.Utils;
 
@@ -6,25 +7,29 @@ namespace Pulse.ViewModels;
 
 public partial class BaseViewModel : ObservableObject
 {
-    protected readonly INavigationService NavigationService;
+    protected readonly INavigationService? NavigationService;
 
     [ObservableProperty]
     private bool _isBusy;
 
     [ObservableProperty]
-    private string _title;
+    private string _title = string.Empty;
 
+    // Costruttore senza parametri (per compatibilità)
     public BaseViewModel()
     {
-        // Se vuoi usare il servizio di navigazione, 
-        // il costruttore senza parametri è per compatibilità
     }
 
-    public BaseViewModel(INavigationService navigationService) => 
+    // Costruttore con NavigationService
+    public BaseViewModel(INavigationService navigationService)
+    {
         NavigationService = navigationService;
-    
+    }
 
-    // Metodo caricamento pagina
+    // ================================================
+    // METODO PER CARICAMENTO DATI
+    // ================================================
+
     protected async Task EseguiConCaricamento(Func<Task> action)
     {
         if (IsBusy)
@@ -32,6 +37,7 @@ public partial class BaseViewModel : ObservableObject
             System.Diagnostics.Debug.WriteLine("⚠️ EseguiConCaricamento: IsBusy è già TRUE, salto l'azione.");
             return;
         }
+
         try
         {
             IsBusy = true;
@@ -47,29 +53,56 @@ public partial class BaseViewModel : ObservableObject
         }
     }
 
-    // Metodo per navigare con caricamento
+    // ================================================
+    // METODI PER NAVIGARE CON CARICAMENTO
+    // ================================================
+
     protected async Task NavigaConCaricamento(string route, bool animate = true)
     {
+        if (NavigationService == null)
+        {
+            System.Diagnostics.Debug.WriteLine("⚠️ NavigaConCaricamento: NavigationService non inizializzato!");
+            return;
+        }
+
         await EseguiConCaricamento(async () =>
-        await NavigationService.NavigateToAsync(route, animate));
+            await NavigationService.NavigateToAsync(route, animate));
     }
 
     protected async Task NavigaConCaricamento(string route, Dictionary<string, object> parameters, bool animate = true)
     {
+        if (NavigationService == null)
+        {
+            System.Diagnostics.Debug.WriteLine("⚠️ NavigaConCaricamento: NavigationService non inizializzato!");
+            return;
+        }
+
         await EseguiConCaricamento(async () =>
-        await NavigationService.NavigateToAsync(route, parameters, animate));
+            await NavigationService.NavigateToAsync(route, parameters, animate));
     }
 
     protected async Task NavigaIndietroConCaricamento(bool animate = true)
     {
-        await EseguiConCaricamento(async () => 
-        await NavigationService.NavigateBackAsync(animate));
+        if (NavigationService == null)
+        {
+            System.Diagnostics.Debug.WriteLine("⚠️ NavigaIndietroConCaricamento: NavigationService non inizializzato!");
+            return;
+        }
+
+        await EseguiConCaricamento(async () =>
+            await NavigationService.NavigateBackAsync(animate));
     }
 
     protected async Task NavigaAllaRootConCaricamento(bool animate = true)
     {
+        if (NavigationService == null)
+        {
+            System.Diagnostics.Debug.WriteLine("⚠️ NavigaAllaRootConCaricamento: NavigationService non inizializzato!");
+            return;
+        }
+
         await EseguiConCaricamento(async () =>
-        await NavigationService.NavigateBackToRootAsync(animate));
+            await NavigationService.NavigateBackToRootAsync(animate));
     }
 }
 

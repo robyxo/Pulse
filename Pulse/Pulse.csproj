@@ -83,6 +83,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Folder Include="Component\" />
 	  <Folder Include="Helpers\" />
 	  <Folder Include="Models\" />
 	  <Folder Include="Converter\" />
@@ -92,15 +93,6 @@
 	  <Content Include="DataBase\Pulse.db">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
-	</ItemGroup>
-
-	<ItemGroup>
-	  <MauiXaml Update="Component\ConfirmPopup.xaml">
-	    <Generator>MSBuild:Compile</Generator>
-	  </MauiXaml>
-	  <MauiXaml Update="Component\CustomPopup.xaml">
-	    <Generator>MSBuild:Compile</Generator>
-	  </MauiXaml>
 	</ItemGroup>
 
 	<PropertyGroup Label="MauiAppAccelerator">

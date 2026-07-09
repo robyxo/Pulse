@@ -1,88 +1,92 @@
-﻿using Pulse.Component;
-using Pulse.Resources.Strings;
-using CommunityToolkit.Maui.Views;
+﻿namespace Pulse.Utils;
 
-namespace Pulse.Utils;
 public static class AlertPopup
 {
-    private static async Task ShowCustomPopup(string title, string message, string cancel)
+    // =========================================
+    //  METODI PRINCIPALI
+    // =========================================
+
+    public static async Task Show(string title, string message, string cancel = "OK")
     {
-        var popup = new CustomPopup(title, message, cancel);
-        if (Shell.Current?.CurrentPage != null)
+        try
         {
-            await Shell.Current.CurrentPage.ShowPopupAsync(popup);
+            if (Application.Current?.MainPage != null)
+            {
+                await Application.Current.MainPage.DisplayAlert(title, message, cancel);
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Errore AlertPopup: {ex.Message}");
+        }
+    }
+
+    public static async Task Show(string title, string message)
+    {
+        await Show(title, message, "OK");
+    }
+
+    public static async Task Show(string title)
+    {
+        await Show(title, "Funzionalità in sviluppo", "OK");
+    }
+
+    // =========================================
+    //  POPUP CONFERMA (SÌ/NO)
+    // =========================================
+
+    public static async Task<bool> ShowConfirmation(
+        string title,
+        string message,
+        string confirmText = "Sì",
+        string cancelText = "No")
+    {
+        try
+        {
+            if (Application.Current?.MainPage != null)
+            {
+                return await Application.Current.MainPage.DisplayAlert(title, message, confirmText, cancelText);
+            }
+            return false;
+        }
+        catch
+        {
+            return false;
         }
     }
 
     // =========================================
-    //     METODI PUBBLICI PER L'USO ESTERNO
-    // =========================================
-
-    public static async Task Show(string title, string message, string cancel) => await ShowCustomPopup(title, message, cancel);
-
-    public static async Task Show(string title, string message) => await ShowCustomPopup(title, message, AppResources.Conferma);
-
-    public static async Task Show(string title)
-    {
-        string defaultMessage = AppResources.Sviluppo;
-        await ShowCustomPopup(title, defaultMessage, AppResources.Conferma);
-    }
-
-    // =========================================
-    //  METODO POPUP DOPPIA SCELTA
-    // =========================================
-
-    public static async Task<bool> ShowConfirmation(
-    string title,
-    string message,
-    string confirmText,
-    string cancelText,
-    bool isDestructive = false)
-    {
-        var popup = new ConfirmPopup(
-            title,
-            message,
-            confirmText,
-            cancelText,
-            isDestructive);
-
-        await Shell.Current.CurrentPage.ShowPopupAsync(popup);
-
-        return await popup.Result;
-    }
-
-    // =========================================
-    //  METODO POPUP ERRORE
+    //  POPUP ERRORE
     // =========================================
 
     public static async Task ShowError(string message)
     {
-        string errorMessage = "Errore";
-        await ShowCustomPopup(errorMessage, message, AppResources.Conferma);
+        await Show("Errore", message, "OK");
     }
 
     // =========================================
-    //  METODO POPUP ATTENZIONE
+    //  POPUP ATTENZIONE
     // =========================================
 
     public static async Task ShowWarning(string message)
     {
-        string warningTitle = "Attenzione";
-        await ShowCustomPopup(warningTitle, message, AppResources.Conferma);
+        await Show("Attenzione", message, "OK");
     }
 
     // =========================================
-    //  METODO POPUP ELIMINAZIONE
+    //  POPUP ELIMINAZIONE
     // =========================================
 
     public static async Task<bool> ShowDeleteConfirmation(string itemName = "")
     {
-        string message = string.IsNullOrEmpty(itemName) ? "Sei sicuro di voler procedere con l'eliminazione??" : $"Sei sicuro di voler eliminare {itemName}?";
+        string message = string.IsNullOrEmpty(itemName)
+            ? "Sei sicuro di voler procedere con l'eliminazione?"
+            : $"Sei sicuro di voler eliminare {itemName}?";
+
         return await ShowConfirmation(
             "Conferma Eliminazione",
             message,
             "Elimina",
-            "Annulla",
-            true);
+            "Annulla");
     }
 }

@@ -9,5 +9,10 @@
         {
             public const string MainPage = "mainpage";
         }
+
+        public static class Calendario
+        {
+            public const string Pagina = "calendario";
+        }
     }
 }

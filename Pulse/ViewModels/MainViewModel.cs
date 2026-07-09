@@ -18,29 +18,21 @@ public partial class MainViewModel : BaseViewModel
         Title = "Home";
     }
 
-    // Esempio di comando per navigare a una pagina di dettaglio
     [RelayCommand]
-    private async Task VaiAlDettaglio() => 
+    private async Task VaiAlDettaglio() =>
         await NavigaConCaricamento("dettaglio");
-    
 
-    // Esempio di comando con caricamento dati
     [RelayCommand]
     private async Task CaricaDati()
     {
         await EseguiConCaricamento(async () =>
         {
-            // Simula caricamento dati
             await Task.Delay(1000);
-
-            // Aggiorna il titolo dopo il caricamento
             Title = "Dati caricati!";
-
             await AlertPopup.Show("Dati caricati con successo!");
         });
     }
 
-    // Esempio di navigazione con parametri
     [RelayCommand]
     private async Task VaiConParametri()
     {
@@ -51,5 +43,11 @@ public partial class MainViewModel : BaseViewModel
         };
 
         await NavigaConCaricamento("dettaglio", parameters);
+    }
+
+    [RelayCommand]
+    private async Task VaiAlCalendario()
+    {
+        await NavigaConCaricamento(AppRoutes.Calendario.Pagina);
     }
 }

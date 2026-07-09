@@ -52,12 +52,16 @@ namespace Pulse
 
             // 4. Registrazione ViewModels
             builder.Services.AddTransient<MainViewModel>();
+            builder.Services.AddTransient<CalendarioViewModel>();
 
             // 5. Registrazione Views
             builder.Services.AddTransient<MainPage>();
+            builder.Services.AddTransient<CalendarioPage>();
+
 
             // 6. Registrazione Servizi
             builder.Services.AddSingleton<INavigationService, NavigationService>();
+            builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
 
             // 7. Configurazione Logging
             ConfigureWindowsSpecific(builder);

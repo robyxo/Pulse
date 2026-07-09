@@ -22,6 +22,7 @@ namespace Pulse
             {
                 // --- MAIN (Solo le pagine figlie) ---
                 { AppRoutes.Main.MainPage, typeof(MainPage) },
+                { AppRoutes.Calendario.Pagina, typeof(CalendarioPage) },
 
                 // --- ALTRE PAGINE ---
 
