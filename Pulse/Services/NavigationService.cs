@@ -29,10 +29,17 @@ public class NavigationService : INavigationService
         await Shell.Current.GoToAsync(route, animate));
     }
 
-    public async Task NavigateToAsync(string route, Dictionary<string, object> parameters, bool animate = true)
+    public async Task NavigateToAsync(string route, Dictionary<string, object> parameters = null, bool animate = true)
     {
         await NavigateSafely(async () =>
-        await Shell.Current.GoToAsync(route, animate, parameters));
+        {
+            // Rimuovi eventuali slash iniziali per forzare la navigazione relativa
+            var cleanRoute = route.TrimStart('/');
+            if (parameters != null)
+                await Shell.Current.GoToAsync(cleanRoute, animate, parameters);
+            else
+                await Shell.Current.GoToAsync(cleanRoute, animate);
+        });
     }
 
     public async Task NavigateBackAsync(bool animate = true)

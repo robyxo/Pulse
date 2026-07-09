@@ -13,19 +13,11 @@
 		<MauiEnableXamlCBindingWithSourceCompilation>true</MauiEnableXamlCBindingWithSourceCompilation>
 
 		<MauiVersion>9.0.50</MauiVersion>
-
-		<!-- Display name -->
-		<ApplicationTitle>TraceIt</ApplicationTitle>
-
-		<!-- App Identifier -->
-		<ApplicationId>com.companyname.TraceIt</ApplicationId>
+		<ApplicationTitle>Pulse</ApplicationTitle>
+		<ApplicationId>com.companyname.pulse</ApplicationId>
 		<ApplicationIdGuid>f33d2c77-7ce6-4237-8518-b683fc496d09</ApplicationIdGuid>
-
-		<!-- Versions -->
 		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
 		<ApplicationVersion>1</ApplicationVersion>
-		
-		<!-- To develop, package, and publish an app to the Microsoft Store, see: https://aka.ms/MauiTemplateUnpackaged -->
 		<WindowsPackageType>None</WindowsPackageType>
 
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
@@ -36,69 +28,62 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<!-- App Icon -->
 		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />
-
-		<!-- Splash Screen -->
 		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" />
-
-		<!-- Images -->
 		<MauiImage Include="Resources\Images\*" />
-
-		<!-- Custom Fonts -->
 		<MauiFont Include="Resources\Fonts\*" />
-
-		<!-- Raw Assets (also remove the "Resources\Raw" prefix) -->
 		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Remove="DataBase\Pulse.db" />
+		<EmbeddedResource Include="DataBase\Pulse.db">
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</EmbeddedResource>
+		<EmbeddedResource Include="appsettings.json" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="CommunityToolkit.Maui" Version="9.1.1" />
-		<PackageReference Include="CommunityToolkit.Maui.Core" Version="9.1.1" />
+		<PackageReference Include="CommunityToolkit.Maui" Version="9.0.3" />
+		<PackageReference Include="CommunityToolkit.Maui.Core" Version="9.0.3" />
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.15" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.9">
-		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		  <PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.1" />
-		<PackageReference Include="CommunityToolkit.MVVM" Version="8.4.2" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.15" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.15">
-		  <PrivateAssets>all</PrivateAssets>
-		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.15" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="$(MauiVersion)" />
-		<PackageReference Include="Microsoft.Maui.Essentials" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.1" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<EmbeddedResource Include="appsettings.json" LogicalName="TraceIt.appsettings.json" />
+		<Folder Include="Component\" />
+		<Folder Include="Models\" />
+		<Folder Include="Converter\" />
+	</ItemGroup>
+
+	<!-- QUESTI 2 BLOCCO ERANO MANCANTI -->
+	<ItemGroup>
+		<Compile Update="Views\CalendarioPage.xaml.cs">
+			<DependentUpon>CalendarioPage.xaml</DependentUpon>
+		</Compile>
+		<Compile Update="Views\Popups\AllieviCorsoPopup.xaml.cs">
+			<DependentUpon>AllieviCorsoPopup.xaml</DependentUpon>
+		</Compile>
+		<Compile Update="Views\Popups\AllieviCorsoPage.xaml.cs">
+		  <DependentUpon>AllieviCorsoPage.xaml</DependentUpon>
+		</Compile>
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Component\" />
-	  <Folder Include="Helpers\" />
-	  <Folder Include="Models\" />
-	  <Folder Include="Converter\" />
+		<MauiXaml Update="Views\Popups\AllieviCorsoPage.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
 	</ItemGroup>
-
-	<ItemGroup>
-	  <Content Include="DataBase\Pulse.db">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
-	</ItemGroup>
-
-	<PropertyGroup Label="MauiAppAccelerator">
-		<wizardVersion>v1.8</wizardVersion>
-		<projectType>MVVMToolkit</projectType>
-		<framework>Flyout</framework>
-	</PropertyGroup>
 
 </Project>

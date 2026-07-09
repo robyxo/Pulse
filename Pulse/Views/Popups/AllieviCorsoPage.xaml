@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Pulse.Views.Popups.AllieviCorsoPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="Allievi">
+
+    <VerticalStackLayout Padding="20" Spacing="10">
+        <Label
+            x:Name="LblTitolo"
+            FontAttributes="Bold"
+            FontSize="20" />
+        <CollectionView x:Name="ListaAllievi">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Grid Padding="10,8" ColumnDefinitions="Auto,*">
+                        <Label Grid.Column="0" Text="👤" />
+                        <Label Grid.Column="1" Margin="10,0,0,0">
+                            <Label.Text>
+                                <MultiBinding StringFormat="{}{0} {1}">
+                                    <Binding Path="Nome" />
+                                    <Binding Path="Cognome" />
+                                </MultiBinding>
+                            </Label.Text>
+                        </Label>
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+            <CollectionView.EmptyView>
+                <Label Text="Nessun allievo iscritto" TextColor="Gray" />
+            </CollectionView.EmptyView>
+        </CollectionView>
+        <Button
+            BackgroundColor="#4F46E5"
+            Clicked="OnChiudiClicked"
+            Text="Chiudi"
+            TextColor="White" />
+    </VerticalStackLayout>
+</ContentPage>

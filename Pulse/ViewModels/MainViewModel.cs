@@ -13,8 +13,11 @@ public partial class MainViewModel : BaseViewModel
     [ObservableProperty]
     private string _sottotitolo = "La tua applicazione è pronta";
 
+    private readonly INavigationService _navigationService;
+
     public MainViewModel(INavigationService navigationService) : base(navigationService)
     {
+        _navigationService = navigationService; // <-- Questa riga mancava
         Title = "Home";
     }
 
@@ -48,6 +51,8 @@ public partial class MainViewModel : BaseViewModel
     [RelayCommand]
     private async Task VaiAlCalendario()
     {
-        await NavigaConCaricamento(AppRoutes.Calendario.Pagina);
+        // Invece di usare una rotta registrata globalmente, 
+        // se le pagine sono nello stesso stack, usa il path relativo pulito.
+        await _navigationService.GoToAsync("calendario");
     }
 }

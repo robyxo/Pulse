@@ -64,25 +64,14 @@ public class DatabaseService : IDatabaseService
 
     public async Task<List<Lezioni>> GetLezioniSettimana(DateTime dataRiferimento)
     {
-        // Calcola l'inizio della settimana (Lunedì)
-        var inizioSettimana = dataRiferimento.Date;
-        while (inizioSettimana.DayOfWeek != DayOfWeek.Monday)
-        {
-            inizioSettimana = inizioSettimana.AddDays(-1);
-        }
-
-        // Calcola la fine della settimana (Domenica)
-        var fineSettimana = inizioSettimana.AddDays(7);
-
-        // Recupera le lezioni con i corsi e gli insegnanti
         return await _context.Lezionis
-            .Include(l => l.Corso)
-            .Include(l => l.Insegnante)
-            .Where(l => l.GiornoSettimana >= (int)DayOfWeek.Monday &&
-                        l.GiornoSettimana <= (int)DayOfWeek.Sunday)
-            .OrderBy(l => l.GiornoSettimana)
-            .ThenBy(l => l.OraInizio)
-            .ToListAsync();
+           .Include(l => l.Corso)
+               .ThenInclude(c => c.Iscrizionis) // per count allievi
+           .Include(l => l.Insegnante)
+           .Where(l => l.GiornoSettimana >= 1 && l.GiornoSettimana <= 7)
+           .OrderBy(l => l.GiornoSettimana)
+           .ThenBy(l => l.OraInizio)
+           .ToListAsync();
     }
 
     public async Task<Lezioni?> GetLezioneById(int id)

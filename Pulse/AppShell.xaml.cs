@@ -14,19 +14,12 @@ namespace Pulse
 
         private void RegisterRoutes()
         {
-            // ❌ ATTENZIONE: Non inserire QUI la Home e l'Accesso!
-            // Essendo pagine "Radice" caricate dinamicamente giù, se le metti qui 
-            // MAUI le apre come pagine scollegate.
-
             var routes = new Dictionary<string, Type>
-            {
-                // --- MAIN (Solo le pagine figlie) ---
-                { AppRoutes.Main.MainPage, typeof(MainPage) },
-                { AppRoutes.Calendario.Pagina, typeof(CalendarioPage) },
-
-                // --- ALTRE PAGINE ---
-
-            };
+    {
+        // ❌ RIMUOVI: { AppRoutes.Main.MainPage, typeof(MainPage) },
+        // Mantieni solo le pagine che NON sono nella barra principale della Shell
+        { AppRoutes.Calendario.Pagina, typeof(CalendarioPage) }
+    };
 
             foreach (var item in routes)
             {

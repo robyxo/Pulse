@@ -1,8 +1,10 @@
 ﻿using CommunityToolkit.Maui;
+using Microsoft.EntityFrameworkCore;
+using Pulse.DataBase; // <-- per DbSeeder
 using Pulse.Models;
 using Pulse.Services;
-using Microsoft.EntityFrameworkCore;
-
+using Pulse.Views.Popups;
+using System.Reflection;
 
 namespace Pulse
 {
@@ -12,75 +14,82 @@ namespace Pulse
         {
             var builder = MauiApp.CreateBuilder();
 
-            // 1. Caricamento del file di configurazione (appsettings.json) - COMMENTATO PER ORA
-            // var assembly = Assembly.GetExecutingAssembly();
-            // using var stream = assembly.GetManifestResourceStream("Pulse.appsettings.json");
-            //
-            // if (stream == null) throw new InvalidOperationException("Il file appsettings.json non è stato trovato come risorsa incorporata.");
-            // var config = new ConfigurationBuilder().AddJsonStream(stream).Build();
-            //
-            // builder.Configuration.AddConfiguration(config);
+            builder.UseMauiApp<App>()
+              .UseMauiCommunityToolkit()
+              .ConfigureFonts(fonts =>
+              {
+                  fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
+                  fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
+                  fonts.AddFont("MaterialSymbols.ttf", "MaterialSymbols");
+              });
 
-            // 2. Configurazione Base dell'App e dei Toolkit
-            builder.UseMauiApp<App>().UseMauiCommunityToolkit().ConfigureFonts(fonts =>
+            // 3. DB SQLite
+            var dbFileName = "Pulse.db";
+#if DEBUG
+            dbFileName = "PulseDemo.db";
+#endif
+            var dbPath = Path.Combine(FileSystem.AppDataDirectory, dbFileName);
+
+#if DEBUG
+            if (File.Exists(dbPath)) File.Delete(dbPath);
+#endif
+
+            if (!File.Exists(dbPath))
             {
-                fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
-                fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
-                fonts.AddFont("MaterialSymbols.ttf", "MaterialSymbols");
-            });
+                var assembly = Assembly.GetExecutingAssembly();
+                var resourceName = "Pulse.DataBase.Pulse.db";
+                using var stream = assembly.GetManifestResourceStream(resourceName);
+                if (stream == null)
+                    throw new InvalidOperationException($"Risorsa {resourceName} non trovata. Controlla che Pulse.db sia EmbeddedResource nel csproj.");
+                using var fileStream = File.Create(dbPath);
+                stream.CopyTo(fileStream);
+            }
 
-            // 3. Registrazione DbContext SQLite (NUOVO!)
-            var dbPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Pulse.db");
             builder.Services.AddDbContext<PulseContext>(options =>
                 options.UseSqlite($"Data Source={dbPath}"));
-            /*
-            // 3. Registrazione DbContext (MySQL)onfig
-            var servicetecDbConnection = builder.Configuration.GetConnectionString("MySqlConnectionServicetec");
-            var servicetecDbConnectionTest = builder.Configuration.GetConnectionString("MySqlConnectionServicetecTest");
 
-            if (string.IsNullOrEmpty(servicetecDbConnection) || string.IsNullOrEmpty(servicetecDbConnectionTest))
-                throw new InvalidOperationException("Le stringhe di connessione sono mancanti nel file appsettings.json.");
-
-            // Decommenta quando avrai i DbContext pronti
-            /*
-            builder.Services.AddDbContext<ServicetecContext>(options =>
-                options.UseMySql(servicetecDbConnection, ServerVersion.AutoDetect(servicetecDbConnection)));
-
-            builder.Services.AddDbContext<ServicetecContextTest>(options =>
-                options.UseMySql(servicetecDbConnectionTest, ServerVersion.AutoDetect(servicetecDbConnectionTest)));
-            */
-
-            // 4. Registrazione ViewModels
+            // 4. ViewModels
             builder.Services.AddTransient<MainViewModel>();
             builder.Services.AddTransient<CalendarioViewModel>();
 
-            // 5. Registrazione Views
+            // 5. Views
             builder.Services.AddTransient<MainPage>();
             builder.Services.AddTransient<CalendarioPage>();
+            builder.Services.AddTransient<AllieviCorsoPage>();
 
-
-            // 6. Registrazione Servizi
+            // 6. Servizi
             builder.Services.AddSingleton<INavigationService, NavigationService>();
             builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
 
-            // 7. Configurazione Logging
             ConfigureWindowsSpecific(builder);
 
 #if DEBUG
             builder.Logging.AddDebug();
             builder.Logging.SetMinimumLevel(LogLevel.Debug);
 #endif
-            return builder.Build();
+
+            var app = builder.Build();
+
+            // QUESTO MANCAVA: CREA LE TABELLE E POPOLA I DATI DEMO
+            using (var scope = app.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<PulseContext>();
+                db.Database.EnsureCreated(); // crea le 6 tabelle se non esistono
+#if DEBUG
+                DbSeeder.SeedAsync(db).GetAwaiter().GetResult(); // popola i dati
+#endif
+            }
+
+            return app;
         }
+
         private static void ConfigureWindowsSpecific(MauiAppBuilder builder)
         {
 #if WINDOWS
-            // Aumenta timeout per operazioni lunghe su Windows
             AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
             {
-                Debug.WriteLine($"[Windows] Unhandled Exception: {args.ExceptionObject}");
+                System.Diagnostics.Debug.WriteLine($"[Windows] Unhandled Exception: {args.ExceptionObject}");
             };
-
 #endif
         }
     }

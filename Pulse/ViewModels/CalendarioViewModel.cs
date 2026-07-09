@@ -1,7 +1,11 @@
-﻿using CommunityToolkit.Mvvm.Input;
+﻿using CommunityToolkit.Maui.Views;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Pulse.Helpers;
 using Pulse.Models;
 using Pulse.Services;
 using Pulse.Utils;
+using Pulse.Views.Popups;
 
 namespace Pulse.ViewModels;
 
@@ -9,34 +13,25 @@ public partial class CalendarioViewModel : BaseViewModel
 {
     private readonly IDatabaseService _databaseService;
 
-    [ObservableProperty]
-    private List<Lezioni> _lezioniSettimana = new();
+    public class FasciaOraria
+    {
+        public TimeSpan Orario { get; set; }
+        public bool IsAttiva { get; set; } = true;
+    }
 
-    [ObservableProperty]
-    private DateTime _settimanaCorrente = DateTime.Now;
+    [ObservableProperty] private List<Lezioni> _lezioniSettimana = new();
+    [ObservableProperty] private DateTime _settimanaCorrente = DateTime.Now;
+    [ObservableProperty] private TimeSpan _oraInizio = new(10, 0, 0);
+    [ObservableProperty] private TimeSpan _oraFine = new(24, 0, 0);
+    [ObservableProperty] private int _intervalloMinuti = 30;
+    [ObservableProperty] private List<FasciaOraria> _fasceOrarie = new();
+    [ObservableProperty] private bool _mostraSoloAttive = false;
 
-    [ObservableProperty]
-    private TimeSpan _oraInizio = new TimeSpan(10, 0, 0); // 10:00
-
-    [ObservableProperty]
-    private TimeSpan _oraFine = new TimeSpan(24, 0, 0); // 24:00
-
-    [ObservableProperty]
-    private int _intervalloMinuti = 30;
-
-    [ObservableProperty]
-    private bool _isCaricamento;
-
-    // Lista giorni della settimana
+    public List<int> IntervalliDisponibili { get; } = new() { 15, 30, 60 };
     public List<DayOfWeek> GiorniSettimana { get; } = new()
     {
-        DayOfWeek.Monday,
-        DayOfWeek.Tuesday,
-        DayOfWeek.Wednesday,
-        DayOfWeek.Thursday,
-        DayOfWeek.Friday,
-        DayOfWeek.Saturday,
-        DayOfWeek.Sunday
+        DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday,
+        DayOfWeek.Thursday, DayOfWeek.Friday, DayOfWeek.Saturday, DayOfWeek.Sunday
     };
 
     public CalendarioViewModel(INavigationService navigationService, IDatabaseService databaseService)
@@ -44,6 +39,25 @@ public partial class CalendarioViewModel : BaseViewModel
     {
         _databaseService = databaseService;
         Title = "Calendario";
+        GeneraFasceOrarie();
+    }
+
+    partial void OnIntervalloMinutiChanged(int value) => GeneraFasceOrarie();
+    partial void OnOraInizioChanged(TimeSpan value) => GeneraFasceOrarie();
+    partial void OnOraFineChanged(TimeSpan value) => GeneraFasceOrarie();
+
+    private void GeneraFasceOrarie()
+    {
+        var lista = new List<FasciaOraria>();
+        var ora = OraInizio;
+        while (ora < OraFine)
+        {
+            // Esempio: pausa 13:00-14:00 disattivata
+            bool attiva = !(ora >= new TimeSpan(13, 0, 0) && ora < new TimeSpan(14, 0, 0));
+            lista.Add(new FasciaOraria { Orario = ora, IsAttiva = attiva });
+            ora = ora.Add(TimeSpan.FromMinutes(IntervalloMinuti));
+        }
+        FasceOrarie = MostraSoloAttive ? lista.Where(f => f.IsAttiva).ToList() : lista;
     }
 
     public async Task LoadData()
@@ -54,129 +68,38 @@ public partial class CalendarioViewModel : BaseViewModel
         });
     }
 
-    // ================================================
-    // COMANDI DI NAVIGAZIONE SETTIMANA
-    // ================================================
-
-    [RelayCommand]
-    private async Task SettimanaPrecedente()
-    {
-        SettimanaCorrente = SettimanaCorrente.AddDays(-7);
-        await LoadData();
-    }
-
-    [RelayCommand]
-    private async Task SettimanaSuccessiva()
-    {
-        SettimanaCorrente = SettimanaCorrente.AddDays(7);
-        await LoadData();
-    }
-
-    [RelayCommand]
-    private async Task VaiOggi()
-    {
-        SettimanaCorrente = DateTime.Now;
-        await LoadData();
-    }
-
-    // ================================================
-    // MOSTRA ALLIEVI DEL CORSO
-    // ================================================
+    [RelayCommand] private async Task SettimanaPrecedente() { SettimanaCorrente = SettimanaCorrente.AddDays(-7); await LoadData(); }
+    [RelayCommand] private async Task SettimanaSuccessiva() { SettimanaCorrente = SettimanaCorrente.AddDays(7); await LoadData(); }
+    [RelayCommand] private async Task VaiOggi() { SettimanaCorrente = DateTime.Now; await LoadData(); }
 
     [RelayCommand]
     public async Task MostraAllieviCorso(Lezioni lezione)
     {
+        if (lezione == null) return;
+
         await EseguiConCaricamento(async () =>
         {
             var allievi = await _databaseService.GetAllieviPerCorso(lezione.CorsoId);
-
-            if (allievi.Count == 0)
-            {
-                await AlertPopup.Show(
-                    $"👥 {lezione.Corso?.Nome ?? "Corso"}",
-                    "Nessun allievo iscritto a questo corso."
-                );
-                return;
-            }
-
-            var messaggio = string.Join("\n", allievi.Select(a => $"• {a.Nome} {a.Cognome}"));
-            await AlertPopup.Show(
-                $"👥 {lezione.Corso?.Nome ?? "Corso"} ({allievi.Count} allievi)",
-                messaggio
-            );
+            var nomeCorso = lezione.Corso?.Nome ?? $"Corso {lezione.CorsoId}";
+            var page = new AllieviCorsoPage(nomeCorso, allievi);
+            await Shell.Current.Navigation.PushAsync(page); // PUSH NORMALE
         });
     }
 
-    // ================================================
-    // METODI DI UTILITÀ PER LA CONVERSIONE
-    // ================================================
+    public TimeSpan StringToTimeSpan(string timeString) => TimeSpan.TryParse(timeString, out var t) ? t : TimeSpan.Zero;
+    public Color StringToColor(string colorString) => Color.TryParse(colorString, out var c) ? c : Colors.Purple;
 
-    // Converte string "HH:mm" in TimeSpan
-    public TimeSpan StringToTimeSpan(string timeString)
-    {
-        if (string.IsNullOrEmpty(timeString)) return TimeSpan.Zero;
-        try
-        {
-            return TimeSpan.Parse(timeString);
-        }
-        catch
-        {
-            return TimeSpan.Zero;
-        }
-    }
+    public List<Lezioni> GetLezioniPerGiorno(DayOfWeek giorno) =>
+        LezioniSettimana.Where(l => (DayOfWeek)l.GiornoSettimana == giorno).ToList();
 
-    // Converte TimeSpan in string "HH:mm"
-    public string TimeSpanToString(TimeSpan time)
-    {
-        return time.ToString(@"hh\:mm");
-    }
-
-    // Converte string colore in Color
-    public Color StringToColor(string colorString)
-    {
-        if (string.IsNullOrEmpty(colorString)) return Colors.Purple;
-        try
-        {
-            return Color.FromArgb(colorString);
-        }
-        catch
-        {
-            return Colors.Purple;
-        }
-    }
-
-    // ================================================
-    // METODI PER LA UI
-    // ================================================
-
-    // Ottiene le lezioni per un giorno specifico
-    public List<Lezioni> GetLezioniPerGiorno(DayOfWeek giorno)
-    {
-        return LezioniSettimana
-            .Where(l => (DayOfWeek)l.GiornoSettimana == giorno)
-            .OrderBy(l => l.OraInizio)
-            .ToList();
-    }
-
-    // Controlla se c'è una lezione in un determinato orario
-    public Lezioni? GetLezionePerOrario(DayOfWeek giorno, TimeSpan orario)
-    {
-        return LezioniSettimana.FirstOrDefault(l =>
+    public Lezioni? GetLezionePerOrario(DayOfWeek giorno, TimeSpan orario) =>
+        LezioniSettimana.FirstOrDefault(l =>
             (DayOfWeek)l.GiornoSettimana == giorno &&
             StringToTimeSpan(l.OraInizio) <= orario &&
             StringToTimeSpan(l.OraFine) > orario);
-    }
 
-    // Ottiene il nome del giorno
-    public string GetNomeGiorno(DayOfWeek giorno, DateTime dataRiferimento)
+    public string GetNomeGiorno(DayOfWeek giorno)
     {
-        var data = dataRiferimento.Date;
-        while (data.DayOfWeek != DayOfWeek.Monday)
-        {
-            data = data.AddDays(-1);
-        }
-        data = data.AddDays((int)giorno - (int)DayOfWeek.Monday);
-
-        return $"{giorno.ToString().Substring(0, 3)} {data.Day}";
+        return DateHelper.GetNomeGiornoCompletoIT(giorno, SettimanaCorrente);
     }
 }

@@ -9,42 +9,38 @@
     BackgroundColor="#F3F4F6">
 
     <Grid RowDefinitions="Auto,Auto,*">
-        <!--  HEADER - Navigazione settimana  -->
         <VerticalStackLayout
             Grid.Row="0"
-            Padding="10,5"
+            Padding="10,8"
             BackgroundColor="White"
-            Spacing="5">
+            Spacing="8">
             <HorizontalStackLayout HorizontalOptions="Center" Spacing="10">
                 <Button
                     BackgroundColor="#4F46E5"
-                    Command="{Binding SettimanaPrecedente}"
+                    Command="{Binding SettimanaPrecedenteCommand}"
                     CornerRadius="8"
                     HeightRequest="40"
                     Text="◀"
                     TextColor="White"
                     WidthRequest="40" />
-
                 <Button
                     Padding="15,0"
                     BackgroundColor="#10B981"
-                    Command="{Binding VaiOggi}"
+                    Command="{Binding VaiOggiCommand}"
                     CornerRadius="8"
                     HeightRequest="40"
                     Text="📅 Oggi"
                     TextColor="White" />
-
                 <Label
                     FontAttributes="Bold"
                     FontSize="16"
                     HorizontalTextAlignment="Center"
-                    Text="{Binding SettimanaCorrente, StringFormat='{0:dd/MM/yyyy}'}"
+                    Text="{Binding SettimanaCorrente, StringFormat='{0:dd MMM yyyy}'}"
                     VerticalOptions="Center"
-                    WidthRequest="120" />
-
+                    WidthRequest="140" />
                 <Button
                     BackgroundColor="#4F46E5"
-                    Command="{Binding SettimanaSuccessiva}"
+                    Command="{Binding SettimanaSuccessivaCommand}"
                     CornerRadius="8"
                     HeightRequest="40"
                     Text="▶"
@@ -52,29 +48,27 @@
                     WidthRequest="40" />
             </HorizontalStackLayout>
 
-            <Label
-                FontSize="12"
-                HorizontalOptions="Center"
-                Text="Orari: 10:00 - 24:00"
-                TextColor="#6B7280" />
+            <HorizontalStackLayout HorizontalOptions="Center" Spacing="15">
+                <Label Text="Intervallo:" VerticalOptions="Center" />
+                <Picker
+                    ItemsSource="{Binding IntervalliDisponibili}"
+                    SelectedItem="{Binding IntervalloMinuti}"
+                    WidthRequest="70" />
+                <Label Text="min" VerticalOptions="Center" />
+                <CheckBox IsChecked="{Binding MostraSoloAttive}" />
+                <Label Text="Nascondi pause" VerticalOptions="Center" />
+            </HorizontalStackLayout>
         </VerticalStackLayout>
 
-        <!--  CALENDARIO  -->
-        <ScrollView
-            Grid.Row="2"
-            HorizontalScrollBarVisibility="Always"
-            Orientation="Both"
-            VerticalScrollBarVisibility="Always">
-
+        <ScrollView Grid.Row="2" Orientation="Both">
             <Grid
                 x:Name="CalendarioGrid"
                 Padding="2"
-                BackgroundColor="White">
-                <!--  Le colonne e righe saranno generate dinamicamente  -->
-            </Grid>
+                BackgroundColor="White"
+                ColumnSpacing="1"
+                RowSpacing="1" />
         </ScrollView>
 
-        <!--  ACTIVITY INDICATOR (durante il caricamento)  -->
         <ActivityIndicator
             Grid.RowSpan="3"
             HorizontalOptions="Center"
