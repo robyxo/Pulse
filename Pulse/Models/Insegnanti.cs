@@ -15,9 +15,7 @@ public partial class Insegnanti
 
     public string? Email { get; set; }
 
-    public string? Specialita { get; set; }
-
-    public int Attivo { get; set; }
+    public int? Attivo { get; set; }
 
     public virtual ICollection<Lezioni> Lezionis { get; set; } = new List<Lezioni>();
 }

@@ -15,9 +15,13 @@ public partial class Corsi
 
     public string? Colore { get; set; }
 
+    public double? CostoSingolo { get; set; }
+
     public double? CostoMensile { get; set; }
 
-    public int Attivo { get; set; }
+    public double? CostoAnnuale { get; set; }
+
+    public int? Attivo { get; set; }
 
     public virtual ICollection<Iscrizioni> Iscrizionis { get; set; } = new List<Iscrizioni>();
 

@@ -7,13 +7,15 @@ public partial class Presenze
 {
     public int Id { get; set; }
 
-    public int AllievoId { get; set; }
-
     public int LezioneId { get; set; }
 
-    public string Data { get; set; } = null!;
+    public int AllievoId { get; set; }
 
-    public int Presente { get; set; }
+    public string DataLezione { get; set; } = null!;
+
+    public int? Stato { get; set; }
+
+    public string? Note { get; set; }
 
     public virtual Allievi Allievo { get; set; } = null!;
 

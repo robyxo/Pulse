@@ -8,12 +8,14 @@
     x:DataType="vm:CalendarioViewModel"
     BackgroundColor="#F3F4F6">
 
-    <Grid RowDefinitions="Auto,Auto,*">
+    <Grid RowDefinitions="Auto,Auto,*,Auto">
+
         <VerticalStackLayout
             Grid.Row="0"
             Padding="10,8"
             BackgroundColor="White"
             Spacing="8">
+
             <HorizontalStackLayout HorizontalOptions="Center" Spacing="10">
                 <Button
                     BackgroundColor="#4F46E5"
@@ -48,26 +50,61 @@
                     WidthRequest="40" />
             </HorizontalStackLayout>
 
-            <HorizontalStackLayout HorizontalOptions="Center" Spacing="15">
-                <Label Text="Intervallo:" VerticalOptions="Center" />
-                <Picker
-                    ItemsSource="{Binding IntervalliDisponibili}"
-                    SelectedItem="{Binding IntervalloMinuti}"
-                    WidthRequest="70" />
-                <Label Text="min" VerticalOptions="Center" />
-                <CheckBox IsChecked="{Binding MostraSoloAttive}" />
-                <Label Text="Nascondi pause" VerticalOptions="Center" />
+            <HorizontalStackLayout HorizontalOptions="Center" Spacing="10">
+                <Label
+                    FontAttributes="Bold"
+                    Text="Dalle:"
+                    VerticalOptions="Center" />
+                <TimePicker Time="{Binding OraInizio}" WidthRequest="90" />
+                <Label
+                    FontAttributes="Bold"
+                    Text="Alle:"
+                    VerticalOptions="Center" />
+                <TimePicker Time="{Binding OraFine}" WidthRequest="90" />
             </HorizontalStackLayout>
+
         </VerticalStackLayout>
 
-        <ScrollView Grid.Row="2" Orientation="Both">
+        <ScrollView
+            Grid.Row="2"
+            HorizontalOptions="Fill"
+            Orientation="Vertical"
+            VerticalOptions="Fill">
             <Grid
                 x:Name="CalendarioGrid"
                 Padding="2"
                 BackgroundColor="White"
                 ColumnSpacing="1"
-                RowSpacing="1" />
+                HorizontalOptions="Fill"
+                RowSpacing="1"
+                VerticalOptions="Fill" />
         </ScrollView>
+
+        <VerticalStackLayout
+            Grid.Row="3"
+            Padding="10"
+            BackgroundColor="White">
+            <Button
+                BackgroundColor="Transparent"
+                Clicked="OnToggleMenuClicked"
+                Text="▼ Menu Azioni"
+                TextColor="Gray" />
+
+            <VerticalStackLayout
+                x:Name="MenuVoci"
+                IsVisible="False"
+                Spacing="5">
+                <Button
+                    BackgroundColor="#4F46E5"
+                    Command="{Binding NavigaGestioneCorsiCommand}"
+                    FontAttributes="Bold"
+                    Text="📚 Gestione Corsi"
+                    TextColor="White" />
+                <Button Command="{Binding NavigaPagamentiCommand}" Text="Pagamenti" />
+                <Button Command="{Binding NavigaStatisticheCommand}" Text="Statistiche" />
+                <Button Command="{Binding NavigaImpostazioniCommand}" Text="Impostazioni" />
+            </VerticalStackLayout>
+        </VerticalStackLayout>
 
         <ActivityIndicator
             Grid.RowSpan="3"

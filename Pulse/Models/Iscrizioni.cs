@@ -11,9 +11,21 @@ public partial class Iscrizioni
 
     public int CorsoId { get; set; }
 
-    public string DataIscrizione { get; set; } = null!;
+    public string? TipoAbbonamento { get; set; }
 
-    public int Attivo { get; set; }
+    public string? DataInizio { get; set; }
+
+    public string? DataScadenza { get; set; }
+
+    public int? MesiTotali { get; set; }
+
+    public int? MesiRimanenti { get; set; }
+
+    public double? ImportoTotale { get; set; }
+
+    public double? ImportoPagato { get; set; }
+
+    public int? Attivo { get; set; }
 
     public virtual Allievi Allievo { get; set; } = null!;
 

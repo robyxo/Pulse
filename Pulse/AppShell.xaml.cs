@@ -18,7 +18,13 @@ namespace Pulse
     {
         // ❌ RIMUOVI: { AppRoutes.Main.MainPage, typeof(MainPage) },
         // Mantieni solo le pagine che NON sono nella barra principale della Shell
-        { AppRoutes.Calendario.Pagina, typeof(CalendarioPage) }
+        { AppRoutes.Calendario.Pagina, typeof(CalendarioPage) },
+                { AppRoutes.Statistiche.Pagina, typeof(StatistichePage) },
+        { AppRoutes.Pagamenti.Pagina, typeof(pagamentiPage) },
+        { AppRoutes.Impostazioni.Pagina, typeof(ImpostazioniPage) },
+        { AppRoutes.Corsi.PaginaCorsi, typeof(CorsiPage) },
+        { AppRoutes.Corsi.GestioneCorso, typeof(GestioneCorsoPage) }
+
     };
 
             foreach (var item in routes)

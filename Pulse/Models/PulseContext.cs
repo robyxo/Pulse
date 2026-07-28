@@ -34,7 +34,6 @@ public partial class PulseContext : DbContext
             entity.ToTable("Allievi");
 
             entity.Property(e => e.Attivo).HasDefaultValue(1);
-            entity.Property(e => e.DataIscrizione).HasDefaultValueSql("CURRENT_TIMESTAMP");
         });
 
         modelBuilder.Entity<Corsi>(entity =>
@@ -43,6 +42,9 @@ public partial class PulseContext : DbContext
 
             entity.Property(e => e.Attivo).HasDefaultValue(1);
             entity.Property(e => e.Colore).HasDefaultValue("#4F46E5");
+            entity.Property(e => e.CostoAnnuale).HasDefaultValue(0.0);
+            entity.Property(e => e.CostoMensile).HasDefaultValue(0.0);
+            entity.Property(e => e.CostoSingolo).HasDefaultValue(0.0);
         });
 
         modelBuilder.Entity<Insegnanti>(entity =>
@@ -56,21 +58,29 @@ public partial class PulseContext : DbContext
         {
             entity.ToTable("Iscrizioni");
 
-            entity.HasIndex(e => new { e.AllievoId, e.CorsoId }, "IX_Iscrizioni_AllievoId_CorsoId").IsUnique();
-
             entity.Property(e => e.Attivo).HasDefaultValue(1);
-            entity.Property(e => e.DataIscrizione).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(e => e.ImportoPagato).HasDefaultValue(0.0);
+            entity.Property(e => e.ImportoTotale).HasDefaultValue(0.0);
+            entity.Property(e => e.MesiRimanenti).HasDefaultValue(1);
+            entity.Property(e => e.MesiTotali).HasDefaultValue(1);
+            entity.Property(e => e.TipoAbbonamento).HasDefaultValue("Mensile");
 
-            entity.HasOne(d => d.Allievo).WithMany(p => p.Iscrizionis).HasForeignKey(d => d.AllievoId);
+            entity.HasOne(d => d.Allievo).WithMany(p => p.Iscrizionis)
+                .HasForeignKey(d => d.AllievoId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
 
-            entity.HasOne(d => d.Corso).WithMany(p => p.Iscrizionis).HasForeignKey(d => d.CorsoId);
+            entity.HasOne(d => d.Corso).WithMany(p => p.Iscrizionis)
+                .HasForeignKey(d => d.CorsoId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
         });
 
         modelBuilder.Entity<Lezioni>(entity =>
         {
             entity.ToTable("Lezioni");
 
-            entity.HasOne(d => d.Corso).WithMany(p => p.Lezionis).HasForeignKey(d => d.CorsoId);
+            entity.HasOne(d => d.Corso).WithMany(p => p.Lezionis)
+                .HasForeignKey(d => d.CorsoId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
 
             entity.HasOne(d => d.Insegnante).WithMany(p => p.Lezionis).HasForeignKey(d => d.InsegnanteId);
         });
@@ -79,11 +89,15 @@ public partial class PulseContext : DbContext
         {
             entity.ToTable("Presenze");
 
-            entity.Property(e => e.Data).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(e => e.Stato).HasDefaultValue(0);
 
-            entity.HasOne(d => d.Allievo).WithMany(p => p.Presenzes).HasForeignKey(d => d.AllievoId);
+            entity.HasOne(d => d.Allievo).WithMany(p => p.Presenzes)
+                .HasForeignKey(d => d.AllievoId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
 
-            entity.HasOne(d => d.Lezione).WithMany(p => p.Presenzes).HasForeignKey(d => d.LezioneId);
+            entity.HasOne(d => d.Lezione).WithMany(p => p.Presenzes)
+                .HasForeignKey(d => d.LezioneId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
         });
 
         OnModelCreatingPartial(modelBuilder);

@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Pulse.Views.CorsiPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:models="clr-namespace:Pulse.Models"
+    xmlns:vm="clr-namespace:Pulse.ViewModels"
+    Title="Gestione Corsi"
+    x:DataType="vm:CorsiViewModel"
+    BackgroundColor="#F8FAFC">
+
+    <Grid RowDefinitions="Auto, *">
+        <Border
+            Grid.Row="0"
+            Margin="15,15,15,10"
+            BackgroundColor="Transparent"
+            StrokeShape="RoundRectangle 8">
+            <Button
+                BackgroundColor="#10B981"
+                Command="{Binding NuovoCorsoCommand}"
+                FontAttributes="Bold"
+                HeightRequest="48"
+                Text="+ Nuovo Corso"
+                TextColor="White" />
+        </Border>
+
+        <CollectionView
+            Grid.Row="1"
+            Margin="15,0,15,15"
+            ItemsSource="{Binding ListaCorsi}"
+            SelectionMode="None">
+            <CollectionView.EmptyView>
+                <VerticalStackLayout
+                    Margin="0,50,0,0"
+                    HorizontalOptions="Center"
+                    Spacing="10"
+                    VerticalOptions="Center">
+                    <Label
+                        FontSize="40"
+                        HorizontalOptions="Center"
+                        Text="📚" />
+                    <Label
+                        FontSize="14"
+                        HorizontalOptions="Center"
+                        Text="Nessun corso presente."
+                        TextColor="#64748B" />
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:Corsi">
+                    <Border
+                        Margin="0,0,0,10"
+                        Padding="12"
+                        BackgroundColor="White"
+                        Stroke="#E2E8F0"
+                        StrokeShape="RoundRectangle 10">
+                        <Grid
+                            ColumnDefinitions="Auto, *, Auto, Auto"
+                            ColumnSpacing="12"
+                            VerticalOptions="Center">
+
+                            <Border
+                                Grid.Column="0"
+                                BackgroundColor="{Binding Colore}"
+                                HeightRequest="24"
+                                Stroke="#CBD5E1"
+                                StrokeShape="RoundRectangle 12"
+                                VerticalOptions="Center"
+                                WidthRequest="24" />
+
+                            <VerticalStackLayout
+                                Grid.Column="1"
+                                Spacing="2"
+                                VerticalOptions="Center">
+                                <Label
+                                    FontAttributes="Bold"
+                                    FontSize="15"
+                                    Text="{Binding Nome}"
+                                    TextColor="#1E293B" />
+                                <Label
+                                    FontSize="12"
+                                    LineBreakMode="TailTruncation"
+                                    Text="{Binding Descrizione}"
+                                    TextColor="#64748B" />
+                            </VerticalStackLayout>
+
+                            <ImageButton
+                                Grid.Column="2"
+                                Padding="8"
+                                BackgroundColor="#F1F5F9"
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CorsiViewModel}}, Path=ModificaCorsoCommand}"
+                                CommandParameter="{Binding .}"
+                                CornerRadius="18"
+                                HeightRequest="36"
+                                Source="pencil_icon.png"
+                                WidthRequest="36" />
+
+                            <ImageButton
+                                Grid.Column="3"
+                                Padding="8"
+                                BackgroundColor="#FEE2E2"
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CorsiViewModel}}, Path=EliminaCorsoCommand}"
+                                CommandParameter="{Binding .}"
+                                CornerRadius="18"
+                                HeightRequest="36"
+                                Source="trash_icon.png"
+                                WidthRequest="36" />
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <ActivityIndicator
+            Grid.RowSpan="2"
+            HorizontalOptions="Center"
+            IsRunning="{Binding IsBusy}"
+            IsVisible="{Binding IsBusy}"
+            VerticalOptions="Center" />
+    </Grid>
+</ContentPage>

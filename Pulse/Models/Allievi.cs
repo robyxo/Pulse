@@ -15,11 +15,9 @@ public partial class Allievi
 
     public string? Email { get; set; }
 
-    public string DataIscrizione { get; set; } = null!;
+    public string? Allegati { get; set; }
 
-    public string? DataNascita { get; set; }
-
-    public int Attivo { get; set; }
+    public int? Attivo { get; set; }
 
     public virtual ICollection<Iscrizioni> Iscrizionis { get; set; } = new List<Iscrizioni>();
 

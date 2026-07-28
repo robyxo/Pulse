@@ -1,8 +1,8 @@
-﻿using CommunityToolkit.Maui.Views;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
+﻿using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using Pulse.Helpers;
 using Pulse.Models;
+using Pulse.Resources.Strings;
 using Pulse.Services;
 using Pulse.Utils;
 using Pulse.Views.Popups;
@@ -19,6 +19,9 @@ public partial class CalendarioViewModel : BaseViewModel
         public bool IsAttiva { get; set; } = true;
     }
 
+    // Messaggio per notificare la View di ridisegnare la griglia
+    public class RefreshGridMessage { }
+
     [ObservableProperty] private List<Lezioni> _lezioniSettimana = new();
     [ObservableProperty] private DateTime _settimanaCorrente = DateTime.Now;
     [ObservableProperty] private TimeSpan _oraInizio = new(10, 0, 0);
@@ -28,11 +31,18 @@ public partial class CalendarioViewModel : BaseViewModel
     [ObservableProperty] private bool _mostraSoloAttive = false;
 
     public List<int> IntervalliDisponibili { get; } = new() { 15, 30, 60 };
+
+    // Aggiungi questo nella tua classe CalendarioViewModel
     public List<DayOfWeek> GiorniSettimana { get; } = new()
-    {
-        DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday,
-        DayOfWeek.Thursday, DayOfWeek.Friday, DayOfWeek.Saturday, DayOfWeek.Sunday
-    };
+{
+    DayOfWeek.Monday,
+    DayOfWeek.Tuesday,
+    DayOfWeek.Wednesday,
+    DayOfWeek.Thursday,
+    DayOfWeek.Friday,
+    DayOfWeek.Saturday,
+    DayOfWeek.Sunday
+};
 
     public CalendarioViewModel(INavigationService navigationService, IDatabaseService databaseService)
         : base(navigationService)
@@ -42,9 +52,16 @@ public partial class CalendarioViewModel : BaseViewModel
         GeneraFasceOrarie();
     }
 
-    partial void OnIntervalloMinutiChanged(int value) => GeneraFasceOrarie();
-    partial void OnOraInizioChanged(TimeSpan value) => GeneraFasceOrarie();
-    partial void OnOraFineChanged(TimeSpan value) => GeneraFasceOrarie();
+
+    // Quando cambiano i filtri, aggiorniamo e inviamo il messaggio
+    partial void OnIntervalloMinutiChanged(int value) => AggiornaVista();
+    partial void OnMostraSoloAttiveChanged(bool value) => AggiornaVista();
+
+    private void AggiornaVista()
+    {
+        GeneraFasceOrarie();
+        WeakReferenceMessenger.Default.Send(new RefreshGridMessage());
+    }
 
     private void GeneraFasceOrarie()
     {
@@ -52,7 +69,6 @@ public partial class CalendarioViewModel : BaseViewModel
         var ora = OraInizio;
         while (ora < OraFine)
         {
-            // Esempio: pausa 13:00-14:00 disattivata
             bool attiva = !(ora >= new TimeSpan(13, 0, 0) && ora < new TimeSpan(14, 0, 0));
             lista.Add(new FasciaOraria { Orario = ora, IsAttiva = attiva });
             ora = ora.Add(TimeSpan.FromMinutes(IntervalloMinuti));
@@ -65,6 +81,7 @@ public partial class CalendarioViewModel : BaseViewModel
         await EseguiConCaricamento(async () =>
         {
             LezioniSettimana = await _databaseService.GetLezioniSettimana(SettimanaCorrente);
+            WeakReferenceMessenger.Default.Send(new RefreshGridMessage());
         });
     }
 
@@ -79,10 +96,7 @@ public partial class CalendarioViewModel : BaseViewModel
 
         await EseguiConCaricamento(async () =>
         {
-            var allievi = await _databaseService.GetAllieviPerCorso(lezione.CorsoId);
-            var nomeCorso = lezione.Corso?.Nome ?? $"Corso {lezione.CorsoId}";
-            var page = new AllieviCorsoPage(nomeCorso, allievi);
-            await Shell.Current.Navigation.PushAsync(page); // PUSH NORMALE
+            await Shell.Current.Navigation.PushAsync(new AllieviCorsoPage(lezione)); // PUSH NORMALE
         });
     }
 
@@ -92,14 +106,80 @@ public partial class CalendarioViewModel : BaseViewModel
     public List<Lezioni> GetLezioniPerGiorno(DayOfWeek giorno) =>
         LezioniSettimana.Where(l => (DayOfWeek)l.GiornoSettimana == giorno).ToList();
 
-    public Lezioni? GetLezionePerOrario(DayOfWeek giorno, TimeSpan orario) =>
-        LezioniSettimana.FirstOrDefault(l =>
-            (DayOfWeek)l.GiornoSettimana == giorno &&
+    public Lezioni? GetLezionePerOrario(DayOfWeek giorno, TimeSpan orario)
+    {
+        // Convertiamo il DayOfWeek in intero (0-6) e poi lo adattiamo al formato DB (1-7)
+        // Se la Domenica è 0, la portiamo a 7 per il confronto col DB
+        int giornoDb = (int)giorno == 0 ? 7 : (int)giorno;
+
+        return LezioniSettimana.FirstOrDefault(l =>
+            l.GiornoSettimana == giornoDb && // Confrontiamo direttamente gli interi
             StringToTimeSpan(l.OraInizio) <= orario &&
             StringToTimeSpan(l.OraFine) > orario);
+    }
 
     public string GetNomeGiorno(DayOfWeek giorno)
     {
         return DateHelper.GetNomeGiornoCompletoIT(giorno, SettimanaCorrente);
     }
+
+    [RelayCommand]
+    public async Task GestisciLezione(Lezioni lezione)
+    {
+        // Passa la lezione intera alla pagina, così la pagina può accedere 
+        // a Maestri, Allievi, Orari, ecc.
+        await Shell.Current.Navigation.PushAsync(new AllieviCorsoPage(lezione));
+    }
+
+    public async Task CreaNuovaLezione(DayOfWeek giorno, TimeSpan ora)
+    {
+        // Creiamo una lezione "vuota" con le info base
+        var nuovaLezione = new Lezioni
+        {
+            GiornoSettimana = (int)giorno,
+            OraInizio = ora.ToString(@"hh\:mm"),
+            OraFine = ora.Add(TimeSpan.FromMinutes(IntervalloMinuti)).ToString(@"hh\:mm")
+        };
+
+        // Per ora naviga verso la pagina, poi creeremo la logica di salvataggio
+        await Shell.Current.Navigation.PushAsync(new AllieviCorsoPage(nuovaLezione));
+    }
+
+
+    // menu di navigazione 
+    [RelayCommand]
+    public async Task NavigaPagamenti()
+    {
+        // Nota: Assicurati che le rotte siano registrate in AppShell.xaml.cs
+        await NavigationService.NavigateToAsync(AppRoutes.Pagamenti.Pagina);
+    }
+
+    [RelayCommand]
+    public async Task NavigaStatistiche()
+    {
+        await NavigationService.NavigateToAsync(AppRoutes.Statistiche.Pagina);
+    }
+
+    [RelayCommand]
+    public async Task NavigaImpostazioni()
+    {
+        await NavigationService.NavigateToAsync(AppRoutes.Impostazioni.Pagina);
+    }
+
+    [RelayCommand]
+    public async Task NavigaGestioneCorsi()
+    {
+        await Shell.Current.GoToAsync(AppRoutes.Corsi.PaginaCorsi);
+    }
+}
+
+
+
+public class FasciaOraria
+{
+    public string Nome { get; set; } = string.Empty;
+    public TimeSpan OraInizio { get; set; }
+    public TimeSpan OraFine { get; set; }
+
+    public string TitoloFormattato => $"{Nome}\n({OraInizio:hh\\:mm} - {OraFine:hh\\:mm})";
 }

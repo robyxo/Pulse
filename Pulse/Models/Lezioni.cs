@@ -9,7 +9,7 @@ public partial class Lezioni
 
     public int CorsoId { get; set; }
 
-    public int InsegnanteId { get; set; }
+    public int? InsegnanteId { get; set; }
 
     public int GiornoSettimana { get; set; }
 
@@ -17,13 +17,9 @@ public partial class Lezioni
 
     public string OraFine { get; set; } = null!;
 
-    public string? Sala { get; set; }
-
-    public string? Note { get; set; }
-
     public virtual Corsi Corso { get; set; } = null!;
 
-    public virtual Insegnanti Insegnante { get; set; } = null!;
+    public virtual Insegnanti? Insegnante { get; set; }
 
     public virtual ICollection<Presenze> Presenzes { get; set; } = new List<Presenze>();
 }

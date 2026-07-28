@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Pulse.Views.GestioneLezionePage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="Gestione Lezione"
+    BackgroundColor="#F8FAFC">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="15">
+
+            <Label
+                FontAttributes="Bold"
+                Text="Corso:"
+                TextColor="#1E293B" />
+            <Border
+                Padding="5,0"
+                Stroke="#CBD5E1"
+                StrokeShape="RoundRectangle 8">
+                <Picker
+                    x:Name="PickerCorsi"
+                    ItemDisplayBinding="{Binding Nome}"
+                    SelectedIndexChanged="OnCorsoChanged" />
+            </Border>
+
+            <Label
+                FontAttributes="Bold"
+                Text="Maestro:"
+                TextColor="#1E293B" />
+            <Border
+                Padding="5,0"
+                Stroke="#CBD5E1"
+                StrokeShape="RoundRectangle 8">
+                <Picker x:Name="PickerMaestri" ItemDisplayBinding="{Binding Nome}" />
+            </Border>
+
+            <Grid ColumnDefinitions="*, *" ColumnSpacing="10">
+                <VerticalStackLayout Grid.Column="0" Spacing="5">
+                    <Label
+                        FontAttributes="Bold"
+                        Text="Orario Inizio:"
+                        TextColor="#1E293B" />
+                    <Border
+                        Padding="5"
+                        Stroke="#CBD5E1"
+                        StrokeShape="RoundRectangle 8">
+                        <TimePicker
+                            x:Name="TimeInizio"
+                            Format="HH:mm"
+                            HorizontalOptions="Center" />
+                    </Border>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Grid.Column="1" Spacing="5">
+                    <Label
+                        FontAttributes="Bold"
+                        Text="Orario Fine:"
+                        TextColor="#1E293B" />
+                    <Border
+                        Padding="5"
+                        Stroke="#CBD5E1"
+                        StrokeShape="RoundRectangle 8">
+                        <TimePicker
+                            x:Name="TimeFine"
+                            Format="HH:mm"
+                            HorizontalOptions="Center" />
+                    </Border>
+                </VerticalStackLayout>
+            </Grid>
+
+            <Border
+                Margin="0,10,0,0"
+                Padding="15"
+                BackgroundColor="White"
+                Stroke="#E2E8F0"
+                StrokeShape="RoundRectangle 10">
+                <VerticalStackLayout Spacing="10">
+                    <Label
+                        x:Name="LblTitoloAllievi"
+                        FontAttributes="Bold"
+                        FontSize="14"
+                        Text="👥 Allievi Iscritti al Corso"
+                        TextColor="#4F46E5" />
+
+                    <Label
+                        x:Name="LblNessunAllievo"
+                        FontSize="12"
+                        IsVisible="False"
+                        Text="Nessun allievo iscritto a questo corso."
+                        TextColor="#64748B" />
+
+                    <CollectionView x:Name="ListaAllievi" SelectionMode="None">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid
+                                    Padding="0,6"
+                                    ColumnDefinitions="Auto, *"
+                                    ColumnSpacing="10">
+                                    <Label
+                                        Grid.Column="0"
+                                        FontSize="14"
+                                        Text="👤"
+                                        VerticalOptions="Center" />
+                                    <Label
+                                        Grid.Column="1"
+                                        FontSize="13"
+                                        TextColor="#1E293B"
+                                        VerticalOptions="Center">
+                                        <Label.FormattedText>
+                                            <FormattedString>
+                                                <Span FontAttributes="Bold" Text="{Binding Nome}" />
+                                                <Span Text=" " />
+                                                <Span FontAttributes="Bold" Text="{Binding Cognome}" />
+                                            </FormattedString>
+                                        </Label.FormattedText>
+                                    </Label>
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Border>
+
+            <Button
+                Margin="0,15,0,0"
+                BackgroundColor="#10B981"
+                Clicked="OnSalvaClicked"
+                CornerRadius="8"
+                FontAttributes="Bold"
+                HeightRequest="48"
+                Text="Salva Lezione"
+                TextColor="White" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

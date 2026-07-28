@@ -11,4 +11,25 @@ public static class AppRoutes
     {
         public const string Pagina = "calendario";
     }
+
+    public static class Corsi
+    {
+        public const string PaginaCorsi = "CorsiPage";
+        public const string GestioneCorso = "GestioneCorsoPage";
+    }
+
+    public static class Statistiche
+    {
+        public const string Pagina = "StatistichePage";
+    }
+
+    public static class Pagamenti
+    {
+        public const string Pagina = "PagamentiPage";
+    }
+
+    public static class Impostazioni
+    {
+        public const string Pagina = "ImpostazioniPage";
+    }
 }

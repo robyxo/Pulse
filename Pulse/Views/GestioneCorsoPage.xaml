@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Pulse.Views.GestioneCorsoPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:Pulse.ViewModels"
+    Title="Gestione Corso"
+    x:DataType="vm:GestioneCorsoViewModel"
+    BackgroundColor="#F8FAFC">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="15">
+
+            <Label
+                FontAttributes="Bold"
+                Text="Nome Corso:"
+                TextColor="#1E293B" />
+            <Border
+                Padding="10,0"
+                Stroke="#CBD5E1"
+                StrokeShape="RoundRectangle 8">
+                <Entry
+                    HeightRequest="45"
+                    Placeholder="Es. Salsa Principianti"
+                    Text="{Binding Nome}" />
+            </Border>
+
+            <Label
+                FontAttributes="Bold"
+                Text="Descrizione:"
+                TextColor="#1E293B" />
+            <Border
+                Padding="10"
+                Stroke="#CBD5E1"
+                StrokeShape="RoundRectangle 8">
+                <Editor
+                    HeightRequest="90"
+                    Placeholder="Inserisci dettagli del corso..."
+                    Text="{Binding Descrizione}" />
+            </Border>
+
+            <Label
+                FontAttributes="Bold"
+                Text="Colore identificativo:"
+                TextColor="#1E293B" />
+            <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
+                <Border
+                    BackgroundColor="{Binding ColoreHex}"
+                    HeightRequest="40"
+                    Stroke="#CBD5E1"
+                    StrokeShape="RoundRectangle 20"
+                    WidthRequest="40" />
+                <Border
+                    Padding="10,0"
+                    Stroke="#CBD5E1"
+                    StrokeShape="RoundRectangle 8"
+                    WidthRequest="150">
+                    <Entry
+                        HeightRequest="45"
+                        Placeholder="#FF0000"
+                        Text="{Binding ColoreHex}" />
+                </Border>
+            </HorizontalStackLayout>
+
+            <Label
+                FontSize="12"
+                Text="Oppure scegli un colore rapido:"
+                TextColor="#64748B" />
+            <FlexLayout
+                AlignItems="Center"
+                Direction="Row"
+                JustifyContent="Start"
+                Wrap="Wrap">
+                <Button
+                    Margin="4"
+                    BackgroundColor="#EDFF21"
+                    Command="{Binding SelezionaColorePresetCommand}"
+                    CommandParameter="#EDFF21"
+                    CornerRadius="18"
+                    HeightRequest="36"
+                    WidthRequest="36" />
+                <Button
+                    Margin="4"
+                    BackgroundColor="#00913F"
+                    Command="{Binding SelezionaColorePresetCommand}"
+                    CommandParameter="#00913F"
+                    CornerRadius="18"
+                    HeightRequest="36"
+                    WidthRequest="36" />
+                <Button
+                    Margin="4"
+                    BackgroundColor="#FF6088"
+                    Command="{Binding SelezionaColorePresetCommand}"
+                    CommandParameter="#FF6088"
+                    CornerRadius="18"
+                    HeightRequest="36"
+                    WidthRequest="36" />
+                <Button
+                    Margin="4"
+                    BackgroundColor="#FF0000"
+                    Command="{Binding SelezionaColorePresetCommand}"
+                    CommandParameter="#FF0000"
+                    CornerRadius="18"
+                    HeightRequest="36"
+                    WidthRequest="36" />
+                <Button
+                    Margin="4"
+                    BackgroundColor="#0000FF"
+                    Command="{Binding SelezionaColorePresetCommand}"
+                    CommandParameter="#0000FF"
+                    CornerRadius="18"
+                    HeightRequest="36"
+                    WidthRequest="36" />
+                <Button
+                    Margin="4"
+                    BackgroundColor="#FF00FF"
+                    Command="{Binding SelezionaColorePresetCommand}"
+                    CommandParameter="#FF00FF"
+                    CornerRadius="18"
+                    HeightRequest="36"
+                    WidthRequest="36" />
+                <Button
+                    Margin="4"
+                    BackgroundColor="#4F46E5"
+                    Command="{Binding SelezionaColorePresetCommand}"
+                    CommandParameter="#4F46E5"
+                    CornerRadius="18"
+                    HeightRequest="36"
+                    WidthRequest="36" />
+            </FlexLayout>
+
+            <Button
+                Margin="0,20,0,0"
+                BackgroundColor="#10B981"
+                Command="{Binding SalvaCorsoCommand}"
+                CornerRadius="8"
+                FontAttributes="Bold"
+                HeightRequest="48"
+                Text="Salva Corso"
+                TextColor="White" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

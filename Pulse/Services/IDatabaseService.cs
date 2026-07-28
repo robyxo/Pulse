@@ -1,0 +1,32 @@
+﻿using Pulse.Models;
+
+namespace Pulse.Services;
+
+public interface IDatabaseService
+{
+    // ================================================
+    // GESTIONE CORSI
+    // ================================================
+    Task<List<Corsi>> GetCorsiAttiviAsync();
+    Task<List<Corsi>> GetCorsiAttivi(); // Alias per compatibilità
+    Task<bool> SalvaCorsoAsync(Corsi corso);
+    Task<bool> EliminaCorsoAsync(int id);
+    Task<bool> EliminaCorsoAsync(Corsi corso); // Alias con oggetto
+
+    // ================================================
+    // CALENDARIO E LEZIONI
+    // ================================================
+    Task<List<Lezioni>> GetLezioniSettimanaAsync(DateTime dataRiferimento);
+    Task<List<Lezioni>> GetLezioniSettimana(DateTime dataRiferimento); // Alias
+    Task<bool> SalvaLezioneAsync(Lezioni lezione);
+    Task<bool> SalvaLezione(Lezioni lezione); // Alias
+
+    // ================================================
+    // MAESTRI E ALLIEVI
+    // ================================================
+    Task<List<Insegnanti>> GetInsegnantiAttiviAsync();
+    Task<List<Insegnanti>> GetInsegnantiAttivi(); // Alias
+    Task<List<Allievi>> GetAllieviPerCorsoAsync(int corsoId);
+    Task<List<Allievi>> GetAllieviPerCorso(int corsoId); // Alias
+    Task<List<Allievi>> GetAllieviPerLezioneAsync(int lezioneId);
+}

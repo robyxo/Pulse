@@ -3,20 +3,36 @@
     x:Class="Pulse.Views.Popups.AllieviCorsoPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    Title="Allievi">
+    Title="Dettaglio Lezione">
 
     <VerticalStackLayout Padding="20" Spacing="10">
         <Label
             x:Name="LblTitolo"
             FontAttributes="Bold"
             FontSize="20" />
-        <CollectionView x:Name="ListaAllievi">
+
+        <Label
+            x:Name="LblOrario"
+            FontSize="14"
+            TextColor="Gray" />
+        <Label
+            x:Name="LblMaestro"
+            FontSize="14"
+            TextColor="Gray" />
+
+        <CollectionView x:Name="ListaAllievi" Margin="0,10,0,0">
             <CollectionView.ItemTemplate>
                 <DataTemplate>
                     <Grid Padding="10,8" ColumnDefinitions="Auto,*">
-                        <Label Grid.Column="0" Text="👤" />
-                        <Label Grid.Column="1" Margin="10,0,0,0">
-                            <Label.Text>
+                        <Label
+                            Grid.Column="0"
+                            Text="👤"
+                            VerticalOptions="Center" />
+                        <Label
+                            Grid.Column="1"
+                            Margin="10,0,0,0"
+                            VerticalOptions="Center">
+                            <Label.Text >
                                 <MultiBinding StringFormat="{}{0} {1}">
                                     <Binding Path="Nome" />
                                     <Binding Path="Cognome" />
@@ -27,10 +43,16 @@
                 </DataTemplate>
             </CollectionView.ItemTemplate>
             <CollectionView.EmptyView>
-                <Label Text="Nessun allievo iscritto" TextColor="Gray" />
+                <Label
+                    Margin="20"
+                    HorizontalOptions="Center"
+                    Text="Nessun allievo iscritto"
+                    TextColor="Gray" />
             </CollectionView.EmptyView>
         </CollectionView>
+
         <Button
+            Margin="0,20,0,0"
             BackgroundColor="#4F46E5"
             Clicked="OnChiudiClicked"
             Text="Chiudi"
