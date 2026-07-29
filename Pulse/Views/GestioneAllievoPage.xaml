@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Pulse.Views.GestioneAllievoPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:Pulse.ViewModels"
+    Title="Gestione Allievo"
+    x:DataType="vm:GestioneAllievoViewModel"
+    BackgroundColor="#F8FAFC">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="15">
+
+            <Label
+                FontAttributes="Bold"
+                Text="Nome:"
+                TextColor="#1E293B" />
+            <Border
+                Padding="10,0"
+                Stroke="#CBD5E1"
+                StrokeShape="RoundRectangle 8">
+                <Entry
+                    HeightRequest="45"
+                    Placeholder="Es. Mario"
+                    Text="{Binding Nome}" />
+            </Border>
+
+            <Label
+                FontAttributes="Bold"
+                Text="Cognome:"
+                TextColor="#1E293B" />
+            <Border
+                Padding="10,0"
+                Stroke="#CBD5E1"
+                StrokeShape="RoundRectangle 8">
+                <Entry
+                    HeightRequest="45"
+                    Placeholder="Es. Rossi"
+                    Text="{Binding Cognome}" />
+            </Border>
+
+            <Label
+                FontAttributes="Bold"
+                Text="Codice Fiscale:"
+                TextColor="#1E293B" />
+            <Border
+                Padding="10,0"
+                Stroke="#CBD5E1"
+                StrokeShape="RoundRectangle 8">
+                <Entry
+                    HeightRequest="45"
+                    Placeholder="Es. RSSMRA80A01H501U"
+                    Text="{Binding CodiceFiscale}" />
+            </Border>
+
+            <Label
+                FontAttributes="Bold"
+                Text="Telefono:"
+                TextColor="#1E293B" />
+            <Border
+                Padding="10,0"
+                Stroke="#CBD5E1"
+                StrokeShape="RoundRectangle 8">
+                <Entry
+                    HeightRequest="45"
+                    Keyboard="Telephone"
+                    Placeholder="Es. +39 333 1234567"
+                    Text="{Binding Telefono}" />
+            </Border>
+
+            <Label
+                FontAttributes="Bold"
+                Text="Email:"
+                TextColor="#1E293B" />
+            <Border
+                Padding="10,0"
+                Stroke="#CBD5E1"
+                StrokeShape="RoundRectangle 8">
+                <Entry
+                    HeightRequest="45"
+                    Keyboard="Email"
+                    Placeholder="Es. mario.rossi@email.com"
+                    Text="{Binding Email}" />
+            </Border>
+
+            <!--  PULSANTI SALVA ED ELIMINA  -->
+            <Button
+                Margin="0,15,0,0"
+                BackgroundColor="#10B981"
+                Command="{Binding SalvaAllievoCommand}"
+                CornerRadius="8"
+                FontAttributes="Bold"
+                HeightRequest="48"
+                Text="Salva Allievo"
+                TextColor="White" />
+
+            <Button
+                BackgroundColor="#EF4444"
+                Command="{Binding EliminaAllievoCommand}"
+                CornerRadius="8"
+                FontAttributes="Bold"
+                HeightRequest="48"
+                IsVisible="{Binding IsEdizione}"
+                Text="Elimina Allievo"
+                TextColor="White" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

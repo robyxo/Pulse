@@ -24,7 +24,11 @@ public partial class AppShell : Shell
 
             // 👨‍🏫 Rotte Insegnanti
             { AppRoutes.Insegnanti.PaginaInsegnanti, typeof(InsegnantiPage) },
-            { AppRoutes.Insegnanti.GestioneInsegnante, typeof(GestioneInsegnantePage) }
+            { AppRoutes.Insegnanti.GestioneInsegnante, typeof(GestioneInsegnantePage) },
+
+            // 👨‍🎓 Rotte Allievi
+            { AppRoutes.Allievi.PaginaAllievi, typeof(AllieviPage) },
+            { AppRoutes.Allievi.GestioneAllievo, typeof(GestioneAllievoPage) }
         };
 
         foreach (var item in routes)

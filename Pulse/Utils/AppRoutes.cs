@@ -23,4 +23,9 @@ public static class AppRoutes
         public const string PaginaInsegnanti = "InsegnantiPage";
         public const string GestioneInsegnante = "GestioneInsegnantePage";
     }
+    public static class Allievi
+    {
+        public const string PaginaAllievi = "AllieviPage";
+        public const string GestioneAllievo = "GestioneAllievoPage";
+    }
 }

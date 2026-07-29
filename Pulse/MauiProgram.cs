@@ -49,18 +49,19 @@ public static class MauiProgram
         builder.Services.AddTransient<GestioneCorsoViewModel>();
         builder.Services.AddTransient<InsegnantiViewModel>();
         builder.Services.AddTransient<GestioneInsegnanteViewModel>();
+        builder.Services.AddTransient<AllieviViewModel>();
+        builder.Services.AddTransient<GestioneAllievoViewModel>();
 
         // 3. Registrazione Views (Pagine)
         builder.Services.AddTransient<MainPage>();
         builder.Services.AddTransient<CalendarioPage>();
         builder.Services.AddTransient<AllieviCorsoPage>();
-        builder.Services.AddTransient<StatistichePage>();
-        builder.Services.AddTransient<ImpostazioniPage>();
-        builder.Services.AddTransient<pagamentiPage>();
         builder.Services.AddTransient<CorsiPage>();
         builder.Services.AddTransient<GestioneCorsoPage>();
         builder.Services.AddTransient<InsegnantiPage>();
         builder.Services.AddTransient<GestioneInsegnantePage>();
+        builder.Services.AddTransient<AllieviPage>();
+        builder.Services.AddTransient<GestioneAllievoPage>();
 
         // 4. Registrazione Servizi
         builder.Services.AddSingleton<INavigationService, NavigationService>();

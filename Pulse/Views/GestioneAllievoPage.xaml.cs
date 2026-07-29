@@ -1,8 +1,8 @@
 ﻿namespace Pulse.Views
 {
-    public partial class ImpostazioniPage : ContentPage
+    public partial class GestioneAllievoPage : ContentPage
     {
-        public ImpostazioniPage()
+        public GestioneAllievoPage()
         {
             InitializeComponent();
         }

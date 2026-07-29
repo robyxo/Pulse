@@ -10,9 +10,13 @@ namespace Pulse.ViewModels;
 public partial class CorsiViewModel : BaseViewModel
 {
     private readonly IDatabaseService _dbService;
+    private List<Corsi> _listaCorsiCompleta = new();
 
     [ObservableProperty]
     private ObservableCollection<Corsi> _listaCorsi = new();
+
+    [ObservableProperty]
+    private string _testoRicerca = string.Empty;
 
     public CorsiViewModel(INavigationService navigationService, IDatabaseService dbService)
         : base(navigationService)
@@ -21,18 +25,32 @@ public partial class CorsiViewModel : BaseViewModel
         Title = "Gestione Corsi";
     }
 
+    partial void OnTestoRicercaChanged(string value)
+    {
+        ApplicaFiltro();
+    }
+
     [RelayCommand]
     public async Task CaricaCorsiAsync()
     {
         await EseguiConCaricamento(async () =>
         {
-            ListaCorsi.Clear();
-            var corsi = await _dbService.GetCorsiAttiviAsync();
-            foreach (var corso in corsi)
-            {
-                ListaCorsi.Add(corso);
-            }
+            _listaCorsiCompleta = await _dbService.GetCorsiAttiviAsync();
+            ApplicaFiltro();
         });
+    }
+
+    private void ApplicaFiltro()
+    {
+        ListaCorsi.Clear();
+        var filtrati = string.IsNullOrWhiteSpace(TestoRicerca)
+            ? _listaCorsiCompleta
+            : _listaCorsiCompleta.Where(c => c.Nome != null && c.Nome.Contains(TestoRicerca, StringComparison.OrdinalIgnoreCase));
+
+        foreach (var corso in filtrati)
+        {
+            ListaCorsi.Add(corso);
+        }
     }
 
     [RelayCommand]

@@ -10,9 +10,13 @@ namespace Pulse.ViewModels;
 public partial class InsegnantiViewModel : BaseViewModel
 {
     private readonly IDatabaseService _dbService;
+    private List<Insegnanti> _listaInsegnantiCompleta = new();
 
     [ObservableProperty]
     private ObservableCollection<Insegnanti> _listaInsegnanti = new();
+
+    [ObservableProperty]
+    private string _testoRicerca = string.Empty;
 
     public InsegnantiViewModel(INavigationService navigationService, IDatabaseService dbService)
         : base(navigationService)
@@ -21,27 +25,43 @@ public partial class InsegnantiViewModel : BaseViewModel
         Title = "Gestione Insegnanti";
     }
 
+    partial void OnTestoRicercaChanged(string value)
+    {
+        ApplicaFiltro();
+    }
+
     [RelayCommand]
     public async Task CaricaInsegnantiAsync()
     {
         await EseguiConCaricamento(async () =>
         {
-            ListaInsegnanti.Clear();
-            var insegnanti = await _dbService.GetInsegnantiAttiviAsync();
-            foreach (var item in insegnanti)
-            {
-                ListaInsegnanti.Add(item);
-            }
+            _listaInsegnantiCompleta = await _dbService.GetInsegnantiAttiviAsync();
+            ApplicaFiltro();
         });
+    }
+
+    private void ApplicaFiltro()
+    {
+        ListaInsegnanti.Clear();
+        var filtrati = string.IsNullOrWhiteSpace(TestoRicerca)
+            ? _listaInsegnantiCompleta
+            : _listaInsegnantiCompleta.Where(i =>
+                (i.Nome != null && i.Nome.Contains(TestoRicerca, StringComparison.OrdinalIgnoreCase)) ||
+                (i.Cognome != null && i.Cognome.Contains(TestoRicerca, StringComparison.OrdinalIgnoreCase)));
+
+        foreach (var item in filtrati)
+        {
+            ListaInsegnanti.Add(item);
+        }
     }
 
     [RelayCommand]
     public async Task NuovoInsegnanteAsync()
     {
         var parametri = new Dictionary<string, object>
-    {
-        { "Insegnante", new Insegnanti { Attivo = 1 } }
-    };
+        {
+            { "Insegnante", new Insegnanti { Attivo = 1 } }
+        };
         await Shell.Current.GoToAsync(AppRoutes.Insegnanti.GestioneInsegnante, parametri);
     }
 

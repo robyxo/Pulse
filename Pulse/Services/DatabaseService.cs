@@ -90,7 +90,7 @@ public class DatabaseService : IDatabaseService
         SalvaLezioneAsync(lezione);
 
     // ================================================
-    // MAESTRI E ALLIEVI
+    // MAESTRI
     // ================================================
 
     public async Task<List<Insegnanti>> GetInsegnantiAttiviAsync()
@@ -101,7 +101,6 @@ public class DatabaseService : IDatabaseService
             .ThenBy(i => i.Nome)
             .ToListAsync();
     }
-
     public async Task<bool> SalvaInsegnanteAsync(Insegnanti insegnante)
     {
         if (insegnante.Id == 0)
@@ -129,6 +128,19 @@ public class DatabaseService : IDatabaseService
 
     public Task<List<Insegnanti>> GetInsegnantiAttivi() => GetInsegnantiAttiviAsync();
 
+    // ================================================
+    // ALLIEVI
+    // ================================================
+
+    public async Task<List<Allievi>> GetAllieviAttiviAsync()
+    {
+        return await _context.Allievis
+            .Where(a => a.Attivo == 1)
+            .OrderBy(a => a.Cognome)
+            .ThenBy(a => a.Nome)
+            .ToListAsync();
+    }
+
     public async Task<List<Allievi>> GetAllieviPerCorsoAsync(int corsoId)
     {
         return await _context.Iscrizionis
@@ -139,6 +151,30 @@ public class DatabaseService : IDatabaseService
             .OrderBy(a => a.Cognome)
             .ThenBy(a => a.Nome)
             .ToListAsync();
+    }
+    public async Task<bool> SalvaAllievoAsync(Allievi allievo)
+    {
+        if (allievo.Id == 0)
+        {
+            allievo.Attivo = 1;
+            _context.Allievis.Add(allievo);
+        }
+        else
+        {
+            _context.Allievis.Update(allievo);
+        }
+
+        return await _context.SaveChangesAsync() > 0;
+    }
+
+    public async Task<bool> EliminaAllievoAsync(int id)
+    {
+        var allievo = await _context.Allievis.FindAsync(id);
+        if (allievo == null) return false;
+
+        allievo.Attivo = 0; // Soft delete per sicurezza storica
+        _context.Allievis.Update(allievo);
+        return await _context.SaveChangesAsync() > 0;
     }
 
     public Task<List<Allievi>> GetAllieviPerCorso(int corsoId) => GetAllieviPerCorsoAsync(corsoId);

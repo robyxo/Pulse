@@ -78,9 +78,6 @@
 		<Compile Update="Views\GestioneLezionePage.xaml.cs">
 		  <DependentUpon>GestioneLezionePage.xaml</DependentUpon>
 		</Compile>
-		<Compile Update="Views\pagamentiPage.xaml.cs">
-		  <DependentUpon>PagamentiPage.xaml</DependentUpon>
-		</Compile>
 		<Compile Update="Views\Popups\AllieviCorsoPopup.xaml.cs">
 			<DependentUpon>AllieviCorsoPopup.xaml</DependentUpon>
 		</Compile>
@@ -90,7 +87,13 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<MauiXaml Update="Views\AllieviPage.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
 		<MauiXaml Update="Views\CorsiPage.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
+		<MauiXaml Update="Views\GestioneAllievoPage.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Views\GestioneCorsoPage.xaml">
@@ -102,20 +105,11 @@
 		<MauiXaml Update="Views\GestioneLezionePage.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
-		<MauiXaml Update="Views\ImpostazioniPage.xaml">
-		  <Generator>MSBuild:Compile</Generator>
-		</MauiXaml>
 		<MauiXaml Update="Views\InsegnantiPage.xaml">
-		  <Generator>MSBuild:Compile</Generator>
-		</MauiXaml>
-		<MauiXaml Update="Views\PagamentiPage.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Views\Popups\AllieviCorsoPage.xaml">
 			<Generator>MSBuild:Compile</Generator>
-		</MauiXaml>
-		<MauiXaml Update="Views\StatistichePage.xaml">
-		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 	</ItemGroup>
 

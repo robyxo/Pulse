@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage
-    x:Class="Pulse.Views.CorsiPage"
+    x:Class="Pulse.Views.AllieviPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:vm="clr-namespace:Pulse.ViewModels"
     x:Name="PageRoot"
-    Title="Gestione Corsi"
-    x:DataType="vm:CorsiViewModel"
+    Title="Gestione Allievi"
+    x:DataType="vm:AllieviViewModel"
     BackgroundColor="#F8FAFC">
 
     <Grid RowDefinitions="Auto, Auto, *">
@@ -20,29 +20,30 @@
             StrokeShape="RoundRectangle 8">
             <SearchBar
                 HeightRequest="40"
-                Placeholder="🔍 Cerca corso per nome..."
+                Placeholder="🔍 Cerca allievo per nome o cognome..."
                 Text="{Binding TestoRicerca}" />
         </Border>
-        <!--  PULSANTE NUOVO CORSO  -->
+
+        <!--  PULSANTE NUOVO ALLIEVO  -->
         <Border
             Grid.Row="1"
-            Margin="15,15,15,10"
+            Margin="15,5,15,10"
             BackgroundColor="Transparent"
             StrokeShape="RoundRectangle 8">
             <Button
                 BackgroundColor="#10B981"
-                Command="{Binding NuovoCorsoCommand}"
+                Command="{Binding NuovoAllievoCommand}"
                 FontAttributes="Bold"
                 HeightRequest="48"
-                Text="+ Nuovo Corso"
+                Text="+ Nuovo Allievo"
                 TextColor="White" />
         </Border>
 
-        <!--  LISTA CORSI  -->
+        <!--  LISTA ALLIEVI  -->
         <CollectionView
             Grid.Row="2"
             Margin="15,0,15,15"
-            ItemsSource="{Binding ListaCorsi}"
+            ItemsSource="{Binding ListaAllievi}"
             SelectionMode="None">
 
             <CollectionView.EmptyView>
@@ -54,11 +55,11 @@
                     <Label
                         FontSize="40"
                         HorizontalOptions="Center"
-                        Text="📚" />
+                        Text="🎓" />
                     <Label
                         FontSize="14"
                         HorizontalOptions="Center"
-                        Text="Nessun corso presente."
+                        Text="Nessun allievo presente."
                         TextColor="#64748B" />
                 </VerticalStackLayout>
             </CollectionView.EmptyView>
@@ -76,50 +77,26 @@
                             ColumnSpacing="12"
                             VerticalOptions="Center">
 
-                            <!--  Badge Colore Corso  -->
-                            <Border
+                            <Label
                                 Grid.Column="0"
-                                BackgroundColor="{Binding Colore}"
-                                HeightRequest="32"
-                                StrokeShape="RoundRectangle 16"
-                                VerticalOptions="Center"
-                                WidthRequest="32" />
+                                FontSize="20"
+                                Text="👤"
+                                VerticalOptions="Center" />
 
-                            <!--  Dettagli Corso  -->
                             <VerticalStackLayout
                                 Grid.Column="1"
                                 Spacing="2"
                                 VerticalOptions="Center">
-
                                 <Label
                                     FontAttributes="Bold"
                                     FontSize="15"
-                                    Text="{Binding Nome}"
+                                    Text="{Binding NomeCompleto}"
                                     TextColor="#1E293B" />
-
                                 <Label
                                     FontSize="12"
                                     LineBreakMode="TailTruncation"
-                                    Text="{Binding Descrizione}"
+                                    Text="{Binding Telefono, StringFormat='📞 {0}'}"
                                     TextColor="#64748B" />
-
-                                <!--  💶 PREZZI ABBONAMENTO (SINGOLO E MENSILE)  -->
-                                <Label
-                                    Margin="0,2,0,0"
-                                    FontAttributes="Bold"
-                                    FontSize="11"
-                                    TextColor="#10B981">
-                                    <Label.FormattedText>
-                                        <FormattedString>
-                                            <Span Text="Singolo: € " />
-                                            <Span Text="{Binding CostoSingolo, StringFormat='{0:N2}'}" />
-                                            <Span Text=" | Mensile: € " />
-                                            <Span Text="{Binding CostoMensile, StringFormat='{0:N2}'}" />
-                                            <Span Text=" | Annuale: € " />
-                                            <Span Text="{Binding CostoAnnuale, StringFormat='{0:N2}'}" />
-                                        </FormattedString>
-                                    </Label.FormattedText>
-                                </Label>
                             </VerticalStackLayout>
 
                             <!--  PULSANTE MODIFICA MATITA  -->
@@ -127,7 +104,7 @@
                                 Grid.Column="2"
                                 Padding="0"
                                 BackgroundColor="#F1F5F9"
-                                Command="{Binding BindingContext.ModificaCorsoCommand, Source={x:Reference PageRoot}}"
+                                Command="{Binding BindingContext.ModificaAllievoCommand, Source={x:Reference PageRoot}}"
                                 CommandParameter="{Binding .}"
                                 CornerRadius="18"
                                 FontSize="16"
@@ -140,7 +117,7 @@
                                 Grid.Column="3"
                                 Padding="0"
                                 BackgroundColor="#FEE2E2"
-                                Command="{Binding BindingContext.EliminaCorsoCommand, Source={x:Reference PageRoot}}"
+                                Command="{Binding BindingContext.EliminaAllievoCommand, Source={x:Reference PageRoot}}"
                                 CommandParameter="{Binding .}"
                                 CornerRadius="18"
                                 FontSize="16"
@@ -154,7 +131,7 @@
         </CollectionView>
 
         <ActivityIndicator
-            Grid.RowSpan="2"
+            Grid.RowSpan="3"
             HorizontalOptions="Center"
             IsRunning="{Binding IsBusy}"
             IsVisible="{Binding IsBusy}"

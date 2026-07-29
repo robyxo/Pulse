@@ -108,6 +108,13 @@
                     Text="📚 Gestione Corsi"
                     TextColor="White" />
 
+                <Button
+                    BackgroundColor="#4F46E5"
+                    Command="{Binding NavigaGestioneAllieviCommand}"
+                    FontAttributes="Bold"
+                    Text="📚 Gestione Allievi"
+                    TextColor="White" />
+
             </VerticalStackLayout>
         </VerticalStackLayout>
 

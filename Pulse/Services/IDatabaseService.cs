@@ -22,13 +22,21 @@ public interface IDatabaseService
     Task<bool> SalvaLezione(Lezioni lezione); // Alias
 
     // ================================================
-    // MAESTRI E ALLIEVI
+    // MAESTRI
     // ================================================
     Task<List<Insegnanti>> GetInsegnantiAttiviAsync();
     Task<bool> SalvaInsegnanteAsync(Insegnanti insegnante);
     Task<bool> EliminaInsegnanteAsync(int id);
     Task<List<Insegnanti>> GetInsegnantiAttivi(); // Alias
+
+    // ================================================
+    // ALLIEVI
+    // ================================================
+
+    Task<List<Allievi>> GetAllieviAttiviAsync();
     Task<List<Allievi>> GetAllieviPerCorsoAsync(int corsoId);
     Task<List<Allievi>> GetAllieviPerCorso(int corsoId); // Alias
     Task<List<Allievi>> GetAllieviPerLezioneAsync(int lezioneId);
+    Task<bool> SalvaAllievoAsync(Allievi allievo);
+    Task<bool> EliminaAllievoAsync(int id);
 }
