@@ -18,18 +18,9 @@ public static class AppRoutes
         public const string GestioneCorso = "GestioneCorsoPage";
     }
 
-    public static class Statistiche
+    public static class Insegnanti
     {
-        public const string Pagina = "StatistichePage";
-    }
-
-    public static class Pagamenti
-    {
-        public const string Pagina = "PagamentiPage";
-    }
-
-    public static class Impostazioni
-    {
-        public const string Pagina = "ImpostazioniPage";
+        public const string PaginaInsegnanti = "InsegnantiPage";
+        public const string GestioneInsegnante = "GestioneInsegnantePage";
     }
 }

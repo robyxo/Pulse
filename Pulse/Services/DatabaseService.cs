@@ -69,7 +69,8 @@ public class DatabaseService : IDatabaseService
             .ToListAsync();
     }
 
-    public Task<List<Lezioni>> GetLezioniSettimana(DateTime dataRiferimento) => GetLezioniSettimanaAsync(dataRiferimento);
+    public Task<List<Lezioni>> GetLezioniSettimana(DateTime dataRiferimento) => 
+        GetLezioniSettimanaAsync(dataRiferimento);
 
     public async Task<bool> SalvaLezioneAsync(Lezioni lezione)
     {
@@ -85,7 +86,8 @@ public class DatabaseService : IDatabaseService
         return await _context.SaveChangesAsync() > 0;
     }
 
-    public Task<bool> SalvaLezione(Lezioni lezione) => SalvaLezioneAsync(lezione);
+    public Task<bool> SalvaLezione(Lezioni lezione) => 
+        SalvaLezioneAsync(lezione);
 
     // ================================================
     // MAESTRI E ALLIEVI
@@ -98,6 +100,31 @@ public class DatabaseService : IDatabaseService
             .OrderBy(i => i.Cognome)
             .ThenBy(i => i.Nome)
             .ToListAsync();
+    }
+
+    public async Task<bool> SalvaInsegnanteAsync(Insegnanti insegnante)
+    {
+        if (insegnante.Id == 0)
+        {
+            insegnante.Attivo = 1;
+            _context.Insegnantis.Add(insegnante);
+        }
+        else
+        {
+            _context.Insegnantis.Update(insegnante);
+        }
+
+        return await _context.SaveChangesAsync() > 0;
+    }
+
+    public async Task<bool> EliminaInsegnanteAsync(int id)
+    {
+        var insegnante = await _context.Insegnantis.FindAsync(id);
+        if (insegnante == null) return false;
+
+        insegnante.Attivo = 0; // Soft delete
+        _context.Insegnantis.Update(insegnante);
+        return await _context.SaveChangesAsync() > 0;
     }
 
     public Task<List<Insegnanti>> GetInsegnantiAttivi() => GetInsegnantiAttiviAsync();

@@ -23,14 +23,17 @@ public static class MauiProgram
               fonts.AddFont("MaterialSymbols.ttf", "MaterialSymbols");
           });
 
-        // 1. Percorso del Database
+        // 1. Percorso del Database SQLite in AppData
         var dbFileName = "Pulse.db";
         var dbPath = Path.Combine(FileSystem.AppDataDirectory, dbFileName);
 
+        // ⚠️ FLAG DI EMERGENZA:
+        // Imposta a 'true' se modifichi lo schema/tabelle del DB e vuoi ricrearlo da zero in Debug.
+        // Lascia a 'false' durante il lavoro normale per non perdere i dati salvati.
+        bool resetDatabaseDiEmergenza = false;
+
 #if DEBUG
-        // 💡 FORZIAMO LA CANCELLAZIONE DEL VECCHIO DB DALLA DISCO PER QUESTA VOLTA,
-        // COSÌ DA ELIMINARE PER SEMPRE L'ERRORE DELLA COLONNA MANCANTE!
-        if (File.Exists(dbPath))
+        if (resetDatabaseDiEmergenza && File.Exists(dbPath))
         {
             try { File.Delete(dbPath); } catch { }
         }
@@ -44,6 +47,8 @@ public static class MauiProgram
         builder.Services.AddTransient<CalendarioViewModel>();
         builder.Services.AddTransient<CorsiViewModel>();
         builder.Services.AddTransient<GestioneCorsoViewModel>();
+        builder.Services.AddTransient<InsegnantiViewModel>();
+        builder.Services.AddTransient<GestioneInsegnanteViewModel>();
 
         // 3. Registrazione Views (Pagine)
         builder.Services.AddTransient<MainPage>();
@@ -54,6 +59,8 @@ public static class MauiProgram
         builder.Services.AddTransient<pagamentiPage>();
         builder.Services.AddTransient<CorsiPage>();
         builder.Services.AddTransient<GestioneCorsoPage>();
+        builder.Services.AddTransient<InsegnantiPage>();
+        builder.Services.AddTransient<GestioneInsegnantePage>();
 
         // 4. Registrazione Servizi
         builder.Services.AddSingleton<INavigationService, NavigationService>();
@@ -68,11 +75,11 @@ public static class MauiProgram
 
         var app = builder.Build();
 
-        // 5. Ricrea il database con TUTTE le nuove colonne
+        // 5. Garantisce la creazione del DB se non esiste
         using (var scope = app.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<PulseContext>();
-            db.Database.EnsureCreated(); // Ricrea il DB perfetto con CostoAnnuale
+            db.Database.EnsureCreated();
         }
 
         return app;
@@ -82,9 +89,7 @@ public static class MauiProgram
     {
 #if WINDOWS
         AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
-        {
-            System.Diagnostics.Debug.WriteLine($"[Windows] Unhandled Exception: {args.ExceptionObject}");
-        };
+        {System.Diagnostics.Debug.WriteLine($"[Windows] Unhandled Exception: {args.ExceptionObject}");};
 #endif
     }
 }

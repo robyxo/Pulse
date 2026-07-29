@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
+using Pulse.DTO;
 
 namespace Pulse.Views;
 

@@ -72,6 +72,9 @@
 		<Compile Update="Views\CalendarioPage.xaml.cs">
 			<DependentUpon>CalendarioPage.xaml</DependentUpon>
 		</Compile>
+		<Compile Update="Views\GestioneInsegnantePage.xaml.cs">
+		  <DependentUpon>GestioneInsegnantePage.xaml</DependentUpon>
+		</Compile>
 		<Compile Update="Views\GestioneLezionePage.xaml.cs">
 		  <DependentUpon>GestioneLezionePage.xaml</DependentUpon>
 		</Compile>
@@ -93,10 +96,16 @@
 		<MauiXaml Update="Views\GestioneCorsoPage.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
+		<MauiXaml Update="Views\GestioneInsegnantePage.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
 		<MauiXaml Update="Views\GestioneLezionePage.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Views\ImpostazioniPage.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
+		<MauiXaml Update="Views\InsegnantiPage.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Views\PagamentiPage.xaml">

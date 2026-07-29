@@ -2,7 +2,7 @@
 using CommunityToolkit.Mvvm.Messaging;
 using Pulse.Helpers;
 using Pulse.Models;
-using Pulse.Resources.Strings;
+using Pulse.DTO;
 using Pulse.Services;
 using Pulse.Utils;
 using Pulse.Views.Popups;
@@ -12,12 +12,6 @@ namespace Pulse.ViewModels;
 public partial class CalendarioViewModel : BaseViewModel
 {
     private readonly IDatabaseService _databaseService;
-
-    public class FasciaOraria
-    {
-        public TimeSpan Orario { get; set; }
-        public bool IsAttiva { get; set; } = true;
-    }
 
     // Messaggio per notificare la View di ridisegnare la griglia
     public class RefreshGridMessage { }
@@ -52,10 +46,11 @@ public partial class CalendarioViewModel : BaseViewModel
         GeneraFasceOrarie();
     }
 
-
     // Quando cambiano i filtri, aggiorniamo e inviamo il messaggio
-    partial void OnIntervalloMinutiChanged(int value) => AggiornaVista();
-    partial void OnMostraSoloAttiveChanged(bool value) => AggiornaVista();
+    partial void OnIntervalloMinutiChanged(int value) => 
+        AggiornaVista();
+    partial void OnMostraSoloAttiveChanged(bool value) =>
+        AggiornaVista();
 
     private void AggiornaVista()
     {
@@ -94,14 +89,14 @@ public partial class CalendarioViewModel : BaseViewModel
     {
         if (lezione == null) return;
 
-        await EseguiConCaricamento(async () =>
-        {
-            await Shell.Current.Navigation.PushAsync(new AllieviCorsoPage(lezione)); // PUSH NORMALE
-        });
+        await EseguiConCaricamento(async () => 
+            await Shell.Current.Navigation.PushAsync(new AllieviCorsoPage(lezione))); // PUSH NORMALE
     }
 
-    public TimeSpan StringToTimeSpan(string timeString) => TimeSpan.TryParse(timeString, out var t) ? t : TimeSpan.Zero;
-    public Color StringToColor(string colorString) => Color.TryParse(colorString, out var c) ? c : Colors.Purple;
+    public TimeSpan StringToTimeSpan(string timeString) => 
+        TimeSpan.TryParse(timeString, out var t) ? t : TimeSpan.Zero;
+    public Color StringToColor(string colorString) => 
+        Color.TryParse(colorString, out var c) ? c : Colors.Purple;
 
     public List<Lezioni> GetLezioniPerGiorno(DayOfWeek giorno) =>
         LezioniSettimana.Where(l => (DayOfWeek)l.GiornoSettimana == giorno).ToList();
@@ -118,18 +113,15 @@ public partial class CalendarioViewModel : BaseViewModel
             StringToTimeSpan(l.OraFine) > orario);
     }
 
-    public string GetNomeGiorno(DayOfWeek giorno)
-    {
-        return DateHelper.GetNomeGiornoCompletoIT(giorno, SettimanaCorrente);
-    }
+    public string GetNomeGiorno(DayOfWeek giorno) => 
+        DateHelper.GetNomeGiornoCompletoIT(giorno, SettimanaCorrente);
 
+    // Passa la lezione intera alla pagina, così la pagina può accedere 
+    // a Maestri, Allievi, Orari, ecc.
     [RelayCommand]
-    public async Task GestisciLezione(Lezioni lezione)
-    {
-        // Passa la lezione intera alla pagina, così la pagina può accedere 
-        // a Maestri, Allievi, Orari, ecc.
+    public async Task GestisciLezione(Lezioni lezione) =>
         await Shell.Current.Navigation.PushAsync(new AllieviCorsoPage(lezione));
-    }
+    
 
     public async Task CreaNuovaLezione(DayOfWeek giorno, TimeSpan ora)
     {
@@ -145,41 +137,14 @@ public partial class CalendarioViewModel : BaseViewModel
         await Shell.Current.Navigation.PushAsync(new AllieviCorsoPage(nuovaLezione));
     }
 
-
     // menu di navigazione 
-    [RelayCommand]
-    public async Task NavigaPagamenti()
-    {
-        // Nota: Assicurati che le rotte siano registrate in AppShell.xaml.cs
-        await NavigationService.NavigateToAsync(AppRoutes.Pagamenti.Pagina);
-    }
 
     [RelayCommand]
-    public async Task NavigaStatistiche()
-    {
-        await NavigationService.NavigateToAsync(AppRoutes.Statistiche.Pagina);
-    }
-
-    [RelayCommand]
-    public async Task NavigaImpostazioni()
-    {
-        await NavigationService.NavigateToAsync(AppRoutes.Impostazioni.Pagina);
-    }
-
-    [RelayCommand]
-    public async Task NavigaGestioneCorsi()
-    {
+    public async Task NavigaGestioneCorsi() => 
         await Shell.Current.GoToAsync(AppRoutes.Corsi.PaginaCorsi);
-    }
-}
 
+    [RelayCommand]
+    public async Task NavigaGestioneInsegnanti() =>
+        await Shell.Current.GoToAsync(AppRoutes.Insegnanti.PaginaInsegnanti);
 
-
-public class FasciaOraria
-{
-    public string Nome { get; set; } = string.Empty;
-    public TimeSpan OraInizio { get; set; }
-    public TimeSpan OraFine { get; set; }
-
-    public string TitoloFormattato => $"{Nome}\n({OraInizio:hh\\:mm} - {OraFine:hh\\:mm})";
 }

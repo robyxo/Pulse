@@ -11,6 +11,7 @@
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="15">
 
+            <!--  NOME CORSO  -->
             <Label
                 FontAttributes="Bold"
                 Text="Nome Corso:"
@@ -25,6 +26,7 @@
                     Text="{Binding Nome}" />
             </Border>
 
+            <!--  DESCRIZIONE  -->
             <Label
                 FontAttributes="Bold"
                 Text="Descrizione:"
@@ -34,15 +36,79 @@
                 Stroke="#CBD5E1"
                 StrokeShape="RoundRectangle 8">
                 <Editor
-                    HeightRequest="90"
+                    HeightRequest="80"
                     Placeholder="Inserisci dettagli del corso..."
                     Text="{Binding Descrizione}" />
             </Border>
 
+            <!--  PREZZI ABBONAMENTO  -->
+            <Label
+                FontAttributes="Bold"
+                Text="Prezzi Abbonamento (€):"
+                TextColor="#1E293B" />
+
+            <Grid ColumnDefinitions="*, *, *" ColumnSpacing="10">
+                <!--  Singolo  -->
+                <VerticalStackLayout Grid.Column="0" Spacing="4">
+                    <Label
+                        FontSize="12"
+                        Text="Singolo"
+                        TextColor="#64748B" />
+                    <Border
+                        Padding="8,0"
+                        Stroke="#CBD5E1"
+                        StrokeShape="RoundRectangle 8">
+                        <Entry
+                            HeightRequest="40"
+                            Keyboard="Numeric"
+                            Placeholder="0,00"
+                            Text="{Binding CostoSingolo, StringFormat='{0:N2}'}" />
+                    </Border>
+                </VerticalStackLayout>
+
+                <!--  Mensile  -->
+                <VerticalStackLayout Grid.Column="1" Spacing="4">
+                    <Label
+                        FontSize="12"
+                        Text="Mensile"
+                        TextColor="#64748B" />
+                    <Border
+                        Padding="8,0"
+                        Stroke="#CBD5E1"
+                        StrokeShape="RoundRectangle 8">
+                        <Entry
+                            HeightRequest="40"
+                            Keyboard="Numeric"
+                            Placeholder="0,00"
+                            Text="{Binding CostoMensile, StringFormat='{0:N2}'}" />
+                    </Border>
+                </VerticalStackLayout>
+
+                <!--  Annuale  -->
+                <VerticalStackLayout Grid.Column="2" Spacing="4">
+                    <Label
+                        FontSize="12"
+                        Text="Annuale"
+                        TextColor="#64748B" />
+                    <Border
+                        Padding="8,0"
+                        Stroke="#CBD5E1"
+                        StrokeShape="RoundRectangle 8">
+                        <Entry
+                            HeightRequest="40"
+                            Keyboard="Numeric"
+                            Placeholder="0,00"
+                            Text="{Binding CostoAnnuale, StringFormat='{0:N2}'}" />
+                    </Border>
+                </VerticalStackLayout>
+            </Grid>
+
+            <!--  COLORE IDENTIFICATIVO  -->
             <Label
                 FontAttributes="Bold"
                 Text="Colore identificativo:"
                 TextColor="#1E293B" />
+
             <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
                 <Border
                     BackgroundColor="{Binding ColoreHex}"
@@ -54,25 +120,26 @@
                     Padding="10,0"
                     Stroke="#CBD5E1"
                     StrokeShape="RoundRectangle 8"
-                    WidthRequest="150">
+                    WidthRequest="140">
                     <Entry
                         HeightRequest="45"
-                        Placeholder="#FF0000"
+                        Placeholder="#4F46E5"
                         Text="{Binding ColoreHex}" />
                 </Border>
             </HorizontalStackLayout>
 
             <Label
                 FontSize="12"
-                Text="Oppure scegli un colore rapido:"
+                Text="Scegli un colore rapido:"
                 TextColor="#64748B" />
+
             <FlexLayout
                 AlignItems="Center"
                 Direction="Row"
                 JustifyContent="Start"
                 Wrap="Wrap">
                 <Button
-                    Margin="4"
+                    Margin="3"
                     BackgroundColor="#EDFF21"
                     Command="{Binding SelezionaColorePresetCommand}"
                     CommandParameter="#EDFF21"
@@ -80,7 +147,7 @@
                     HeightRequest="36"
                     WidthRequest="36" />
                 <Button
-                    Margin="4"
+                    Margin="3"
                     BackgroundColor="#00913F"
                     Command="{Binding SelezionaColorePresetCommand}"
                     CommandParameter="#00913F"
@@ -88,7 +155,7 @@
                     HeightRequest="36"
                     WidthRequest="36" />
                 <Button
-                    Margin="4"
+                    Margin="3"
                     BackgroundColor="#FF6088"
                     Command="{Binding SelezionaColorePresetCommand}"
                     CommandParameter="#FF6088"
@@ -96,7 +163,7 @@
                     HeightRequest="36"
                     WidthRequest="36" />
                 <Button
-                    Margin="4"
+                    Margin="3"
                     BackgroundColor="#FF0000"
                     Command="{Binding SelezionaColorePresetCommand}"
                     CommandParameter="#FF0000"
@@ -104,7 +171,7 @@
                     HeightRequest="36"
                     WidthRequest="36" />
                 <Button
-                    Margin="4"
+                    Margin="3"
                     BackgroundColor="#0000FF"
                     Command="{Binding SelezionaColorePresetCommand}"
                     CommandParameter="#0000FF"
@@ -112,7 +179,7 @@
                     HeightRequest="36"
                     WidthRequest="36" />
                 <Button
-                    Margin="4"
+                    Margin="3"
                     BackgroundColor="#FF00FF"
                     Command="{Binding SelezionaColorePresetCommand}"
                     CommandParameter="#FF00FF"
@@ -120,7 +187,7 @@
                     HeightRequest="36"
                     WidthRequest="36" />
                 <Button
-                    Margin="4"
+                    Margin="3"
                     BackgroundColor="#4F46E5"
                     Command="{Binding SelezionaColorePresetCommand}"
                     CommandParameter="#4F46E5"
@@ -129,8 +196,9 @@
                     WidthRequest="36" />
             </FlexLayout>
 
+            <!--  PULSANTI AZIONE  -->
             <Button
-                Margin="0,20,0,0"
+                Margin="0,15,0,0"
                 BackgroundColor="#10B981"
                 Command="{Binding SalvaCorsoCommand}"
                 CornerRadius="8"
@@ -138,6 +206,17 @@
                 HeightRequest="48"
                 Text="Salva Corso"
                 TextColor="White" />
+
+            <Button
+                BackgroundColor="#EF4444"
+                Command="{Binding EliminaCorsoCommand}"
+                CornerRadius="8"
+                FontAttributes="Bold"
+                HeightRequest="48"
+                IsVisible="{Binding IsEdizione}"
+                Text="Elimina Corso"
+                TextColor="White" />
+
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

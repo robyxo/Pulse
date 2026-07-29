@@ -25,6 +25,8 @@ public interface IDatabaseService
     // MAESTRI E ALLIEVI
     // ================================================
     Task<List<Insegnanti>> GetInsegnantiAttiviAsync();
+    Task<bool> SalvaInsegnanteAsync(Insegnanti insegnante);
+    Task<bool> EliminaInsegnanteAsync(int id);
     Task<List<Insegnanti>> GetInsegnantiAttivi(); // Alias
     Task<List<Allievi>> GetAllieviPerCorsoAsync(int corsoId);
     Task<List<Allievi>> GetAllieviPerCorso(int corsoId); // Alias

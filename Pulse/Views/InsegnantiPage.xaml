@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage
-    x:Class="Pulse.Views.CorsiPage"
+    x:Class="Pulse.Views.InsegnantiPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:models="clr-namespace:Pulse.Models"
     xmlns:vm="clr-namespace:Pulse.ViewModels"
     x:Name="PageRoot"
-    Title="Gestione Corsi"
-    x:DataType="vm:CorsiViewModel"
+    Title="Gestione Insegnanti"
+    x:DataType="vm:InsegnantiViewModel"
     BackgroundColor="#F8FAFC">
 
     <Grid RowDefinitions="Auto, *">
-        <!--  PULSANTE NUOVO CORSO  -->
         <Border
             Grid.Row="0"
             Margin="15,15,15,10"
@@ -18,18 +18,17 @@
             StrokeShape="RoundRectangle 8">
             <Button
                 BackgroundColor="#10B981"
-                Command="{Binding NuovoCorsoCommand}"
+                Command="{Binding NuovoInsegnanteCommand}"
                 FontAttributes="Bold"
                 HeightRequest="48"
-                Text="+ Nuovo Corso"
+                Text="+ Nuovo Insegnante"
                 TextColor="White" />
         </Border>
 
-        <!--  LISTA CORSI  -->
         <CollectionView
             Grid.Row="1"
             Margin="15,0,15,15"
-            ItemsSource="{Binding ListaCorsi}"
+            ItemsSource="{Binding ListaInsegnanti}"
             SelectionMode="None">
 
             <CollectionView.EmptyView>
@@ -41,16 +40,17 @@
                     <Label
                         FontSize="40"
                         HorizontalOptions="Center"
-                        Text="📚" />
+                        Text="👨‍🏫" />
                     <Label
                         FontSize="14"
                         HorizontalOptions="Center"
-                        Text="Nessun corso presente."
+                        Text="Nessun insegnante presente."
                         TextColor="#64748B" />
                 </VerticalStackLayout>
             </CollectionView.EmptyView>
 
             <CollectionView.ItemTemplate>
+                <!--  🟢 Cambiamo x:DataType in x:Object per sbloccare il binding verso il ViewModel  -->
                 <DataTemplate x:DataType="x:Object">
                     <Border
                         Margin="0,0,0,10"
@@ -63,58 +63,41 @@
                             ColumnSpacing="12"
                             VerticalOptions="Center">
 
-                            <!--  Badge Colore Corso  -->
-                            <Border
+                            <Label
                                 Grid.Column="0"
-                                BackgroundColor="{Binding Colore}"
-                                HeightRequest="32"
-                                StrokeShape="RoundRectangle 16"
-                                VerticalOptions="Center"
-                                WidthRequest="32" />
+                                FontSize="20"
+                                Text="👤"
+                                VerticalOptions="Center" />
 
-                            <!--  Dettagli Corso  -->
                             <VerticalStackLayout
                                 Grid.Column="1"
                                 Spacing="2"
                                 VerticalOptions="Center">
-
                                 <Label
                                     FontAttributes="Bold"
                                     FontSize="15"
-                                    Text="{Binding Nome}"
-                                    TextColor="#1E293B" />
-
-                                <Label
-                                    FontSize="12"
-                                    LineBreakMode="TailTruncation"
-                                    Text="{Binding Descrizione}"
-                                    TextColor="#64748B" />
-
-                                <!--  💶 PREZZI ABBONAMENTO (SINGOLO E MENSILE)  -->
-                                <Label
-                                    Margin="0,2,0,0"
-                                    FontAttributes="Bold"
-                                    FontSize="11"
-                                    TextColor="#10B981">
+                                    TextColor="#1E293B">
                                     <Label.FormattedText>
                                         <FormattedString>
-                                            <Span Text="Singolo: € " />
-                                            <Span Text="{Binding CostoSingolo, StringFormat='{0:N2}'}" />
-                                            <Span Text=" | Mensile: € " />
-                                            <Span Text="{Binding CostoMensile, StringFormat='{0:N2}'}" />
-                                            <Span Text=" | Annuale: € " />
-                                            <Span Text="{Binding CostoAnnuale, StringFormat='{0:N2}'}" />
+                                            <Span Text="{Binding Nome}" />
+                                            <Span Text=" " />
+                                            <Span Text="{Binding Cognome}" />
                                         </FormattedString>
                                     </Label.FormattedText>
                                 </Label>
+                                <Label
+                                    FontSize="12"
+                                    LineBreakMode="TailTruncation"
+                                    Text="{Binding Telefono, StringFormat='📞 {0}'}"
+                                    TextColor="#64748B" />
                             </VerticalStackLayout>
 
-                            <!--  PULSANTE MODIFICA MATITA  -->
+                            <!--  PULSANTE MODIFICA  -->
                             <Button
                                 Grid.Column="2"
                                 Padding="0"
                                 BackgroundColor="#F1F5F9"
-                                Command="{Binding BindingContext.ModificaCorsoCommand, Source={x:Reference PageRoot}}"
+                                Command="{Binding BindingContext.ModificaInsegnanteCommand, Source={x:Reference PageRoot}}"
                                 CommandParameter="{Binding .}"
                                 CornerRadius="18"
                                 FontSize="16"
@@ -122,12 +105,12 @@
                                 Text="✏️"
                                 WidthRequest="36" />
 
-                            <!--  PULSANTE ELIMINA CESTINO  -->
+                            <!--  PULSANTE ELIMINA  -->
                             <Button
                                 Grid.Column="3"
                                 Padding="0"
                                 BackgroundColor="#FEE2E2"
-                                Command="{Binding BindingContext.EliminaCorsoCommand, Source={x:Reference PageRoot}}"
+                                Command="{Binding BindingContext.EliminaInsegnanteCommand, Source={x:Reference PageRoot}}"
                                 CommandParameter="{Binding .}"
                                 CornerRadius="18"
                                 FontSize="16"

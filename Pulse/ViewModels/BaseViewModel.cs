@@ -21,10 +21,9 @@ public partial class BaseViewModel : ObservableObject
     }
 
     // Costruttore con NavigationService
-    public BaseViewModel(INavigationService navigationService)
-    {
+    public BaseViewModel(INavigationService navigationService) =>
         NavigationService = navigationService;
-    }
+    
 
     // ================================================
     // METODO PER CARICAMENTO DATI

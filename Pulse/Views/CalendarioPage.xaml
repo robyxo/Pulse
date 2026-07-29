@@ -89,20 +89,25 @@
                 Clicked="OnToggleMenuClicked"
                 Text="▼ Menu Azioni"
                 TextColor="Gray" />
-
             <VerticalStackLayout
                 x:Name="MenuVoci"
                 IsVisible="False"
                 Spacing="5">
+
+                <Button
+                    BackgroundColor="#0284C7"
+                    Command="{Binding NavigaGestioneInsegnantiCommand}"
+                    FontAttributes="Bold"
+                    Text="👨‍🏫 Gestione Insegnanti"
+                    TextColor="White" />
+
                 <Button
                     BackgroundColor="#4F46E5"
                     Command="{Binding NavigaGestioneCorsiCommand}"
                     FontAttributes="Bold"
                     Text="📚 Gestione Corsi"
                     TextColor="White" />
-                <Button Command="{Binding NavigaPagamentiCommand}" Text="Pagamenti" />
-                <Button Command="{Binding NavigaStatisticheCommand}" Text="Statistiche" />
-                <Button Command="{Binding NavigaImpostazioniCommand}" Text="Impostazioni" />
+
             </VerticalStackLayout>
         </VerticalStackLayout>
 

@@ -1,5 +1,4 @@
-﻿// ViewModels/CorsiViewModel.cs
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Pulse.Models;
 using Pulse.Services;
@@ -8,40 +7,32 @@ using System.Collections.ObjectModel;
 
 namespace Pulse.ViewModels;
 
-public partial class CorsiViewModel : ObservableObject
+public partial class CorsiViewModel : BaseViewModel
 {
     private readonly IDatabaseService _dbService;
 
     [ObservableProperty]
     private ObservableCollection<Corsi> _listaCorsi = new();
 
-    [ObservableProperty]
-    private bool _isBusy;
-
-    public CorsiViewModel(IDatabaseService dbService)
+    public CorsiViewModel(INavigationService navigationService, IDatabaseService dbService)
+        : base(navigationService)
     {
         _dbService = dbService;
+        Title = "Gestione Corsi";
     }
 
     [RelayCommand]
     public async Task CaricaCorsiAsync()
     {
-        if (IsBusy) return;
-
-        try
+        await EseguiConCaricamento(async () =>
         {
-            IsBusy = true;
             ListaCorsi.Clear();
             var corsi = await _dbService.GetCorsiAttiviAsync();
             foreach (var corso in corsi)
             {
                 ListaCorsi.Add(corso);
             }
-        }
-        finally
-        {
-            IsBusy = false;
-        }
+        });
     }
 
     [RelayCommand]
@@ -79,8 +70,11 @@ public partial class CorsiViewModel : ObservableObject
 
         if (confermato)
         {
-            await _dbService.EliminaCorsoAsync(corso);
-            await CaricaCorsiAsync();
+            await EseguiConCaricamento(async () =>
+            {
+                await _dbService.EliminaCorsoAsync(corso);
+                await CaricaCorsiAsync();
+            });
         }
     }
 }
