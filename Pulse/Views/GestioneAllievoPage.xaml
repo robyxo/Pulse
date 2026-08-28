@@ -4,6 +4,7 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:vm="clr-namespace:Pulse.ViewModels"
+    x:Name="PageRoot"
     Title="Gestione Allievo"
     x:DataType="vm:GestioneAllievoViewModel"
     BackgroundColor="#F8FAFC">
@@ -11,6 +12,7 @@
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="15">
 
+            <!--  DATI ANAGRAFICI  -->
             <Label
                 FontAttributes="Bold"
                 Text="Nome:"
@@ -53,37 +55,213 @@
                     Text="{Binding CodiceFiscale}" />
             </Border>
 
-            <Label
-                FontAttributes="Bold"
-                Text="Telefono:"
-                TextColor="#1E293B" />
+            <Grid ColumnDefinitions="*, *">
+                <VerticalStackLayout Grid.Column="0" Spacing="4">
+                    <Label
+                        FontAttributes="Bold"
+                        Text="Telefono:"
+                        TextColor="#1E293B" />
+                    <Border
+                        Padding="10,0"
+                        Stroke="#CBD5E1"
+                        StrokeShape="RoundRectangle 8">
+                        <Entry
+                            HeightRequest="45"
+                            Keyboard="Telephone"
+                            Text="{Binding Telefono}" />
+                    </Border>
+                </VerticalStackLayout>
+                <VerticalStackLayout
+                    Grid.Column="1"
+                    Margin="10,0,0,0"
+                    Spacing="4">
+                    <Label
+                        FontAttributes="Bold"
+                        Text="Email:"
+                        TextColor="#1E293B" />
+                    <Border
+                        Padding="10,0"
+                        Stroke="#CBD5E1"
+                        StrokeShape="RoundRectangle 8">
+                        <Entry
+                            HeightRequest="45"
+                            Keyboard="Email"
+                            Text="{Binding Email}" />
+                    </Border>
+                </VerticalStackLayout>
+            </Grid>
+
+            <!--  ================= SEZIONE STORICO ABBONAMENTI =================  -->
             <Border
-                Padding="10,0"
-                Stroke="#CBD5E1"
-                StrokeShape="RoundRectangle 8">
-                <Entry
-                    HeightRequest="45"
-                    Keyboard="Telephone"
-                    Placeholder="Es. +39 333 1234567"
-                    Text="{Binding Telefono}" />
+                Margin="0,10,0,0"
+                Padding="15"
+                BackgroundColor="White"
+                Stroke="#E2E8F0"
+                StrokeShape="RoundRectangle 12">
+                <VerticalStackLayout Spacing="12">
+
+                    <Grid ColumnDefinitions="*, Auto">
+                        <Label
+                            Grid.Column="0"
+                            FontAttributes="Bold"
+                            FontSize="16"
+                            Text="💳 Storico Abbonamenti"
+                            TextColor="#1E293B"
+                            VerticalOptions="Center" />
+
+                        <!--  + NUOVO ABBONAMENTO  -->
+                        <Button
+                            Grid.Column="1"
+                            BackgroundColor="#4F46E5"
+                            Command="{Binding ApriPopupNuovoAbbonamentoCommand}"
+                            CornerRadius="6"
+                            FontAttributes="Bold"
+                            FontSize="12"
+                            HeightRequest="36"
+                            Text="+ Nuovo Abbonamento"
+                            TextColor="White" />
+                    </Grid>
+
+                    <!--  LISTA ABBONAMENTI  -->
+                    <CollectionView ItemsSource="{Binding ListaAbbonamenti}" SelectionMode="None">
+                        <CollectionView.EmptyView>
+                            <Label
+                                Margin="0,10"
+                                FontSize="12"
+                                HorizontalOptions="Center"
+                                Text="Nessun abbonamento registrato."
+                                TextColor="#94A3B8" />
+                        </CollectionView.EmptyView>
+
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="x:Object">
+                                <Border
+                                    Margin="0,0,0,8"
+                                    Padding="12"
+                                    BackgroundColor="#F8FAFC"
+                                    Stroke="{Binding ColoreStatoHex}"
+                                    StrokeShape="RoundRectangle 8"
+                                    StrokeThickness="1.5">
+                                    <Grid
+                                        ColumnDefinitions="*, Auto, Auto"
+                                        ColumnSpacing="6"
+                                        RowDefinitions="Auto, Auto"
+                                        RowSpacing="4">
+
+                                        <!--  Nome Corso e Tipo  -->
+                                        <VerticalStackLayout Grid.Row="0" Grid.Column="0">
+                                            <Label
+                                                FontAttributes="Bold"
+                                                FontSize="14"
+                                                Text="{Binding Corso.Nome}"
+                                                TextColor="#1E293B" />
+                                            <Label
+                                                FontSize="12"
+                                                Text="{Binding TipoAbbonamento}"
+                                                TextColor="#64748B" />
+                                        </VerticalStackLayout>
+
+                                        <!--  Badge Stato  -->
+                                        <Border
+                                            Grid.Row="0"
+                                            Grid.Column="1"
+                                            Padding="8,2"
+                                            BackgroundColor="{Binding ColoreStatoHex}"
+                                            StrokeShape="RoundRectangle 12">
+                                            <Label
+                                                FontAttributes="Bold"
+                                                FontSize="11"
+                                                Text="{Binding StatoTesto}"
+                                                TextColor="White" />
+                                        </Border>
+
+                                        <!--  Scadenza e Importo  -->
+                                        <VerticalStackLayout
+                                            Grid.Row="1"
+                                            Grid.Column="0"
+                                            Grid.ColumnSpan="2"
+                                            Margin="0,4,0,0">
+                                            <Label FontSize="12" TextColor="#475569">
+                                                <Label.FormattedText>
+                                                    <FormattedString>
+                                                        <Span Text="Scadenza: " />
+                                                        <Span FontAttributes="Bold" Text="{Binding DataScadenza, StringFormat='{0:dd/MM/yyyy}'}" />
+                                                        <Span Text=" | Importo: € " />
+                                                        <Span
+                                                            FontAttributes="Bold"
+                                                            Text="{Binding ImportoTotale, StringFormat='{0:N2}'}"
+                                                            TextColor="#10B981" />
+                                                    </FormattedString>
+                                                </Label.FormattedText>
+                                            </Label>
+                                        </VerticalStackLayout>
+
+                                        <!--  CONTROLLI: STAMPA 🖨️ - PLAY/PAUSA ⏯️ - RINNOVA 🔄 - CESTINO 🗑️  -->
+                                        <HorizontalStackLayout
+                                            Grid.Row="0"
+                                            Grid.RowSpan="2"
+                                            Grid.Column="2"
+                                            Spacing="4"
+                                            VerticalOptions="Center">
+
+                                            <!--  🖨️ Stampa  -->
+                                            <Button
+                                                Padding="0"
+                                                BackgroundColor="#F1F5F9"
+                                                Command="{Binding BindingContext.StampaRicevutaCommand, Source={x:Reference PageRoot}}"
+                                                CommandParameter="{Binding .}"
+                                                CornerRadius="16"
+                                                FontSize="14"
+                                                HeightRequest="32"
+                                                Text="🖨️"
+                                                WidthRequest="32" />
+
+                                            <!--  ⏯️ Play / Pause  -->
+                                            <Button
+                                                Padding="0"
+                                                BackgroundColor="#E2E8F0"
+                                                Command="{Binding BindingContext.ToggleSospensioneAbbonamentoCommand, Source={x:Reference PageRoot}}"
+                                                CommandParameter="{Binding .}"
+                                                CornerRadius="16"
+                                                FontSize="14"
+                                                HeightRequest="32"
+                                                Text="{Binding IconaPausaTesto}"
+                                                WidthRequest="32" />
+
+                                            <!--  🔄 Rinnova  -->
+                                            <Button
+                                                Padding="0"
+                                                BackgroundColor="#DBEAFE"
+                                                Command="{Binding BindingContext.RinnovaAbbonamentoCommand, Source={x:Reference PageRoot}}"
+                                                CommandParameter="{Binding .}"
+                                                CornerRadius="16"
+                                                FontSize="14"
+                                                HeightRequest="32"
+                                                Text="🔄"
+                                                WidthRequest="32" />
+
+                                            <!--  🗑️ Elimina  -->
+                                            <Button
+                                                Padding="0"
+                                                BackgroundColor="#FEE2E2"
+                                                Command="{Binding BindingContext.EliminaAbbonamentoCommand, Source={x:Reference PageRoot}}"
+                                                CommandParameter="{Binding .}"
+                                                CornerRadius="16"
+                                                FontSize="14"
+                                                HeightRequest="32"
+                                                Text="🗑️"
+                                                WidthRequest="32" />
+                                        </HorizontalStackLayout>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+
+                </VerticalStackLayout>
             </Border>
 
-            <Label
-                FontAttributes="Bold"
-                Text="Email:"
-                TextColor="#1E293B" />
-            <Border
-                Padding="10,0"
-                Stroke="#CBD5E1"
-                StrokeShape="RoundRectangle 8">
-                <Entry
-                    HeightRequest="45"
-                    Keyboard="Email"
-                    Placeholder="Es. mario.rossi@email.com"
-                    Text="{Binding Email}" />
-            </Border>
-
-            <!--  PULSANTI SALVA ED ELIMINA  -->
+            <!--  PULSANTI SALVA ED ELIMINA ALLIEVO  -->
             <Button
                 Margin="0,15,0,0"
                 BackgroundColor="#10B981"

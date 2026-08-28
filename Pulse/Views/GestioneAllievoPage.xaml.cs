@@ -1,10 +1,12 @@
-﻿namespace Pulse.Views
+﻿using Pulse.ViewModels;
+
+namespace Pulse.Views;
+
+public partial class GestioneAllievoPage : ContentPage
 {
-    public partial class GestioneAllievoPage : ContentPage
+    public GestioneAllievoPage(GestioneAllievoViewModel viewModel)
     {
-        public GestioneAllievoPage()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
+        BindingContext = viewModel;
     }
 }

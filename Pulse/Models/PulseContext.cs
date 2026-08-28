@@ -15,6 +15,8 @@ public partial class PulseContext : DbContext
     {
     }
 
+    public virtual DbSet<Abbonamenti> Abbonamentis { get; set; }
+
     public virtual DbSet<Allievi> Allievis { get; set; }
 
     public virtual DbSet<Corsi> Corsis { get; set; }
@@ -29,6 +31,22 @@ public partial class PulseContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Abbonamenti>(entity =>
+        {
+            entity.ToTable("Abbonamenti");
+
+            entity.HasIndex(e => e.AllievoId, "IX_Abbonamenti_AllievoId");
+
+            entity.HasIndex(e => e.CorsoId, "IX_Abbonamenti_CorsoId");
+
+            entity.Property(e => e.Attivo).HasDefaultValue(1);
+            entity.Property(e => e.TipoAbbonamento).HasDefaultValue("Mensile");
+
+            entity.HasOne(d => d.Allievo).WithMany(p => p.Abbonamentis).HasForeignKey(d => d.AllievoId);
+
+            entity.HasOne(d => d.Corso).WithMany(p => p.Abbonamentis).HasForeignKey(d => d.CorsoId);
+        });
+
         modelBuilder.Entity<Allievi>(entity =>
         {
             entity.ToTable("Allievi");

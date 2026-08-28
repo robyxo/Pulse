@@ -17,15 +17,16 @@ public partial class Allievi
 
     public string? Email { get; set; }
 
-    public string? Allegati { get; set; }
+    public string? DataNascita { get; set; }
 
-    public DateTime? DataNascita { get; set; }
+    public string? Allegati { get; set; }
 
     public int? Attivo { get; set; }
 
     // Proprietà calcolata comoda per la visualizzazione nelle liste
-
     public string NomeCompleto => $"{Nome} {Cognome}";
+
+    public virtual ICollection<Abbonamenti> Abbonamentis { get; set; } = new List<Abbonamenti>();
 
     public virtual ICollection<Iscrizioni> Iscrizionis { get; set; } = new List<Iscrizioni>();
 

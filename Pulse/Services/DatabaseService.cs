@@ -143,11 +143,17 @@ public class DatabaseService : IDatabaseService
 
     public async Task<List<Allievi>> GetAllieviPerCorsoAsync(int corsoId)
     {
-        return await _context.Iscrizionis
-            .Where(i => i.CorsoId == corsoId && i.Attivo == 1)
-            .Include(i => i.Allievo)
-            .Select(i => i.Allievo!)
-            .Where(a => a != null && a.Attivo == 1)
+        var dataOggi = DateTime.Now.Date;
+
+        return await _context.Abbonamentis
+            .Where(a => a.CorsoId == corsoId
+                     && a.Attivo == 1
+                     && a.IsSospeso == 0
+                     && a.DataScadenza.Date >= dataOggi)
+            .Include(a => a.Allievo)
+            .Select(a => a.Allievo!)
+            .Where(allievo => allievo != null && allievo.Attivo == 1)
+            .Distinct()
             .OrderBy(a => a.Cognome)
             .ThenBy(a => a.Nome)
             .ToListAsync();
@@ -181,19 +187,56 @@ public class DatabaseService : IDatabaseService
 
     public async Task<List<Allievi>> GetAllieviPerLezioneAsync(int lezioneId)
     {
-        var lezione = await _context.Lezionis
-            .Include(l => l.Corso)
-                .ThenInclude(c => c.Iscrizionis)
-                    .ThenInclude(i => i.Allievo)
-            .FirstOrDefaultAsync(l => l.Id == lezioneId);
+        var lezione = await _context.Lezionis.FindAsync(lezioneId);
+        if (lezione == null) return new List<Allievi>();
 
-        if (lezione?.Corso == null) return new List<Allievi>();
+        return await GetAllieviPerCorsoAsync(lezione.CorsoId);
+    }
 
-        return lezione.Corso.Iscrizionis
-            .Where(i => i.Attivo == 1 && i.Allievo != null && i.Allievo.Attivo == 1)
-            .Select(i => i.Allievo!)
-            .OrderBy(a => a.Cognome)
-            .ThenBy(a => a.Nome)
-            .ToList();
+    // ================================================
+    // ABBONAMENTI
+    // ================================================
+
+    public async Task<List<Abbonamenti>> GetAbbonamentiAllievoAsync(int allievoId)
+    {
+        return await _context.Abbonamentis
+            .Include(a => a.Corso)
+            .Where(a => a.AllievoId == allievoId && a.Attivo == 1)
+            .OrderByDescending(a => a.DataInizio)
+            .ToListAsync();
+    }
+
+    public async Task<bool> SalvaAbbonamentoAsync(Abbonamenti abbonamento)
+    {
+        if (abbonamento.Id == 0)
+        {
+            abbonamento.Attivo = 1;
+            _context.Abbonamentis.Add(abbonamento);
+        }
+        else
+        {
+            _context.Abbonamentis.Update(abbonamento);
+        }
+
+        return await _context.SaveChangesAsync() > 0;
+    }
+
+    public async Task<bool> EliminaAbbonamentoAsync(int id)
+    {
+        var abb = await _context.Abbonamentis.FindAsync(id);
+        if (abb == null) return false;
+
+        abb.Attivo = 0; // Soft delete
+        _context.Abbonamentis.Update(abb);
+        return await _context.SaveChangesAsync() > 0;
+    }
+
+    public async Task<bool> EliminaLezioneAsync(int id)
+    {
+        var lezione = await _context.Lezionis.FindAsync(id);
+        if (lezione == null) return false;
+
+        _context.Lezionis.Remove(lezione);
+        return await _context.SaveChangesAsync() > 0;
     }
 }

@@ -20,6 +20,7 @@ public interface IDatabaseService
     Task<List<Lezioni>> GetLezioniSettimana(DateTime dataRiferimento); // Alias
     Task<bool> SalvaLezioneAsync(Lezioni lezione);
     Task<bool> SalvaLezione(Lezioni lezione); // Alias
+    Task<bool> EliminaLezioneAsync(int id);
 
     // ================================================
     // MAESTRI
@@ -39,4 +40,13 @@ public interface IDatabaseService
     Task<List<Allievi>> GetAllieviPerLezioneAsync(int lezioneId);
     Task<bool> SalvaAllievoAsync(Allievi allievo);
     Task<bool> EliminaAllievoAsync(int id);
+
+    // ================================================
+    // Abbonamenti
+    // ================================================
+
+    Task<List<Abbonamenti>> GetAbbonamentiAllievoAsync(int allievoId);
+    Task<bool> SalvaAbbonamentoAsync(Abbonamenti abbonamento);
+    Task<bool> EliminaAbbonamentoAsync(int id);
+
 }
