@@ -272,7 +272,6 @@ public partial class CalendarioPage : ContentPage
 
         if (string.IsNullOrWhiteSpace(resInizio) || !TimeSpan.TryParse(resInizio, out var nuovaOraInizio))
             return;
-
         string resFine = await DisplayPromptAsync(
             $"Modifica {fascia.Nome}",
             "Inserisci l'orario di FINE (es. 13:00 o 18:00):",

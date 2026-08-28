@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Pulse.Models;
 
@@ -18,4 +19,6 @@ public partial class Insegnanti
     public int? Attivo { get; set; }
 
     public virtual ICollection<Lezioni> Lezionis { get; set; } = new List<Lezioni>();
+    [NotMapped]
+    public string NomeCompleto => $"{Nome} {Cognome}".Trim();
 }

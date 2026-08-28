@@ -3,37 +3,62 @@
     x:Class="Pulse.Views.GestioneLezionePage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:Pulse.ViewModels"
     Title="Gestione Lezione"
+    x:DataType="vm:GestioneLezioneViewModel"
     BackgroundColor="#F8FAFC">
 
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="15">
 
+            <!--  CORSO  -->
             <Label
                 FontAttributes="Bold"
                 Text="Corso:"
                 TextColor="#1E293B" />
             <Border
-                Padding="5,0"
+                Padding="10,0"
                 Stroke="#CBD5E1"
                 StrokeShape="RoundRectangle 8">
                 <Picker
-                    x:Name="PickerCorsi"
+                    Title="Seleziona Corso"
                     ItemDisplayBinding="{Binding Nome}"
-                    SelectedIndexChanged="OnCorsoChanged" />
+                    ItemsSource="{Binding ListaCorsi}"
+                    SelectedItem="{Binding CorsoSelezionato}" />
             </Border>
 
+            <!--  MAESTRO / INSEGNANTE  -->
             <Label
                 FontAttributes="Bold"
-                Text="Maestro:"
+                Text="Maestro / Insegnante:"
                 TextColor="#1E293B" />
             <Border
-                Padding="5,0"
+                Padding="10,0"
                 Stroke="#CBD5E1"
                 StrokeShape="RoundRectangle 8">
-                <Picker x:Name="PickerMaestri" ItemDisplayBinding="{Binding Nome}" />
+                <Picker
+                    Title="Seleziona Maestro"
+                    ItemDisplayBinding="{Binding NomeCompleto}"
+                    ItemsSource="{Binding ListaMaestri}"
+                    SelectedItem="{Binding MaestroSelezionato}" />
             </Border>
 
+            <!--  GIORNO  -->
+            <Label
+                FontAttributes="Bold"
+                Text="Giorno della Settimana:"
+                TextColor="#1E293B" />
+            <Border
+                Padding="10,0"
+                Stroke="#CBD5E1"
+                StrokeShape="RoundRectangle 8">
+                <Picker
+                    Title="Seleziona Giorno"
+                    ItemsSource="{Binding GiorniSettimana}"
+                    SelectedItem="{Binding GiornoSelezionato}" />
+            </Border>
+
+            <!--  ORARI  -->
             <Grid ColumnDefinitions="*, *" ColumnSpacing="10">
                 <VerticalStackLayout Grid.Column="0" Spacing="5">
                     <Label
@@ -45,9 +70,9 @@
                         Stroke="#CBD5E1"
                         StrokeShape="RoundRectangle 8">
                         <TimePicker
-                            x:Name="TimeInizio"
                             Format="HH:mm"
-                            HorizontalOptions="Center" />
+                            HorizontalOptions="Center"
+                            Time="{Binding OraInizio}" />
                     </Border>
                 </VerticalStackLayout>
 
@@ -61,13 +86,14 @@
                         Stroke="#CBD5E1"
                         StrokeShape="RoundRectangle 8">
                         <TimePicker
-                            x:Name="TimeFine"
                             Format="HH:mm"
-                            HorizontalOptions="Center" />
+                            HorizontalOptions="Center"
+                            Time="{Binding OraFine}" />
                     </Border>
                 </VerticalStackLayout>
             </Grid>
 
+            <!--  SEZIONE ALLIEVI ISCRITTI  -->
             <Border
                 Margin="0,10,0,0"
                 Padding="15"
@@ -76,59 +102,87 @@
                 StrokeShape="RoundRectangle 10">
                 <VerticalStackLayout Spacing="10">
                     <Label
-                        x:Name="LblTitoloAllievi"
                         FontAttributes="Bold"
                         FontSize="14"
-                        Text="👥 Allievi Iscritti al Corso"
+                        Text="{Binding TitoloAllievi}"
                         TextColor="#4F46E5" />
 
                     <Label
-                        x:Name="LblNessunAllievo"
                         FontSize="12"
-                        IsVisible="False"
-                        Text="Nessun allievo iscritto a questo corso."
+                        IsVisible="{Binding NessunAllievoPresente}"
+                        Text="Nessun allievo con abbonamento attivo per questo corso."
                         TextColor="#64748B" />
 
-                    <CollectionView x:Name="ListaAllievi" SelectionMode="None">
+                    <CollectionView ItemsSource="{Binding ListaAllievi}" SelectionMode="None">
                         <CollectionView.ItemTemplate>
-                            <DataTemplate>
-                                <Grid
-                                    Padding="0,6"
-                                    ColumnDefinitions="Auto, *"
-                                    ColumnSpacing="10">
-                                    <Label
-                                        Grid.Column="0"
-                                        FontSize="14"
-                                        Text="👤"
-                                        VerticalOptions="Center" />
-                                    <Label
-                                        Grid.Column="1"
-                                        FontSize="13"
-                                        TextColor="#1E293B"
+                            <DataTemplate x:DataType="x:Object">
+                                <Border
+                                    Margin="0,0,0,6"
+                                    Padding="10"
+                                    BackgroundColor="#F8FAFC"
+                                    Stroke="#E2E8F0"
+                                    StrokeShape="RoundRectangle 8">
+                                    <Grid
+                                        ColumnDefinitions="Auto, *, Auto"
+                                        ColumnSpacing="10"
                                         VerticalOptions="Center">
-                                        <Label.FormattedText>
-                                            <FormattedString>
-                                                <Span FontAttributes="Bold" Text="{Binding Nome}" />
-                                                <Span Text=" " />
-                                                <Span FontAttributes="Bold" Text="{Binding Cognome}" />
-                                            </FormattedString>
-                                        </Label.FormattedText>
-                                    </Label>
-                                </Grid>
+                                        <Label
+                                            Grid.Column="0"
+                                            FontSize="16"
+                                            Text="👤"
+                                            VerticalOptions="Center" />
+                                        <VerticalStackLayout
+                                            Grid.Column="1"
+                                            Spacing="2"
+                                            VerticalOptions="Center">
+                                            <Label
+                                                FontAttributes="Bold"
+                                                FontSize="13"
+                                                Text="{Binding NomeCompleto}"
+                                                TextColor="#1E293B" />
+                                            <Label
+                                                FontSize="11"
+                                                Text="{Binding TipoAbbonamento}"
+                                                TextColor="#64748B" />
+                                        </VerticalStackLayout>
+                                        <Border
+                                            Grid.Column="2"
+                                            Padding="8,2"
+                                            BackgroundColor="{Binding ColoreStatoHex}"
+                                            StrokeShape="RoundRectangle 12">
+                                            <Label
+                                                FontAttributes="Bold"
+                                                FontSize="10"
+                                                Text="{Binding StatoTesto}"
+                                                TextColor="White" />
+                                        </Border>
+                                    </Grid>
+                                </Border>
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
                     </CollectionView>
                 </VerticalStackLayout>
             </Border>
 
+            <!--  PULSANTI SALVA ED ELIMINA  -->
             <Button
                 Margin="0,15,0,0"
                 BackgroundColor="#10B981"
-                Clicked="OnSalvaClicked"
+                Command="{Binding SalvaLezioneCommand}"
                 CornerRadius="8"
                 FontAttributes="Bold"
                 HeightRequest="48"
                 Text="Salva Lezione"
+                TextColor="White" />
+
+            <Button
+                BackgroundColor="#EF4444"
+                Command="{Binding EliminaLezioneCommand}"
+                CornerRadius="8"
+                FontAttributes="Bold"
+                HeightRequest="48"
+                IsVisible="{Binding IsEdizione}"
+                Text="Elimina Lezione"
                 TextColor="White" />
 
         </VerticalStackLayout>

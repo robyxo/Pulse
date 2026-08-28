@@ -10,6 +10,7 @@ public static class AppRoutes
     public static class Calendario
     {
         public const string Pagina = "calendario";
+        public const string GestioneLezione = "GestioneLezionePage";
     }
 
     public static class Corsi
@@ -23,6 +24,7 @@ public static class AppRoutes
         public const string PaginaInsegnanti = "InsegnantiPage";
         public const string GestioneInsegnante = "GestioneInsegnantePage";
     }
+
     public static class Allievi
     {
         public const string PaginaAllievi = "AllieviPage";

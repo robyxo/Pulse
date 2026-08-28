@@ -119,22 +119,26 @@ public partial class CalendarioViewModel : BaseViewModel
     // Passa la lezione intera alla pagina, così la pagina può accedere 
     // a Maestri, Allievi, Orari, ecc.
     [RelayCommand]
-    public async Task GestisciLezione(Lezioni lezione) =>
-        await Shell.Current.Navigation.PushAsync(new AllieviCorsoPage(lezione));
-    
+    public async Task GestisciLezione(Lezioni lezione)
+    {
+        if (lezione == null) return;
+        var parametri = new Dictionary<string, object> { { "Lezione", lezione } };
+        await Shell.Current.GoToAsync(AppRoutes.Calendario.GestioneLezione, parametri);
+    }
 
     public async Task CreaNuovaLezione(DayOfWeek giorno, TimeSpan ora)
     {
-        // Creiamo una lezione "vuota" con le info base
+        int giornoDb = (int)giorno == 0 ? 7 : (int)giorno;
+
         var nuovaLezione = new Lezioni
         {
-            GiornoSettimana = (int)giorno,
+            GiornoSettimana = giornoDb,
             OraInizio = ora.ToString(@"hh\:mm"),
             OraFine = ora.Add(TimeSpan.FromMinutes(IntervalloMinuti)).ToString(@"hh\:mm")
         };
 
-        // Per ora naviga verso la pagina, poi creeremo la logica di salvataggio
-        await Shell.Current.Navigation.PushAsync(new AllieviCorsoPage(nuovaLezione));
+        var parametri = new Dictionary<string, object> { { "Lezione", nuovaLezione } };
+        await Shell.Current.GoToAsync(AppRoutes.Calendario.GestioneLezione, parametri);
     }
 
     // menu di navigazione 

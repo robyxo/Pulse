@@ -1,4 +1,5 @@
 ﻿using Pulse.Utils;
+using Pulse.Views;
 
 namespace Pulse;
 
@@ -16,9 +17,11 @@ public partial class AppShell : Shell
     {
         var routes = new Dictionary<string, Type>
         {
+            // 📅 Rotte Calendario & Lezioni
             { AppRoutes.Calendario.Pagina, typeof(CalendarioPage) },
+            { AppRoutes.Calendario.GestioneLezione, typeof(GestioneLezionePage) },
             
-            // Rotte Corsi
+            // 📚 Rotte Corsi
             { AppRoutes.Corsi.PaginaCorsi, typeof(CorsiPage) },
             { AppRoutes.Corsi.GestioneCorso, typeof(GestioneCorsoPage) },
 
@@ -35,27 +38,17 @@ public partial class AppShell : Shell
         {
             Routing.RegisterRoute(item.Key, item.Value);
         }
-
-#if DEBUG
-        // rotte per versione debug
-#endif
     }
 
     private void ConfiguraPaginaIniziale()
     {
-        ShellContent mainContent = new ShellContent();
+        ShellContent mainContent = new ShellContent
+        {
+            Title = "Home",
+            Route = AppRoutes.Main.MainPage,
+            ContentTemplate = new DataTemplate(typeof(MainPage))
+        };
 
-#if DEBUG
-        // In Debug parte dalla MainPage
-        mainContent.Title = "Home";
-        mainContent.Route = AppRoutes.Main.MainPage;
-        mainContent.ContentTemplate = new DataTemplate(typeof(MainPage));
-#else
-        // In Release parte dalla AccessoPage
-        mainContent.Title = "Home";
-        mainContent.Route = AppRoutes.Main.MainPage;
-        mainContent.ContentTemplate = new DataTemplate(typeof(MainPage));
-#endif
         Shell.SetNavBarIsVisible(mainContent, false);
         this.Items.Add(mainContent);
     }
