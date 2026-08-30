@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Pulse.DTO;
 using Pulse.Models;
 using Pulse.Services;
 using Pulse.Utils;
@@ -10,13 +11,35 @@ namespace Pulse.ViewModels;
 public partial class AllieviViewModel : BaseViewModel
 {
     private readonly IDatabaseService _dbService;
-    private List<Allievi> _listaAllieviCompleta = new();
+    private List<AllievoTabellaDTO> _listaCompletaDTO = new();
 
     [ObservableProperty]
-    private ObservableCollection<Allievi> _listaAllievi = new();
+    private ObservableCollection<AllievoTabellaDTO> _listaAllievi = new();
 
+    // 🎓 1. Filtro Corsi
+    [ObservableProperty]
+    private ObservableCollection<Corsi> _listaFiltroCorsi = new();
+
+    [ObservableProperty]
+    private Corsi? _corsoSelezionatoFiltro;
+
+    // 🏷️ 2. Filtro Stato Abbonamento
+    [ObservableProperty]
+    private string _statoSelezionatoFiltro = "Tutti gli Stati";
+
+    // 🔍 3. Ricerca Testuale
     [ObservableProperty]
     private string _testoRicerca = string.Empty;
+
+    public List<string> StatiDisponibili { get; } = new()
+    {
+        "Tutti gli Stati",
+        "Attivo",
+        "In Scadenza",
+        "In Pausa",
+        "Scaduto",
+        "Nessuno"
+    };
 
     public AllieviViewModel(INavigationService navigationService, IDatabaseService dbService)
         : base(navigationService)
@@ -25,34 +48,71 @@ public partial class AllieviViewModel : BaseViewModel
         Title = "Gestione Allievi";
     }
 
-    partial void OnTestoRicercaChanged(string value)
-    {
-        ApplicaFiltro();
-    }
+    partial void OnTestoRicercaChanged(string value) => ApplicaFiltri();
+    partial void OnCorsoSelezionatoFiltroChanged(Corsi? value) => ApplicaFiltri();
+    partial void OnStatoSelezionatoFiltroChanged(string value) => ApplicaFiltri();
 
     [RelayCommand]
     public async Task CaricaAllieviAsync()
     {
         await EseguiConCaricamento(async () =>
         {
-            _listaAllieviCompleta = await _dbService.GetAllieviAttiviAsync();
-            ApplicaFiltro();
+            // 1. Carica Corsi per il filtro
+            var corsi = await _dbService.GetCorsiAttiviAsync();
+            var corsiFiltro = new List<Corsi> { new Corsi { Id = 0, Nome = "Tutti i Corsi" } };
+            corsiFiltro.AddRange(corsi);
+            ListaFiltroCorsi = new ObservableCollection<Corsi>(corsiFiltro);
+            CorsoSelezionatoFiltro = ListaFiltroCorsi.FirstOrDefault(c => c.Id == 0);
+
+            // 2. Seleziona lo stato di default
+            StatoSelezionatoFiltro = "Tutti gli Stati";
+
+            // 3. Carica Allievi e i rispettivi Abbonamenti
+            var allievi = await _dbService.GetAllieviAttiviAsync();
+            var listaTemp = new List<AllievoTabellaDTO>();
+
+            foreach (var a in allievi)
+            {
+                var abbonamenti = await _dbService.GetAbbonamentiAllievoAsync(a.Id);
+                var ultimoAbb = abbonamenti.OrderByDescending(x => x.DataScadenza).FirstOrDefault();
+
+                listaTemp.Add(new AllievoTabellaDTO
+                {
+                    Allievo = a,
+                    UltimoAbbonamento = ultimoAbb
+                });
+            }
+
+            _listaCompletaDTO = listaTemp;
+            ApplicaFiltri();
         });
     }
 
-    private void ApplicaFiltro()
+    private void ApplicaFiltri()
     {
-        ListaAllievi.Clear();
-        var filtrati = string.IsNullOrWhiteSpace(TestoRicerca)
-            ? _listaAllieviCompleta
-            : _listaAllieviCompleta.Where(a =>
-                (a.Nome != null && a.Nome.Contains(TestoRicerca, StringComparison.OrdinalIgnoreCase)) ||
-                (a.Cognome != null && a.Cognome.Contains(TestoRicerca, StringComparison.OrdinalIgnoreCase)));
+        var filtrati = _listaCompletaDTO.AsEnumerable();
 
-        foreach (var allievo in filtrati)
+        // 1. Filtro Ricerca
+        if (!string.IsNullOrWhiteSpace(TestoRicerca))
         {
-            ListaAllievi.Add(allievo);
+            filtrati = filtrati.Where(x =>
+                x.NomeCompleto.Contains(TestoRicerca, StringComparison.OrdinalIgnoreCase) ||
+                (x.Allievo.CodiceFiscale != null && x.Allievo.CodiceFiscale.Contains(TestoRicerca, StringComparison.OrdinalIgnoreCase)));
         }
+
+        // 2. Filtro per Corso
+        if (CorsoSelezionatoFiltro != null && CorsoSelezionatoFiltro.Id > 0)
+        {
+            filtrati = filtrati.Where(x => x.UltimoAbbonamento != null && x.UltimoAbbonamento.CorsoId == CorsoSelezionatoFiltro.Id);
+        }
+
+        // 3. Filtro per Stato Abbonamento
+        if (!string.IsNullOrWhiteSpace(StatoSelezionatoFiltro) && StatoSelezionatoFiltro != "Tutti gli Stati")
+        {
+            filtrati = filtrati.Where(x => x.StatoChiave == StatoSelezionatoFiltro);
+        }
+
+        ListaAllievi = new ObservableCollection<AllievoTabellaDTO>(filtrati.ToList());
     }
 
     [RelayCommand]
@@ -66,25 +126,25 @@ public partial class AllieviViewModel : BaseViewModel
     }
 
     [RelayCommand]
-    public async Task ModificaAllievoAsync(Allievi allievo)
+    public async Task ModificaAllievoAsync(AllievoTabellaDTO item)
     {
-        if (allievo == null) return;
+        if (item?.Allievo == null) return;
 
         var parametri = new Dictionary<string, object>
         {
-            { "Allievo", allievo }
+            { "Allievo", item.Allievo }
         };
         await Shell.Current.GoToAsync(AppRoutes.Allievi.GestioneAllievo, parametri);
     }
 
     [RelayCommand]
-    public async Task EliminaAllievoAsync(Allievi allievo)
+    public async Task EliminaAllievoAsync(AllievoTabellaDTO item)
     {
-        if (allievo == null) return;
+        if (item?.Allievo == null) return;
 
         bool confermato = await Shell.Current.DisplayAlert(
             "Conferma Eliminazione",
-            $"Sei sicuro di voler eliminare l'allievo '{allievo.NomeCompleto}'?",
+            $"Sei sicuro di voler eliminare l'allievo '{item.NomeCompleto}'?",
             "Sì, Elimina",
             "Annulla");
 
@@ -92,7 +152,7 @@ public partial class AllieviViewModel : BaseViewModel
         {
             await EseguiConCaricamento(async () =>
             {
-                await _dbService.EliminaAllievoAsync(allievo.Id);
+                await _dbService.EliminaAllievoAsync(item.Allievo.Id);
                 await CaricaAllieviAsync();
             });
         }

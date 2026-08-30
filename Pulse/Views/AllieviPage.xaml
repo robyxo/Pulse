@@ -7,129 +7,276 @@
     x:Name="PageRoot"
     Title="Gestione Allievi"
     x:DataType="vm:AllieviViewModel"
-    BackgroundColor="#F8FAFC">
+    BackgroundColor="#F1F5F9">
 
-    <Grid RowDefinitions="Auto, Auto, *">
-        <!--  BARRA DI RICERCA  -->
-        <Border
+    <Grid
+        Padding="20"
+        RowDefinitions="Auto, Auto, *"
+        RowSpacing="14">
+
+        <!--  1. BARRA SUPERIORE: RICERCA E NUOVO ALLIEVO  -->
+        <Grid
             Grid.Row="0"
-            Margin="15,15,15,5"
-            Padding="10,0"
-            BackgroundColor="White"
-            Stroke="#CBD5E1"
-            StrokeShape="RoundRectangle 8">
-            <SearchBar
-                HeightRequest="40"
-                Placeholder="🔍 Cerca allievo per nome o cognome..."
-                Text="{Binding TestoRicerca}" />
-        </Border>
+            ColumnDefinitions="*, Auto"
+            ColumnSpacing="12">
+            <Border
+                Padding="10,0"
+                BackgroundColor="White"
+                Stroke="#CBD5E1"
+                StrokeShape="RoundRectangle 8">
+                <SearchBar
+                    HeightRequest="42"
+                    Placeholder="🔍 Cerca allievo per nome, cognome o C.F...."
+                    Text="{Binding TestoRicerca}" />
+            </Border>
 
-        <!--  PULSANTE NUOVO ALLIEVO  -->
-        <Border
-            Grid.Row="1"
-            Margin="15,5,15,10"
-            BackgroundColor="Transparent"
-            StrokeShape="RoundRectangle 8">
             <Button
+                Grid.Column="1"
                 BackgroundColor="#10B981"
                 Command="{Binding NuovoAllievoCommand}"
+                CornerRadius="8"
                 FontAttributes="Bold"
-                HeightRequest="48"
+                HeightRequest="42"
                 Text="+ Nuovo Allievo"
                 TextColor="White" />
+        </Grid>
+
+        <!--  2. FILTRI AFFIANCATI (CORSO & STATO)  -->
+        <Grid
+            Grid.Row="1"
+            ColumnDefinitions="*, *"
+            ColumnSpacing="15">
+
+            <!--  🎓 FILTRO CORSI  -->
+            <VerticalStackLayout Grid.Column="0" Spacing="4">
+                <Label
+                    FontAttributes="Bold"
+                    FontSize="12"
+                    Text="Filtra per Corso:"
+                    TextColor="#475569" />
+                <Border
+                    BackgroundColor="White"
+                    Stroke="#CBD5E1"
+                    StrokeShape="RoundRectangle 8">
+                    <Picker
+                        Title="Seleziona Corso"
+                        Margin="5,0"
+                        ItemDisplayBinding="{Binding Nome}"
+                        ItemsSource="{Binding ListaFiltroCorsi}"
+                        SelectedItem="{Binding CorsoSelezionatoFiltro}"
+                        TextColor="#1E293B"
+                        TitleColor="#94A3B8" />
+                </Border>
+            </VerticalStackLayout>
+
+            <!--  🏷️ FILTRO STATO  -->
+            <VerticalStackLayout Grid.Column="1" Spacing="4">
+                <Label
+                    FontAttributes="Bold"
+                    FontSize="12"
+                    Text="Filtra per Stato:"
+                    TextColor="#475569" />
+                <Border
+                    BackgroundColor="White"
+                    Stroke="#CBD5E1"
+                    StrokeShape="RoundRectangle 8">
+                    <Picker
+                        Title="Seleziona Stato"
+                        Margin="5,0"
+                        ItemsSource="{Binding StatiDisponibili}"
+                        SelectedItem="{Binding StatoSelezionatoFiltro}"
+                        TextColor="#1E293B"
+                        TitleColor="#94A3B8" />
+                </Border>
+            </VerticalStackLayout>
+        </Grid>
+
+        <!--  3. TABELLA ALLIEVI  -->
+        <Border
+            Grid.Row="2"
+            Padding="0"
+            BackgroundColor="White"
+            Stroke="#E2E8F0"
+            StrokeShape="RoundRectangle 10">
+
+            <Grid RowDefinitions="Auto, *">
+
+                <!--  HEADER TABELLA  -->
+                <Grid
+                    Grid.Row="0"
+                    Padding="16,12"
+                    BackgroundColor="#F8FAFC"
+                    ColumnDefinitions="2*, 1.5*, 1.2*, 1.2*, Auto"
+                    ColumnSpacing="10">
+
+                    <Label
+                        Grid.Column="0"
+                        FontAttributes="Bold"
+                        FontSize="12"
+                        Text="Allievo / Telefono"
+                        TextColor="#475569" />
+                    <Label
+                        Grid.Column="1"
+                        FontAttributes="Bold"
+                        FontSize="12"
+                        Text="Corso Attuale"
+                        TextColor="#475569" />
+                    <Label
+                        Grid.Column="2"
+                        FontAttributes="Bold"
+                        FontSize="12"
+                        Text="Scadenza"
+                        TextColor="#475569" />
+                    <Label
+                        Grid.Column="3"
+                        FontAttributes="Bold"
+                        FontSize="12"
+                        Text="Stato"
+                        TextColor="#475569" />
+                    <Label
+                        Grid.Column="4"
+                        FontAttributes="Bold"
+                        FontSize="12"
+                        HorizontalTextAlignment="Center"
+                        Text="Azioni"
+                        TextColor="#475569"
+                        WidthRequest="76" />
+                </Grid>
+
+                <BoxView
+                    Grid.Row="0"
+                    BackgroundColor="#E2E8F0"
+                    HeightRequest="1"
+                    VerticalOptions="End" />
+
+                <!--  RIGHE DEI DATI  -->
+                <CollectionView
+                    Grid.Row="1"
+                    ItemsSource="{Binding ListaAllievi}"
+                    SelectionMode="None">
+                    <CollectionView.EmptyView>
+                        <VerticalStackLayout
+                            Margin="0,50,0,0"
+                            HorizontalOptions="Center"
+                            Spacing="8">
+                            <Label
+                                FontSize="36"
+                                HorizontalOptions="Center"
+                                Text="🎓" />
+                            <Label
+                                FontSize="13"
+                                HorizontalOptions="Center"
+                                Text="Nessun allievo trovato con i filtri selezionati."
+                                TextColor="#64748B" />
+                        </VerticalStackLayout>
+                    </CollectionView.EmptyView>
+
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="x:Object">
+                            <Grid
+                                Padding="16,10"
+                                ColumnDefinitions="2*, 1.5*, 1.2*, 1.2*, Auto"
+                                ColumnSpacing="10"
+                                VerticalOptions="Center">
+
+                                <!--  Allievo & Telefono  -->
+                                <VerticalStackLayout
+                                    Grid.Column="0"
+                                    Spacing="2"
+                                    VerticalOptions="Center">
+                                    <Label
+                                        FontAttributes="Bold"
+                                        FontSize="13"
+                                        LineBreakMode="TailTruncation"
+                                        Text="{Binding NomeCompleto}"
+                                        TextColor="#1E293B" />
+                                    <Label
+                                        FontSize="11"
+                                        LineBreakMode="TailTruncation"
+                                        Text="{Binding Telefono}"
+                                        TextColor="#64748B" />
+                                </VerticalStackLayout>
+
+                                <!--  Corso & Tipo  -->
+                                <VerticalStackLayout
+                                    Grid.Column="1"
+                                    Spacing="2"
+                                    VerticalOptions="Center">
+                                    <Label
+                                        FontAttributes="Bold"
+                                        FontSize="12"
+                                        LineBreakMode="TailTruncation"
+                                        Text="{Binding CorsoNome}"
+                                        TextColor="#334155" />
+                                    <Label
+                                        FontSize="11"
+                                        Text="{Binding TipoAbbonamento}"
+                                        TextColor="#94A3B8" />
+                                </VerticalStackLayout>
+
+                                <!--  Scadenza  -->
+                                <Label
+                                    Grid.Column="2"
+                                    FontSize="12"
+                                    Text="{Binding ScadenzaTesto}"
+                                    TextColor="#475569"
+                                    VerticalOptions="Center" />
+
+                                <!--  Stato con Pallino Colorato Ben Visibile  -->
+                                <HorizontalStackLayout
+                                    Grid.Column="3"
+                                    Spacing="8"
+                                    VerticalOptions="Center">
+                                    <Border
+                                        BackgroundColor="{Binding ColorePallinoHex}"
+                                        HeightRequest="12"
+                                        StrokeShape="RoundRectangle 6"
+                                        StrokeThickness="0"
+                                        VerticalOptions="Center"
+                                        WidthRequest="12" />
+                                    <Label
+                                        FontAttributes="Bold"
+                                        FontSize="12"
+                                        Text="{Binding StatoChiave}"
+                                        TextColor="#1E293B"
+                                        VerticalOptions="Center" />
+                                </HorizontalStackLayout>
+
+                                <!--  Azioni: Modifica ✏️ ed Elimina 🗑️  -->
+                                <HorizontalStackLayout
+                                    Grid.Column="4"
+                                    Spacing="6"
+                                    VerticalOptions="Center">
+                                    <Button
+                                        Padding="0"
+                                        BackgroundColor="#F1F5F9"
+                                        Command="{Binding BindingContext.ModificaAllievoCommand, Source={x:Reference PageRoot}}"
+                                        CommandParameter="{Binding .}"
+                                        CornerRadius="16"
+                                        FontSize="14"
+                                        HeightRequest="32"
+                                        Text="✏️"
+                                        WidthRequest="32" />
+
+                                    <Button
+                                        Padding="0"
+                                        BackgroundColor="#FEE2E2"
+                                        Command="{Binding BindingContext.EliminaAllievoCommand, Source={x:Reference PageRoot}}"
+                                        CommandParameter="{Binding .}"
+                                        CornerRadius="16"
+                                        FontSize="14"
+                                        HeightRequest="32"
+                                        Text="🗑️"
+                                        WidthRequest="32" />
+                                </HorizontalStackLayout>
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </Grid>
         </Border>
 
-        <!--  LISTA ALLIEVI  -->
-        <CollectionView
-            Grid.Row="2"
-            Margin="15,0,15,15"
-            ItemsSource="{Binding ListaAllievi}"
-            SelectionMode="None">
-
-            <CollectionView.EmptyView>
-                <VerticalStackLayout
-                    Margin="0,50,0,0"
-                    HorizontalOptions="Center"
-                    Spacing="10"
-                    VerticalOptions="Center">
-                    <Label
-                        FontSize="40"
-                        HorizontalOptions="Center"
-                        Text="🎓" />
-                    <Label
-                        FontSize="14"
-                        HorizontalOptions="Center"
-                        Text="Nessun allievo presente."
-                        TextColor="#64748B" />
-                </VerticalStackLayout>
-            </CollectionView.EmptyView>
-
-            <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="x:Object">
-                    <Border
-                        Margin="0,0,0,10"
-                        Padding="12"
-                        BackgroundColor="White"
-                        Stroke="#E2E8F0"
-                        StrokeShape="RoundRectangle 10">
-                        <Grid
-                            ColumnDefinitions="Auto, *, Auto, Auto"
-                            ColumnSpacing="12"
-                            VerticalOptions="Center">
-
-                            <Label
-                                Grid.Column="0"
-                                FontSize="20"
-                                Text="👤"
-                                VerticalOptions="Center" />
-
-                            <VerticalStackLayout
-                                Grid.Column="1"
-                                Spacing="2"
-                                VerticalOptions="Center">
-                                <Label
-                                    FontAttributes="Bold"
-                                    FontSize="15"
-                                    Text="{Binding NomeCompleto}"
-                                    TextColor="#1E293B" />
-                                <Label
-                                    FontSize="12"
-                                    LineBreakMode="TailTruncation"
-                                    Text="{Binding Telefono, StringFormat='📞 {0}'}"
-                                    TextColor="#64748B" />
-                            </VerticalStackLayout>
-
-                            <!--  PULSANTE MODIFICA MATITA  -->
-                            <Button
-                                Grid.Column="2"
-                                Padding="0"
-                                BackgroundColor="#F1F5F9"
-                                Command="{Binding BindingContext.ModificaAllievoCommand, Source={x:Reference PageRoot}}"
-                                CommandParameter="{Binding .}"
-                                CornerRadius="18"
-                                FontSize="16"
-                                HeightRequest="36"
-                                Text="✏️"
-                                WidthRequest="36" />
-
-                            <!--  PULSANTE ELIMINA CESTINO  -->
-                            <Button
-                                Grid.Column="3"
-                                Padding="0"
-                                BackgroundColor="#FEE2E2"
-                                Command="{Binding BindingContext.EliminaAllievoCommand, Source={x:Reference PageRoot}}"
-                                CommandParameter="{Binding .}"
-                                CornerRadius="18"
-                                FontSize="16"
-                                HeightRequest="36"
-                                Text="🗑️"
-                                WidthRequest="36" />
-                        </Grid>
-                    </Border>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
-
+        <!--  CARICAMENTO  -->
         <ActivityIndicator
             Grid.RowSpan="3"
             HorizontalOptions="Center"
