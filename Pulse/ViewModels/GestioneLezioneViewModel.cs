@@ -71,7 +71,6 @@ public partial class GestioneLezioneViewModel : BaseViewModel
     {
         await EseguiConCaricamento(async () =>
         {
-            // 1. Carica Corsi e Insegnanti attivi dal Database
             var corsi = await _dbService.GetCorsiAttiviAsync();
             var maestri = await _dbService.GetInsegnantiAttiviAsync();
 
@@ -80,22 +79,18 @@ public partial class GestioneLezioneViewModel : BaseViewModel
 
             IsEdizione = Lezione.Id > 0;
 
-            // 2. Imposta giorno
             int indexGiorno = Math.Clamp(Lezione.GiornoSettimana - 1, 0, 6);
             GiornoSelezionato = GiorniSettimana[indexGiorno];
 
-            // 3. Imposta orari
             if (TimeSpan.TryParse(Lezione.OraInizio, out var tInizio))
                 OraInizio = tInizio;
 
             if (TimeSpan.TryParse(Lezione.OraFine, out var tFine))
                 OraFine = tFine;
 
-            // 4. Preseleziona Corso se presente
             if (Lezione.CorsoId > 0)
                 CorsoSelezionato = ListaCorsi.FirstOrDefault(c => c.Id == Lezione.CorsoId);
 
-            // 5. Preseleziona Maestro se presente
             if (Lezione.InsegnanteId.HasValue && Lezione.InsegnanteId.Value > 0)
                 MaestroSelezionato = ListaMaestri.FirstOrDefault(m => m.Id == Lezione.InsegnanteId.Value);
 
@@ -136,6 +131,78 @@ public partial class GestioneLezioneViewModel : BaseViewModel
         ListaAllievi = new ObservableCollection<AllievoPresenzaDTO>(dtos);
         NessunAllievoPresente = ListaAllievi.Count == 0;
         TitoloAllievi = $"👥 Allievi Iscritti ({ListaAllievi.Count})";
+    }
+
+    [RelayCommand]
+    public async Task PagamentoRapidoAsync(AllievoPresenzaDTO item)
+    {
+        if (item?.Allievo == null || CorsoSelezionato == null) return;
+
+        string opzioneScelta = await Shell.Current.DisplayActionSheet(
+            $"Incasso per {item.NomeCompleto}:",
+            "Annulla",
+            null,
+            $"Singolo / Giornata (€ {CorsoSelezionato.CostoSingolo ?? 0:N2})",
+            $"Mensile 4 Settimane (€ {CorsoSelezionato.CostoMensile ?? 0:N2})");
+
+        if (string.IsNullOrEmpty(opzioneScelta) || opzioneScelta == "Annulla") return;
+
+        bool isSingolo = opzioneScelta.StartsWith("Singolo");
+        string tipoAbb = isSingolo ? "Singolo" : "Mensile";
+        double importo = isSingolo ? (CorsoSelezionato.CostoSingolo ?? 0) : (CorsoSelezionato.CostoMensile ?? 0);
+
+        DateTime dataInizio = DateTime.Now;
+        DateTime dataFine;
+
+        if (isSingolo)
+        {
+            dataFine = DateTime.Now.Date.AddDays(1).AddTicks(-1);
+        }
+        else
+        {
+            DateTime dataBase = (item.Abbonamento != null && item.Abbonamento.DataScadenza >= DateTime.Today)
+                ? item.Abbonamento.DataScadenza
+                : DateTime.Today;
+            dataFine = dataBase.AddDays(28);
+        }
+
+        var nuovoAbbonamento = new Abbonamenti
+        {
+            AllievoId = item.Allievo.Id,
+            Allievo = item.Allievo,
+            CorsoId = CorsoSelezionato.Id,
+            Corso = CorsoSelezionato,
+            TipoAbbonamento = tipoAbb,
+            DataInizio = dataInizio,
+            DataScadenza = dataFine,
+            ImportoTotale = importo,
+            ImportoPagato = importo,
+            IsPagato = 1,
+            IsSospeso = 0,
+            Attivo = 1
+        };
+
+        await EseguiConCaricamento(async () =>
+        {
+            await _dbService.SalvaAbbonamentoAsync(nuovoAbbonamento);
+            await CaricaAllieviPerCorsoAsync();
+        });
+
+        bool stampa = await Shell.Current.DisplayAlert(
+            "Pagamento Registrato",
+            $"Incasso di € {importo:N2} salvato con successo.\nNuova scadenza: {dataFine:dd/MM/yyyy}.\n\nVuoi stampare la ricevuta di cortesia?",
+            "Sì, Stampa",
+            "No");
+
+        if (stampa)
+        {
+            string nomeScuola = Preferences.Get("Scuola_Nome", "ASD SCUOLA DI DANZA PULSE");
+            string indirizzoScuola = Preferences.Get("Scuola_Indirizzo", "Via Roma 123 - San Benedetto del Tronto (AP)");
+            string pivaScuola = Preferences.Get("Scuola_PIVA", "01234567890");
+
+            var ricevutaService = new RicevutaService();
+            await ricevutaService.StampaRicevutaCortesiaAsync(nuovoAbbonamento, nomeScuola, indirizzoScuola, pivaScuola);
+        }
     }
 
     [RelayCommand]

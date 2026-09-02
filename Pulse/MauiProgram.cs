@@ -30,7 +30,7 @@ public static class MauiProgram
         // ⚠️ FLAG DI EMERGENZA:
         // Imposta a 'true' se modifichi lo schema/tabelle del DB e vuoi ricrearlo da zero in Debug.
         // Lascia a 'false' durante il lavoro normale per non perdere i dati salvati.
-        bool resetDatabaseDiEmergenza = false;
+        bool resetDatabaseDiEmergenza = true;
 
 #if DEBUG
         if (resetDatabaseDiEmergenza && File.Exists(dbPath))

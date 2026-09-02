@@ -10,6 +10,8 @@ namespace Pulse.ViewModels;
 public partial class GestioneAllievoViewModel : BaseViewModel
 {
     private readonly IDatabaseService _dbService;
+    private readonly RicevutaService _ricevutaService;
+    private List<Abbonamenti> _listaAbbonamentiMaster = new();
 
     [ObservableProperty]
     private Allievi _allievo = new();
@@ -32,13 +34,41 @@ public partial class GestioneAllievoViewModel : BaseViewModel
     [ObservableProperty]
     private bool _isEdizione = false;
 
+    // --- TABELLA E PAGINAZIONE ABBONAMENTI ---
     [ObservableProperty]
-    private ObservableCollection<Abbonamenti> _listaAbbonamenti = new();
+    private ObservableCollection<Abbonamenti> _listaAbbonamentiPaginata = new();
+
+    [ObservableProperty]
+    private ObservableCollection<string> _anniDisponibili = new();
+
+    [ObservableProperty]
+    private string _annoSelezionato = "Tutti gli anni";
+
+    [ObservableProperty]
+    private string _testoRicercaAbbonamento = string.Empty;
+
+    [ObservableProperty]
+    private int _paginaCorrente = 1;
+
+    [ObservableProperty]
+    private int _totalePagine = 1;
+
+    [ObservableProperty]
+    private string _testoPaginazione = "Pagina 1 di 1";
+
+    [ObservableProperty]
+    private bool _haPaginaPrecedente = false;
+
+    [ObservableProperty]
+    private bool _haPaginaSuccessiva = false;
+
+    private const int ElementiPerPagina = 5;
 
     public GestioneAllievoViewModel(INavigationService navigationService, IDatabaseService dbService)
         : base(navigationService)
     {
         _dbService = dbService;
+        _ricevutaService = new RicevutaService();
         Title = "Gestione Allievo";
     }
 
@@ -57,29 +87,115 @@ public partial class GestioneAllievoViewModel : BaseViewModel
         _ = CaricaAbbonamentiAsync();
     }
 
+    partial void OnTestoRicercaAbbonamentoChanged(string value)
+    {
+        PaginaCorrente = 1;
+        ApplicaFiltroEPaginazione();
+    }
+
+    partial void OnAnnoSelezionatoChanged(string value)
+    {
+        PaginaCorrente = 1;
+        ApplicaFiltroEPaginazione();
+    }
+
     private async Task CaricaAbbonamentiAsync()
     {
         if (Allievo.Id > 0)
         {
             var abbonamenti = await _dbService.GetAbbonamentiAllievoAsync(Allievo.Id);
-            ListaAbbonamenti = new ObservableCollection<Abbonamenti>(abbonamenti);
+            _listaAbbonamentiMaster = abbonamenti.OrderByDescending(a => a.DataInizio).ToList();
+
+            var anni = _listaAbbonamentiMaster
+                .Select(a => a.DataInizio.Year.ToString())
+                .Distinct()
+                .OrderByDescending(y => y)
+                .ToList();
+
+            anni.Insert(0, "Tutti gli anni");
+            AnniDisponibili = new ObservableCollection<string>(anni);
+
+            // Seleziona esplicitamente il primo valore per far apparire la scritta
+            AnnoSelezionato = AnniDisponibili.FirstOrDefault() ?? "Tutti gli anni";
+
+            PaginaCorrente = 1;
+            ApplicaFiltroEPaginazione();
         }
     }
 
-    // 🟢 NUOVO ABBONAMENTO CON VERIFICA CORSI ESISTENTI
+    private void ApplicaFiltroEPaginazione()
+    {
+        var filtrati = _listaAbbonamentiMaster.AsEnumerable();
+
+        // 1. Filtro Anno
+        if (!string.IsNullOrWhiteSpace(AnnoSelezionato) && AnnoSelezionato != "Tutti gli anni" && int.TryParse(AnnoSelezionato, out int annoInt))
+        {
+            filtrati = filtrati.Where(a => a.DataInizio.Year == annoInt);
+        }
+
+        // 2. Filtro Testo (per nome corso o tipo abbonamento)
+        if (!string.IsNullOrWhiteSpace(TestoRicercaAbbonamento))
+        {
+            filtrati = filtrati.Where(a =>
+                (a.Corso != null && a.Corso.Nome.Contains(TestoRicercaAbbonamento, StringComparison.OrdinalIgnoreCase)) ||
+                a.TipoAbbonamento.Contains(TestoRicercaAbbonamento, StringComparison.OrdinalIgnoreCase));
+        }
+
+        var listaFiltrata = filtrati.ToList();
+
+        // Calcolo Pagine
+        int totaleElementi = listaFiltrata.Count;
+        TotalePagine = (int)Math.Ceiling((double)totaleElementi / ElementiPerPagina);
+        if (TotalePagine <= 0) TotalePagine = 1;
+
+        if (PaginaCorrente > TotalePagine) PaginaCorrente = TotalePagine;
+        if (PaginaCorrente < 1) PaginaCorrente = 1;
+
+        HaPaginaPrecedente = PaginaCorrente > 1;
+        HaPaginaSuccessiva = PaginaCorrente < TotalePagine;
+        TestoPaginazione = $"Pagina {PaginaCorrente} di {TotalePagine}";
+
+        // Paginazione a 5 record
+        var elementiPagina = listaFiltrata
+            .Skip((PaginaCorrente - 1) * ElementiPerPagina)
+            .Take(ElementiPerPagina)
+            .ToList();
+
+        ListaAbbonamentiPaginata = new ObservableCollection<Abbonamenti>(elementiPagina);
+    }
+
+    [RelayCommand]
+    public void PaginaPrecedente()
+    {
+        if (HaPaginaPrecedente)
+        {
+            PaginaCorrente--;
+            ApplicaFiltroEPaginazione();
+        }
+    }
+
+    [RelayCommand]
+    public void PaginaSuccessiva()
+    {
+        if (HaPaginaSuccessiva)
+        {
+            PaginaCorrente++;
+            ApplicaFiltroEPaginazione();
+        }
+    }
+
+    // 🟢 NUOVO ABBONAMENTO
     [RelayCommand]
     public async Task ApriPopupNuovoAbbonamentoAsync()
     {
         var corsiDisponibili = await _dbService.GetCorsiAttiviAsync();
 
-        // Se non ci sono corsi registrati, avvisa l'utente
         if (corsiDisponibili == null || corsiDisponibili.Count == 0)
         {
             await Shell.Current.DisplayAlert("Attenzione", "Prima devi creare un corso!", "OK");
             return;
         }
 
-        // 1. Scelta del Corso
         var opzioniCorsi = corsiDisponibili.Select(c => c.Nome).ToArray();
         string corsoSelezionatoNome = await Shell.Current.DisplayActionSheet("Seleziona il Corso:", "Annulla", null, opzioniCorsi);
 
@@ -88,7 +204,6 @@ public partial class GestioneAllievoViewModel : BaseViewModel
         var corsoScelto = corsiDisponibili.FirstOrDefault(c => c.Nome == corsoSelezionatoNome);
         if (corsoScelto == null) return;
 
-        // 2. Scelta del Tipo di Abbonamento con i prezzi definiti nel corso
         var opzioniPrezzi = new List<string>();
         if (corsoScelto.CostoSingolo.HasValue && corsoScelto.CostoSingolo.Value > 0)
             opzioniPrezzi.Add($"Singolo (€ {corsoScelto.CostoSingolo.Value:N2})");
@@ -99,7 +214,6 @@ public partial class GestioneAllievoViewModel : BaseViewModel
 
         if (opzioniPrezzi.Count == 0)
         {
-            // Fallback se nessun prezzo è impostato
             opzioniPrezzi.Add("Mensile 4 Settimane (€ 0,00)");
         }
 
@@ -111,10 +225,9 @@ public partial class GestioneAllievoViewModel : BaseViewModel
 
         if (string.IsNullOrEmpty(tipoSelezionato) || tipoSelezionato == "Annulla") return;
 
-        // 3. Calcolo Scadenza e Costo
         string tipo = "Mensile";
         double importo = corsoScelto.CostoMensile ?? 0;
-        DateTime scadenza = DateTime.Now.AddDays(28); // 4 Settimane
+        DateTime scadenza = DateTime.Now.AddDays(28);
 
         if (tipoSelezionato.StartsWith("Singolo"))
         {
@@ -132,6 +245,7 @@ public partial class GestioneAllievoViewModel : BaseViewModel
         var nuovo = new Abbonamenti
         {
             AllievoId = Allievo.Id,
+            Allievo = Allievo,
             CorsoId = corsoScelto.Id,
             Corso = corsoScelto,
             TipoAbbonamento = tipo,
@@ -140,18 +254,31 @@ public partial class GestioneAllievoViewModel : BaseViewModel
             ImportoTotale = importo,
             ImportoPagato = importo,
             IsPagato = 1,
-            IsSospeso = 0
+            IsSospeso = 0,
+            Attivo = 1
         };
 
         if (Allievo.Id > 0)
         {
             await _dbService.SalvaAbbonamentoAsync(nuovo);
+            _listaAbbonamentiMaster.Insert(0, nuovo);
+            PaginaCorrente = 1;
+            ApplicaFiltroEPaginazione();
         }
 
-        ListaAbbonamenti.Insert(0, nuovo);
+        bool vuoleStampare = await Shell.Current.DisplayAlert(
+            "Abbonamento Creato",
+            $"Abbonamento registrato con successo!\nScadenza: {scadenza:dd/MM/yyyy}.\n\nVuoi stampare la ricevuta di cortesia?",
+            "Sì, Stampa",
+            "No");
+
+        if (vuoleStampare)
+        {
+            await StampaRicevutaAsync(nuovo);
+        }
     }
 
-    // ⏯️ PLAY / STOP (Pausa e Ripristino Sospensione)
+    // ⏯️ PLAY / STOP
     [RelayCommand]
     public async Task ToggleSospensioneAbbonamentoAsync(Abbonamenti abbonamento)
     {
@@ -159,7 +286,6 @@ public partial class GestioneAllievoViewModel : BaseViewModel
 
         if (abbonamento.IsSospeso == 0)
         {
-            // ⏸️ RICHIESTA CONFERMA SOSPENSIONE
             bool confermaStop = await Shell.Current.DisplayAlert(
                 "Sospendi Abbonamento",
                 $"Sei sicuro di voler sospendere l'abbonamento '{abbonamento.Corso?.Nome ?? abbonamento.TipoAbbonamento}'? I giorni rimanenti verranno congelati.",
@@ -172,12 +298,9 @@ public partial class GestioneAllievoViewModel : BaseViewModel
             abbonamento.DataSospensione = DateTime.Now;
             var giorniRimanenti = (abbonamento.DataScadenza.Date - DateTime.Now.Date).Days;
             abbonamento.GiorniRimanentiCongelati = Math.Max(0, giorniRimanenti);
-
-            await Shell.Current.DisplayAlert("Abbonamento Sospeso", $"Abbonamento congelato con {abbonamento.GiorniRimanentiCongelati} giorni rimanenti.", "OK");
         }
         else
         {
-            // ▶️ RICHIESTA CONFERMA RIPRISTINO
             DateTime nuovaScadenza = DateTime.Now.AddDays(abbonamento.GiorniRimanentiCongelati);
 
             bool confermaPlay = await Shell.Current.DisplayAlert(
@@ -192,8 +315,6 @@ public partial class GestioneAllievoViewModel : BaseViewModel
             abbonamento.DataScadenza = nuovaScadenza;
             abbonamento.DataSospensione = null;
             abbonamento.GiorniRimanentiCongelati = 0;
-
-            await Shell.Current.DisplayAlert("Abbonamento Riattivato", $"Abbonamento ripristinato. Nuova scadenza: {abbonamento.DataScadenza:dd/MM/yyyy}", "OK");
         }
 
         if (abbonamento.Id > 0)
@@ -201,60 +322,34 @@ public partial class GestioneAllievoViewModel : BaseViewModel
             await _dbService.SalvaAbbonamentoAsync(abbonamento);
         }
 
-        // 🟢 Forza il refresh immediato della lista per aggiornare badge, colori e icona
-        int index = ListaAbbonamenti.IndexOf(abbonamento);
-        if (index >= 0)
-        {
-            ListaAbbonamenti.RemoveAt(index);
-            ListaAbbonamenti.Insert(index, abbonamento);
-        }
+        ApplicaFiltroEPaginazione();
     }
 
-    // 🔄 RINNOVA ABBONAMENTO CON CONFERMA PREVENTIVA
+    // 🔄 RINNOVA ABBONAMENTO
     [RelayCommand]
     public async Task RinnovaAbbonamentoAsync(Abbonamenti abbonamento)
     {
         if (abbonamento == null) return;
 
-        // 1. Determina il periodo da aggiungere e l'etichetta del messaggio
-        int giorniAggiunti;
-        string unitaTempo;
-
-        switch (abbonamento.TipoAbbonamento)
+        int giorniAggiunti = abbonamento.TipoAbbonamento switch
         {
-            case "Singolo":
-                giorniAggiunti = 1;
-                unitaTempo = "un'ulteriore lezione/giorno";
-                break;
-            case "Annuale":
-                giorniAggiunti = 365;
-                unitaTempo = "un ulteriore anno";
-                break;
-            default: // Mensile = 4 settimane (28 giorni)
-                giorniAggiunti = 28;
-                unitaTempo = "un ulteriore mese (4 settimane)";
-                break;
-        }
+            "Singolo" => 1,
+            "Annuale" => 365,
+            _ => 28
+        };
 
-        // 2. Calcola la data di partenza: se è scaduto parte da oggi, se attivo si accoda alla scadenza attuale
         bool isGiaAttivo = abbonamento.DataScadenza >= DateTime.Now.Date;
         DateTime baseData = isGiaAttivo ? abbonamento.DataScadenza : DateTime.Now;
         DateTime nuovaScadenzaCalcolata = baseData.AddDays(giorniAggiunti);
 
-        // 3. Mostra la richiesta di conferma
-        string messaggioConferma = isGiaAttivo
-            ? $"L'abbonamento è attualmente attivo.\n\nSei sicuro di voler aggiungere {unitaTempo} all'abbonamento attuale?\nLa nuova scadenza è prevista per il {nuovaScadenzaCalcolata:dd/MM/yyyy}.\n\nProcedere?"
-            : $"L'abbonamento è scaduto.\n\nVuoi rinnovarlo per {unitaTempo} a partire da oggi?\nNuova scadenza: {nuovaScadenzaCalcolata:dd/MM/yyyy}.\n\nProcedere?";
-
         bool conferma = await Shell.Current.DisplayAlert(
             "Conferma Rinnovo",
-            messaggioConferma,
+            $"Vuoi rinnovare l'abbonamento fino al {nuovaScadenzaCalcolata:dd/MM/yyyy}?",
             "Sì, Rinnova",
             "Annulla");
 
         if (!conferma) return;
 
-        // 4. Applica il rinnovo e riattiva l'abbonamento se era sospeso
         abbonamento.DataScadenza = nuovaScadenzaCalcolata;
         abbonamento.IsSospeso = 0;
         abbonamento.DataSospensione = null;
@@ -265,23 +360,18 @@ public partial class GestioneAllievoViewModel : BaseViewModel
             await _dbService.SalvaAbbonamentoAsync(abbonamento);
         }
 
-        // 5. Ricarica la lista per aggiornare subito badge, colori e date a video
-        if (Allievo.Id > 0)
-        {
-            var abbonamentiAggiornati = await _dbService.GetAbbonamentiAllievoAsync(Allievo.Id);
-            ListaAbbonamenti = new ObservableCollection<Abbonamenti>(abbonamentiAggiornati);
-        }
-        else
-        {
-            var index = ListaAbbonamenti.IndexOf(abbonamento);
-            if (index >= 0)
-            {
-                ListaAbbonamenti.RemoveAt(index);
-                ListaAbbonamenti.Insert(index, abbonamento);
-            }
-        }
+        ApplicaFiltroEPaginazione();
 
-        await Shell.Current.DisplayAlert("Rinnovato", $"Abbonamento rinnovato con successo fino al {abbonamento.DataScadenza:dd/MM/yyyy}!", "OK");
+        bool vuoleStampare = await Shell.Current.DisplayAlert(
+            "Rinnovato",
+            $"Abbonamento rinnovato fino al {abbonamento.DataScadenza:dd/MM/yyyy}!\n\nVuoi stampare la ricevuta di cortesia?",
+            "Sì, Stampa",
+            "No");
+
+        if (vuoleStampare)
+        {
+            await StampaRicevutaAsync(abbonamento);
+        }
     }
 
     // 🗑️ ELIMINA ABBONAMENTO
@@ -297,11 +387,12 @@ public partial class GestioneAllievoViewModel : BaseViewModel
             {
                 await _dbService.EliminaAbbonamentoAsync(abbonamento.Id);
             }
-            ListaAbbonamenti.Remove(abbonamento);
+            _listaAbbonamentiMaster.Remove(abbonamento);
+            ApplicaFiltroEPaginazione();
         }
     }
 
-    // 🖨️ STAMPA RICEVUTA DI CORTESIA
+    // 🖨️ STAMPA RICEVUTA
     [RelayCommand]
     public async Task StampaRicevutaAsync(Abbonamenti abbonamento)
     {
@@ -313,31 +404,7 @@ public partial class GestioneAllievoViewModel : BaseViewModel
         string indirizzoScuola = Preferences.Get("Scuola_Indirizzo", "Via Roma 123 - San Benedetto del Tronto (AP)");
         string pivaScuola = Preferences.Get("Scuola_PIVA", "01234567890");
 
-        string numRicevuta = $"{abbonamento.Id:D5}";
-        string dataOggi = DateTime.Now.ToString("dd/MM/yyyy");
-        string periodo = $"{abbonamento.DataInizio:dd/MM/yyyy} al {abbonamento.DataScadenza:dd/MM/yyyy}";
-
-        string ricevutaTesto =
-$@"--------------------------------------------------
-         {nomeScuola.ToUpper()}
-         {indirizzoScuola}
-         P.IVA / C.F.: {pivaScuola}
---------------------------------------------------
-RICEVUTA DI CORTESIA N. {numRicevuta} del {dataOggi}
-(Valido solo come attestazione di pagamento)
-
-Allievo: {abbonamento.Allievo.Nome} {abbonamento.Allievo.Cognome}
-C.F.: {abbonamento.Allievo.CodiceFiscale}
-
-Somma Pagata: € {abbonamento.ImportoTotale:N2}
-Corso: {abbonamento.Corso?.Nome ?? "Corso Danza"}
-Tipo: Abbonamento {abbonamento.TipoAbbonamento}
-Periodo: dal {periodo}
-
-Stato: REGOLARE (PAGATO)
---------------------------------------------------";
-
-        await Shell.Current.DisplayAlert($"🖨️ Ricevuta N° {numRicevuta}", ricevutaTesto, "Stampa / Chiudi");
+        await _ricevutaService.StampaRicevutaCortesiaAsync(abbonamento, nomeScuola, indirizzoScuola, pivaScuola);
     }
 
     [RelayCommand]
@@ -361,8 +428,7 @@ Stato: REGOLARE (PAGATO)
 
             await _dbService.SalvaAllievoAsync(Allievo);
 
-            // Salva gli abbonamenti correlati
-            foreach (var abb in ListaAbbonamenti)
+            foreach (var abb in _listaAbbonamentiMaster)
             {
                 if (abb.AllievoId == 0) abb.AllievoId = Allievo.Id;
                 await _dbService.SalvaAbbonamentoAsync(abb);

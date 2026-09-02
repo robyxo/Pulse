@@ -26,14 +26,13 @@ public interface IDatabaseService
     // MAESTRI
     // ================================================
     Task<List<Insegnanti>> GetInsegnantiAttiviAsync();
+    Task<List<Insegnanti>> GetInsegnantiAttivi(); // Alias
     Task<bool> SalvaInsegnanteAsync(Insegnanti insegnante);
     Task<bool> EliminaInsegnanteAsync(int id);
-    Task<List<Insegnanti>> GetInsegnantiAttivi(); // Alias
 
     // ================================================
     // ALLIEVI
     // ================================================
-
     Task<List<Allievi>> GetAllieviAttiviAsync();
     Task<List<Allievi>> GetAllieviPerCorsoAsync(int corsoId);
     Task<List<Allievi>> GetAllieviPerCorso(int corsoId); // Alias
@@ -42,11 +41,9 @@ public interface IDatabaseService
     Task<bool> EliminaAllievoAsync(int id);
 
     // ================================================
-    // Abbonamenti
+    // ABBONAMENTI
     // ================================================
-
     Task<List<Abbonamenti>> GetAbbonamentiAllievoAsync(int allievoId);
     Task<bool> SalvaAbbonamentoAsync(Abbonamenti abbonamento);
     Task<bool> EliminaAbbonamentoAsync(int id);
-
 }

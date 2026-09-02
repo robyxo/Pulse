@@ -69,7 +69,7 @@ public class DatabaseService : IDatabaseService
             .ToListAsync();
     }
 
-    public Task<List<Lezioni>> GetLezioniSettimana(DateTime dataRiferimento) => 
+    public Task<List<Lezioni>> GetLezioniSettimana(DateTime dataRiferimento) =>
         GetLezioniSettimanaAsync(dataRiferimento);
 
     public async Task<bool> SalvaLezioneAsync(Lezioni lezione)
@@ -86,8 +86,17 @@ public class DatabaseService : IDatabaseService
         return await _context.SaveChangesAsync() > 0;
     }
 
-    public Task<bool> SalvaLezione(Lezioni lezione) => 
+    public Task<bool> SalvaLezione(Lezioni lezione) =>
         SalvaLezioneAsync(lezione);
+
+    public async Task<bool> EliminaLezioneAsync(int id)
+    {
+        var lezione = await _context.Lezionis.FindAsync(id);
+        if (lezione == null) return false;
+
+        _context.Lezionis.Remove(lezione);
+        return await _context.SaveChangesAsync() > 0;
+    }
 
     // ================================================
     // MAESTRI
@@ -101,6 +110,7 @@ public class DatabaseService : IDatabaseService
             .ThenBy(i => i.Nome)
             .ToListAsync();
     }
+
     public async Task<bool> SalvaInsegnanteAsync(Insegnanti insegnante)
     {
         if (insegnante.Id == 0)
@@ -143,13 +153,12 @@ public class DatabaseService : IDatabaseService
 
     public async Task<List<Allievi>> GetAllieviPerCorsoAsync(int corsoId)
     {
-        var dataOggi = DateTime.Now.Date;
-
+        // Mostra allievi che frequentano questo corso (anche con mese scaduto per permettere rinnovo)
+        // Esclude chi è sospeso/in pausa o chi ha abbonamento cancellato (Attivo == 0)
         return await _context.Abbonamentis
             .Where(a => a.CorsoId == corsoId
                      && a.Attivo == 1
-                     && a.IsSospeso == 0
-                     && a.DataScadenza.Date >= dataOggi)
+                     && a.IsSospeso == 0)
             .Include(a => a.Allievo)
             .Select(a => a.Allievo!)
             .Where(allievo => allievo != null && allievo.Attivo == 1)
@@ -158,6 +167,17 @@ public class DatabaseService : IDatabaseService
             .ThenBy(a => a.Nome)
             .ToListAsync();
     }
+
+    public Task<List<Allievi>> GetAllieviPerCorso(int corsoId) => GetAllieviPerCorsoAsync(corsoId);
+
+    public async Task<List<Allievi>> GetAllieviPerLezioneAsync(int lezioneId)
+    {
+        var lezione = await _context.Lezionis.FindAsync(lezioneId);
+        if (lezione == null) return new List<Allievi>();
+
+        return await GetAllieviPerCorsoAsync(lezione.CorsoId);
+    }
+
     public async Task<bool> SalvaAllievoAsync(Allievi allievo)
     {
         if (allievo.Id == 0)
@@ -178,19 +198,9 @@ public class DatabaseService : IDatabaseService
         var allievo = await _context.Allievis.FindAsync(id);
         if (allievo == null) return false;
 
-        allievo.Attivo = 0; // Soft delete per sicurezza storica
+        allievo.Attivo = 0; // Soft delete
         _context.Allievis.Update(allievo);
         return await _context.SaveChangesAsync() > 0;
-    }
-
-    public Task<List<Allievi>> GetAllieviPerCorso(int corsoId) => GetAllieviPerCorsoAsync(corsoId);
-
-    public async Task<List<Allievi>> GetAllieviPerLezioneAsync(int lezioneId)
-    {
-        var lezione = await _context.Lezionis.FindAsync(lezioneId);
-        if (lezione == null) return new List<Allievi>();
-
-        return await GetAllieviPerCorsoAsync(lezione.CorsoId);
     }
 
     // ================================================
@@ -228,15 +238,6 @@ public class DatabaseService : IDatabaseService
 
         abb.Attivo = 0; // Soft delete
         _context.Abbonamentis.Update(abb);
-        return await _context.SaveChangesAsync() > 0;
-    }
-
-    public async Task<bool> EliminaLezioneAsync(int id)
-    {
-        var lezione = await _context.Lezionis.FindAsync(id);
-        if (lezione == null) return false;
-
-        _context.Lezionis.Remove(lezione);
         return await _context.SaveChangesAsync() > 0;
     }
 }

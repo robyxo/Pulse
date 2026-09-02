@@ -3,7 +3,9 @@
     x:Class="Pulse.Views.GestioneLezionePage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:dto="clr-namespace:Pulse.DTO"
     xmlns:vm="clr-namespace:Pulse.ViewModels"
+    x:Name="PageRoot"
     Title="Gestione Lezione"
     x:DataType="vm:GestioneLezioneViewModel"
     BackgroundColor="#F8FAFC">
@@ -93,7 +95,7 @@
                 </VerticalStackLayout>
             </Grid>
 
-            <!--  SEZIONE ALLIEVI ISCRITTI  -->
+            <!--  SEZIONE ALLIEVI ISCRITTI CON INCASSO RAPIDO  -->
             <Border
                 Margin="0,10,0,0"
                 Padding="15"
@@ -115,29 +117,35 @@
 
                     <CollectionView ItemsSource="{Binding ListaAllievi}" SelectionMode="None">
                         <CollectionView.ItemTemplate>
-                            <DataTemplate x:DataType="x:Object">
+                            <DataTemplate x:DataType="dto:AllievoPresenzaDTO">
                                 <Border
                                     Margin="0,0,0,6"
-                                    Padding="10"
+                                    Padding="12,10"
                                     BackgroundColor="#F8FAFC"
                                     Stroke="#E2E8F0"
                                     StrokeShape="RoundRectangle 8">
+
+                                    <!--  4 COLONNE: Icona, Dati, Badge Stato, Bottone Incasso  -->
                                     <Grid
-                                        ColumnDefinitions="Auto, *, Auto"
-                                        ColumnSpacing="10"
+                                        ColumnDefinitions="Auto, *, Auto, Auto"
+                                        ColumnSpacing="12"
                                         VerticalOptions="Center">
+
+                                        <!--  Icona  -->
                                         <Label
                                             Grid.Column="0"
-                                            FontSize="16"
+                                            FontSize="18"
                                             Text="👤"
                                             VerticalOptions="Center" />
+
+                                        <!--  Dati Allievo  -->
                                         <VerticalStackLayout
                                             Grid.Column="1"
                                             Spacing="2"
                                             VerticalOptions="Center">
                                             <Label
                                                 FontAttributes="Bold"
-                                                FontSize="13"
+                                                FontSize="14"
                                                 Text="{Binding NomeCompleto}"
                                                 TextColor="#1E293B" />
                                             <Label
@@ -145,17 +153,37 @@
                                                 Text="{Binding TipoAbbonamento}"
                                                 TextColor="#64748B" />
                                         </VerticalStackLayout>
+
+                                        <!--  Badge Stato  -->
                                         <Border
                                             Grid.Column="2"
-                                            Padding="8,2"
+                                            Padding="10,4"
                                             BackgroundColor="{Binding ColoreStatoHex}"
-                                            StrokeShape="RoundRectangle 12">
+                                            StrokeShape="RoundRectangle 12"
+                                            StrokeThickness="0"
+                                            VerticalOptions="Center">
                                             <Label
                                                 FontAttributes="Bold"
-                                                FontSize="10"
+                                                FontSize="11"
                                                 Text="{Binding StatoTesto}"
                                                 TextColor="White" />
                                         </Border>
+
+                                        <!--  💶 PULSANTE INCASSO RAPIDO  -->
+                                        <Button
+                                            Grid.Column="3"
+                                            Padding="12,0"
+                                            BackgroundColor="#10B981"
+                                            Command="{Binding BindingContext.PagamentoRapidoCommand, Source={x:Reference PageRoot}}"
+                                            CommandParameter="{Binding .}"
+                                            CornerRadius="8"
+                                            FontAttributes="Bold"
+                                            FontSize="12"
+                                            HeightRequest="36"
+                                            IsVisible="{Binding MostraPulsanteIncasso}"
+                                            Text="{Binding TestoPulsanteIncasso}"
+                                            TextColor="White"
+                                            VerticalOptions="Center" />
                                     </Grid>
                                 </Border>
                             </DataTemplate>

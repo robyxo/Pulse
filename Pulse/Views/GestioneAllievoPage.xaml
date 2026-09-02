@@ -3,6 +3,7 @@
     x:Class="Pulse.Views.GestioneAllievoPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:models="clr-namespace:Pulse.Models"
     xmlns:vm="clr-namespace:Pulse.ViewModels"
     x:Name="PageRoot"
     Title="Gestione Allievo"
@@ -10,36 +11,41 @@
     BackgroundColor="#F8FAFC">
 
     <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="15">
+        <VerticalStackLayout Padding="20" Spacing="14">
 
             <!--  DATI ANAGRAFICI  -->
-            <Label
-                FontAttributes="Bold"
-                Text="Nome:"
-                TextColor="#1E293B" />
-            <Border
-                Padding="10,0"
-                Stroke="#CBD5E1"
-                StrokeShape="RoundRectangle 8">
-                <Entry
-                    HeightRequest="45"
-                    Placeholder="Es. Mario"
-                    Text="{Binding Nome}" />
-            </Border>
-
-            <Label
-                FontAttributes="Bold"
-                Text="Cognome:"
-                TextColor="#1E293B" />
-            <Border
-                Padding="10,0"
-                Stroke="#CBD5E1"
-                StrokeShape="RoundRectangle 8">
-                <Entry
-                    HeightRequest="45"
-                    Placeholder="Es. Rossi"
-                    Text="{Binding Cognome}" />
-            </Border>
+            <Grid ColumnDefinitions="*, *" ColumnSpacing="12">
+                <VerticalStackLayout Grid.Column="0" Spacing="4">
+                    <Label
+                        FontAttributes="Bold"
+                        Text="Nome:"
+                        TextColor="#1E293B" />
+                    <Border
+                        Padding="10,0"
+                        Stroke="#CBD5E1"
+                        StrokeShape="RoundRectangle 8">
+                        <Entry
+                            HeightRequest="42"
+                            Placeholder="Es. Mario"
+                            Text="{Binding Nome}" />
+                    </Border>
+                </VerticalStackLayout>
+                <VerticalStackLayout Grid.Column="1" Spacing="4">
+                    <Label
+                        FontAttributes="Bold"
+                        Text="Cognome:"
+                        TextColor="#1E293B" />
+                    <Border
+                        Padding="10,0"
+                        Stroke="#CBD5E1"
+                        StrokeShape="RoundRectangle 8">
+                        <Entry
+                            HeightRequest="42"
+                            Placeholder="Es. Rossi"
+                            Text="{Binding Cognome}" />
+                    </Border>
+                </VerticalStackLayout>
+            </Grid>
 
             <Label
                 FontAttributes="Bold"
@@ -50,12 +56,12 @@
                 Stroke="#CBD5E1"
                 StrokeShape="RoundRectangle 8">
                 <Entry
-                    HeightRequest="45"
+                    HeightRequest="42"
                     Placeholder="Es. RSSMRA80A01H501U"
                     Text="{Binding CodiceFiscale}" />
             </Border>
 
-            <Grid ColumnDefinitions="*, *">
+            <Grid ColumnDefinitions="*, *" ColumnSpacing="12">
                 <VerticalStackLayout Grid.Column="0" Spacing="4">
                     <Label
                         FontAttributes="Bold"
@@ -66,15 +72,12 @@
                         Stroke="#CBD5E1"
                         StrokeShape="RoundRectangle 8">
                         <Entry
-                            HeightRequest="45"
+                            HeightRequest="42"
                             Keyboard="Telephone"
                             Text="{Binding Telefono}" />
                     </Border>
                 </VerticalStackLayout>
-                <VerticalStackLayout
-                    Grid.Column="1"
-                    Margin="10,0,0,0"
-                    Spacing="4">
+                <VerticalStackLayout Grid.Column="1" Spacing="4">
                     <Label
                         FontAttributes="Bold"
                         Text="Email:"
@@ -84,35 +87,40 @@
                         Stroke="#CBD5E1"
                         StrokeShape="RoundRectangle 8">
                         <Entry
-                            HeightRequest="45"
+                            HeightRequest="42"
                             Keyboard="Email"
                             Text="{Binding Email}" />
                     </Border>
                 </VerticalStackLayout>
             </Grid>
 
-            <!--  ================= SEZIONE STORICO ABBONAMENTI =================  -->
+            <!--  ================= TABELLA STORICO ABBONAMENTI =================  -->
             <Border
                 Margin="0,10,0,0"
-                Padding="15"
+                Padding="0"
                 BackgroundColor="White"
                 Stroke="#E2E8F0"
                 StrokeShape="RoundRectangle 12">
-                <VerticalStackLayout Spacing="12">
 
-                    <Grid ColumnDefinitions="*, Auto">
+                <VerticalStackLayout Spacing="0">
+
+                    <!--  INTESTAZIONE SEZIONE E TASTO NUOVO  -->
+                    <Grid
+                        Padding="15,12"
+                        BackgroundColor="#F8FAFC"
+                        ColumnDefinitions="*, Auto">
                         <Label
                             Grid.Column="0"
                             FontAttributes="Bold"
-                            FontSize="16"
+                            FontSize="15"
                             Text="💳 Storico Abbonamenti"
                             TextColor="#1E293B"
                             VerticalOptions="Center" />
 
-                        <!--  + NUOVO ABBONAMENTO  -->
                         <Button
                             Grid.Column="1"
-                            BackgroundColor="#4F46E5"
+                            Padding="12,0"
+                            BackgroundColor="#10B981"
                             Command="{Binding ApriPopupNuovoAbbonamentoCommand}"
                             CornerRadius="6"
                             FontAttributes="Bold"
@@ -122,132 +130,216 @@
                             TextColor="White" />
                     </Grid>
 
-                    <!--  LISTA ABBONAMENTI  -->
-                    <CollectionView ItemsSource="{Binding ListaAbbonamenti}" SelectionMode="None">
+                    <BoxView BackgroundColor="#E2E8F0" HeightRequest="1" />
+
+                    <!--  BARRA DI RICERCA E FILTRO PER ANNO  -->
+                    <Grid
+                        Padding="12"
+                        ColumnDefinitions="2*, 1*"
+                        ColumnSpacing="12">
+                        <Border
+                            Grid.Column="0"
+                            Padding="8,0"
+                            BackgroundColor="#F8FAFC"
+                            Stroke="#CBD5E1"
+                            StrokeShape="RoundRectangle 8">
+                            <SearchBar
+                                HeightRequest="42"
+                                Placeholder="🔍 Cerca per corso o tipologia..."
+                                Text="{Binding TestoRicercaAbbonamento}" />
+                        </Border>
+
+                        <Border
+                            Grid.Column="1"
+                            BackgroundColor="#F8FAFC"
+                            Stroke="#CBD5E1"
+                            StrokeShape="RoundRectangle 8">
+                            <Picker
+                                Title="Seleziona Anno"
+                                Margin="10,0"
+                                ItemsSource="{Binding AnniDisponibili}"
+                                SelectedItem="{Binding AnnoSelezionato}"
+                                TextColor="#1E293B"
+                                TitleColor="#64748B" />
+                        </Border>
+                    </Grid>
+
+                    <!--  HEADER TABELLA (Azioni a 170px)  -->
+                    <Grid
+                        Padding="16,10"
+                        BackgroundColor="#F1F5F9"
+                        ColumnDefinitions="2*, 1.2*, 1*, 1*, 170"
+                        ColumnSpacing="10">
+                        <Label
+                            Grid.Column="0"
+                            FontAttributes="Bold"
+                            FontSize="11"
+                            Text="Corso / Tipo"
+                            TextColor="#475569" />
+                        <Label
+                            Grid.Column="1"
+                            FontAttributes="Bold"
+                            FontSize="11"
+                            Text="Periodo"
+                            TextColor="#475569" />
+                        <Label
+                            Grid.Column="2"
+                            FontAttributes="Bold"
+                            FontSize="11"
+                            Text="Importo"
+                            TextColor="#475569" />
+                        <Label
+                            Grid.Column="3"
+                            FontAttributes="Bold"
+                            FontSize="11"
+                            Text="Stato"
+                            TextColor="#475569" />
+                        <Label
+                            Grid.Column="4"
+                            FontAttributes="Bold"
+                            FontSize="11"
+                            HorizontalTextAlignment="Center"
+                            Text="Azioni"
+                            TextColor="#475569" />
+                    </Grid>
+
+                    <BoxView BackgroundColor="#E2E8F0" HeightRequest="1" />
+
+                    <!--  RIGHE TABELLA (x:DataType="x:Object" garantisce la risoluzione dei Command con x:Reference)  -->
+                    <CollectionView ItemsSource="{Binding ListaAbbonamentiPaginata}" SelectionMode="None">
                         <CollectionView.EmptyView>
-                            <Label
-                                Margin="0,10"
-                                FontSize="12"
+                            <VerticalStackLayout
+                                Padding="20"
                                 HorizontalOptions="Center"
-                                Text="Nessun abbonamento registrato."
-                                TextColor="#94A3B8" />
+                                Spacing="6">
+                                <Label
+                                    FontSize="30"
+                                    HorizontalOptions="Center"
+                                    Text="📄" />
+                                <Label
+                                    FontSize="12"
+                                    HorizontalOptions="Center"
+                                    Text="Nessun abbonamento registrato per i filtri selezionati."
+                                    TextColor="#94A3B8" />
+                            </VerticalStackLayout>
                         </CollectionView.EmptyView>
 
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="x:Object">
                                 <Border
-                                    Margin="0,0,0,8"
-                                    Padding="12"
-                                    BackgroundColor="#F8FAFC"
-                                    Stroke="{Binding ColoreStatoHex}"
-                                    StrokeShape="RoundRectangle 8"
-                                    StrokeThickness="1.5">
+                                    Padding="16,10"
+                                    Stroke="#F1F5F9"
+                                    StrokeThickness="0.5">
                                     <Grid
-                                        ColumnDefinitions="*, Auto, Auto"
-                                        ColumnSpacing="6"
-                                        RowDefinitions="Auto, Auto"
-                                        RowSpacing="4">
+                                        ColumnDefinitions="2*, 1.2*, 1*, 1*, 200"
+                                        ColumnSpacing="10"
+                                        VerticalOptions="Center">
 
-                                        <!--  Nome Corso e Tipo  -->
-                                        <VerticalStackLayout Grid.Row="0" Grid.Column="0">
+                                        <!--  Corso e Tipologia  -->
+                                        <VerticalStackLayout
+                                            Grid.Column="0"
+                                            Spacing="1"
+                                            VerticalOptions="Center">
                                             <Label
                                                 FontAttributes="Bold"
-                                                FontSize="14"
+                                                FontSize="13"
+                                                LineBreakMode="TailTruncation"
                                                 Text="{Binding Corso.Nome}"
                                                 TextColor="#1E293B" />
                                             <Label
-                                                FontSize="12"
+                                                FontSize="11"
                                                 Text="{Binding TipoAbbonamento}"
                                                 TextColor="#64748B" />
                                         </VerticalStackLayout>
 
-                                        <!--  Badge Stato  -->
-                                        <Border
-                                            Grid.Row="0"
+                                        <!--  Date Inizio e Fine  -->
+                                        <VerticalStackLayout
                                             Grid.Column="1"
-                                            Padding="8,2"
-                                            BackgroundColor="{Binding ColoreStatoHex}"
-                                            StrokeShape="RoundRectangle 12">
+                                            Spacing="1"
+                                            VerticalOptions="Center">
+                                            <Label
+                                                FontSize="11"
+                                                Text="{Binding DataInizio, StringFormat='Inizio: {0:dd/MM/yy}'}"
+                                                TextColor="#64748B" />
                                             <Label
                                                 FontAttributes="Bold"
                                                 FontSize="11"
+                                                Text="{Binding DataScadenza, StringFormat='Fine: {0:dd/MM/yy}'}"
+                                                TextColor="#334155" />
+                                        </VerticalStackLayout>
+
+                                        <!--  Importo  -->
+                                        <Label
+                                            Grid.Column="2"
+                                            FontAttributes="Bold"
+                                            FontSize="12"
+                                            Text="{Binding ImportoTotale, StringFormat='€ {0:N2}'}"
+                                            TextColor="#10B981"
+                                            VerticalOptions="Center" />
+
+                                        <!--  Badge Stato  -->
+                                        <Border
+                                            Grid.Column="3"
+                                            Padding="6,2"
+                                            BackgroundColor="{Binding ColoreStatoHex}"
+                                            HorizontalOptions="Start"
+                                            StrokeShape="RoundRectangle 8"
+                                            StrokeThickness="0"
+                                            VerticalOptions="Center">
+                                            <Label
+                                                FontAttributes="Bold"
+                                                FontSize="10"
                                                 Text="{Binding StatoTesto}"
                                                 TextColor="White" />
                                         </Border>
 
-                                        <!--  Scadenza e Importo  -->
-                                        <VerticalStackLayout
-                                            Grid.Row="1"
-                                            Grid.Column="0"
-                                            Grid.ColumnSpan="2"
-                                            Margin="0,4,0,0">
-                                            <Label FontSize="12" TextColor="#475569">
-                                                <Label.FormattedText>
-                                                    <FormattedString>
-                                                        <Span Text="Scadenza: " />
-                                                        <Span FontAttributes="Bold" Text="{Binding DataScadenza, StringFormat='{0:dd/MM/yyyy}'}" />
-                                                        <Span Text=" | Importo: € " />
-                                                        <Span
-                                                            FontAttributes="Bold"
-                                                            Text="{Binding ImportoTotale, StringFormat='{0:N2}'}"
-                                                            TextColor="#10B981" />
-                                                    </FormattedString>
-                                                </Label.FormattedText>
-                                            </Label>
-                                        </VerticalStackLayout>
-
-                                        <!--  CONTROLLI: STAMPA 🖨️ - PLAY/PAUSA ⏯️ - RINNOVA 🔄 - CESTINO 🗑️  -->
+                                        <!--  Azioni con binding esplicito a PageRoot  -->
                                         <HorizontalStackLayout
-                                            Grid.Row="0"
-                                            Grid.RowSpan="2"
-                                            Grid.Column="2"
-                                            Spacing="4"
+                                            Grid.Column="4"
+                                            HorizontalOptions="Center"
+                                            Spacing="6"
                                             VerticalOptions="Center">
 
-                                            <!--  🖨️ Stampa  -->
                                             <Button
                                                 Padding="0"
                                                 BackgroundColor="#F1F5F9"
-                                                Command="{Binding BindingContext.StampaRicevutaCommand, Source={x:Reference PageRoot}}"
+                                                Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.StampaRicevutaCommand}"
                                                 CommandParameter="{Binding .}"
                                                 CornerRadius="16"
-                                                FontSize="14"
+                                                FontSize="13"
                                                 HeightRequest="32"
                                                 Text="🖨️"
                                                 WidthRequest="32" />
 
-                                            <!--  ⏯️ Play / Pause  -->
                                             <Button
                                                 Padding="0"
                                                 BackgroundColor="#E2E8F0"
-                                                Command="{Binding BindingContext.ToggleSospensioneAbbonamentoCommand, Source={x:Reference PageRoot}}"
+                                                Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.ToggleSospensioneAbbonamentoCommand}"
                                                 CommandParameter="{Binding .}"
                                                 CornerRadius="16"
-                                                FontSize="14"
+                                                FontSize="13"
                                                 HeightRequest="32"
                                                 Text="{Binding IconaPausaTesto}"
                                                 WidthRequest="32" />
 
-                                            <!--  🔄 Rinnova  -->
                                             <Button
                                                 Padding="0"
                                                 BackgroundColor="#DBEAFE"
-                                                Command="{Binding BindingContext.RinnovaAbbonamentoCommand, Source={x:Reference PageRoot}}"
+                                                Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.RinnovaAbbonamentoCommand}"
                                                 CommandParameter="{Binding .}"
                                                 CornerRadius="16"
-                                                FontSize="14"
+                                                FontSize="13"
                                                 HeightRequest="32"
                                                 Text="🔄"
                                                 WidthRequest="32" />
 
-                                            <!--  🗑️ Elimina  -->
                                             <Button
                                                 Padding="0"
                                                 BackgroundColor="#FEE2E2"
-                                                Command="{Binding BindingContext.EliminaAbbonamentoCommand, Source={x:Reference PageRoot}}"
+                                                Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.EliminaAbbonamentoCommand}"
                                                 CommandParameter="{Binding .}"
                                                 CornerRadius="16"
-                                                FontSize="14"
+                                                FontSize="13"
                                                 HeightRequest="32"
                                                 Text="🗑️"
                                                 WidthRequest="32" />
@@ -258,17 +350,60 @@
                         </CollectionView.ItemTemplate>
                     </CollectionView>
 
+                    <BoxView BackgroundColor="#E2E8F0" HeightRequest="1" />
+
+                    <!--  BARRA DI PAGINAZIONE  -->
+                    <Grid
+                        Padding="12,8"
+                        BackgroundColor="#F8FAFC"
+                        ColumnDefinitions="Auto, *, Auto">
+                        <Button
+                            Grid.Column="0"
+                            Padding="10,0"
+                            BackgroundColor="#E2E8F0"
+                            Command="{Binding PaginaPrecedenteCommand}"
+                            CornerRadius="6"
+                            FontAttributes="Bold"
+                            FontSize="11"
+                            HeightRequest="32"
+                            IsEnabled="{Binding HaPaginaPrecedente}"
+                            Text="◀ Precedente"
+                            TextColor="#1E293B" />
+
+                        <Label
+                            Grid.Column="1"
+                            FontAttributes="Bold"
+                            FontSize="12"
+                            HorizontalOptions="Center"
+                            Text="{Binding TestoPaginazione}"
+                            TextColor="#475569"
+                            VerticalOptions="Center" />
+
+                        <Button
+                            Grid.Column="2"
+                            Padding="10,0"
+                            BackgroundColor="#E2E8F0"
+                            Command="{Binding PaginaSuccessivaCommand}"
+                            CornerRadius="6"
+                            FontAttributes="Bold"
+                            FontSize="11"
+                            HeightRequest="32"
+                            IsEnabled="{Binding HaPaginaSuccessiva}"
+                            Text="Successivo ▶"
+                            TextColor="#1E293B" />
+                    </Grid>
+
                 </VerticalStackLayout>
             </Border>
 
             <!--  PULSANTI SALVA ED ELIMINA ALLIEVO  -->
             <Button
-                Margin="0,15,0,0"
+                Margin="0,10,0,0"
                 BackgroundColor="#10B981"
                 Command="{Binding SalvaAllievoCommand}"
                 CornerRadius="8"
                 FontAttributes="Bold"
-                HeightRequest="48"
+                HeightRequest="46"
                 Text="Salva Allievo"
                 TextColor="White" />
 
@@ -277,7 +412,7 @@
                 Command="{Binding EliminaAllievoCommand}"
                 CornerRadius="8"
                 FontAttributes="Bold"
-                HeightRequest="48"
+                HeightRequest="46"
                 IsVisible="{Binding IsEdizione}"
                 Text="Elimina Allievo"
                 TextColor="White" />
