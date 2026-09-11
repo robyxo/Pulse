@@ -46,4 +46,17 @@ public interface IDatabaseService
     Task<List<Abbonamenti>> GetAbbonamentiAllievoAsync(int allievoId);
     Task<bool> SalvaAbbonamentoAsync(Abbonamenti abbonamento);
     Task<bool> EliminaAbbonamentoAsync(int id);
+
+    // ================================================
+    // CALENDARIO CHIUSURE
+    // ================================================
+    Task<List<CalendarioChiusure>> GetChiusureAsync();
+    Task<bool> SalvaChiusuraAsync(CalendarioChiusure chiusura);
+    Task<bool> EliminaChiusuraAsync(int id);
+
+    // ================================================
+    // PRIVACY
+    // ================================================
+    Task<List<Privacy>> GetPrivacyAllievoAsync(int allievoId);
+    Task<bool> SalvaPrivacyAsync(Privacy privacy);
 }

@@ -11,24 +11,37 @@ public partial class Allievi
 
     public string Cognome { get; set; } = null!;
 
-    public string? CodiceFiscale { get; set; }
+    public string? Indirizzo { get; set; }
+
+    public string? NCivico { get; set; }
+
+    public string? Cap { get; set; }
+
+    public string? Citta { get; set; }
+
+    public string? Provincia { get; set; }
 
     public string? Telefono { get; set; }
 
-    public string? Email { get; set; }
+    public string? Sesso { get; set; }
 
     public string? DataNascita { get; set; }
+
+    public string? Cellulare { get; set; }
+
+    public string? CodiceFiscale { get; set; }
+
+    public string? Email { get; set; }
 
     public string? Allegati { get; set; }
 
     public int? Attivo { get; set; }
-
-    // Proprietà calcolata comoda per la visualizzazione nelle liste
-    public string NomeCompleto => $"{Nome} {Cognome}";
 
     public virtual ICollection<Abbonamenti> Abbonamentis { get; set; } = new List<Abbonamenti>();
 
     public virtual ICollection<Iscrizioni> Iscrizionis { get; set; } = new List<Iscrizioni>();
 
     public virtual ICollection<Presenze> Presenzes { get; set; } = new List<Presenze>();
+
+    public virtual ICollection<Privacy> Privacies { get; set; } = new List<Privacy>();
 }

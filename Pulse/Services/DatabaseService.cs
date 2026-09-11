@@ -240,4 +240,64 @@ public class DatabaseService : IDatabaseService
         _context.Abbonamentis.Update(abb);
         return await _context.SaveChangesAsync() > 0;
     }
+
+    // ================================================
+    // CALENDARIO CHIUSURE
+    // ================================================
+
+    public async Task<List<CalendarioChiusure>> GetChiusureAsync()
+    {
+        return await _context.CalendarioChiusures
+            .OrderBy(c => c.DataInizio)
+            .ToListAsync();
+    }
+
+    public async Task<bool> SalvaChiusuraAsync(CalendarioChiusure chiusura)
+    {
+        if (chiusura.Id == 0)
+        {
+            _context.CalendarioChiusures.Add(chiusura);
+        }
+        else
+        {
+            _context.CalendarioChiusures.Update(chiusura);
+        }
+
+        return await _context.SaveChangesAsync() > 0;
+    }
+
+    public async Task<bool> EliminaChiusuraAsync(int id)
+    {
+        var chiusura = await _context.CalendarioChiusures.FindAsync(id);
+        if (chiusura == null) return false;
+
+        _context.CalendarioChiusures.Remove(chiusura);
+        return await _context.SaveChangesAsync() > 0;
+    }
+
+    // ================================================
+    // PRIVACY
+    // ================================================
+
+    public async Task<List<Privacy>> GetPrivacyAllievoAsync(int allievoId)
+    {
+        return await _context.Privacies
+            .Where(p => p.IdAllievo == allievoId)
+            .OrderByDescending(p => p.Data)
+            .ToListAsync();
+    }
+
+    public async Task<bool> SalvaPrivacyAsync(Privacy privacy)
+    {
+        if (privacy.Id == 0)
+        {
+            _context.Privacies.Add(privacy);
+        }
+        else
+        {
+            _context.Privacies.Update(privacy);
+        }
+
+        return await _context.SaveChangesAsync() > 0;
+    }
 }

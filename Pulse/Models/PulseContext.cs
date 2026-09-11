@@ -19,6 +19,8 @@ public partial class PulseContext : DbContext
 
     public virtual DbSet<Allievi> Allievis { get; set; }
 
+    public virtual DbSet<CalendarioChiusure> CalendarioChiusures { get; set; }
+
     public virtual DbSet<Corsi> Corsis { get; set; }
 
     public virtual DbSet<Insegnanti> Insegnantis { get; set; }
@@ -28,6 +30,8 @@ public partial class PulseContext : DbContext
     public virtual DbSet<Lezioni> Lezionis { get; set; }
 
     public virtual DbSet<Presenze> Presenzes { get; set; }
+
+    public virtual DbSet<Privacy> Privacies { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -52,6 +56,15 @@ public partial class PulseContext : DbContext
             entity.ToTable("Allievi");
 
             entity.Property(e => e.Attivo).HasDefaultValue(1);
+            entity.Property(e => e.NCivico).HasColumnName("N_Civico");
+        });
+
+        modelBuilder.Entity<CalendarioChiusure>(entity =>
+        {
+            entity.ToTable("CalendarioChiusure");
+
+            entity.Property(e => e.DataFine).HasColumnName("Data_Fine");
+            entity.Property(e => e.DataInizio).HasColumnName("Data_Inizio");
         });
 
         modelBuilder.Entity<Corsi>(entity =>
@@ -116,6 +129,15 @@ public partial class PulseContext : DbContext
             entity.HasOne(d => d.Lezione).WithMany(p => p.Presenzes)
                 .HasForeignKey(d => d.LezioneId)
                 .OnDelete(DeleteBehavior.ClientSetNull);
+        });
+
+        modelBuilder.Entity<Privacy>(entity =>
+        {
+            entity.ToTable("Privacy");
+
+            entity.Property(e => e.IdAllievo).HasColumnName("Id_Allievo");
+
+            entity.HasOne(d => d.IdAllievoNavigation).WithMany(p => p.Privacies).HasForeignKey(d => d.IdAllievo);
         });
 
         OnModelCreatingPartial(modelBuilder);
