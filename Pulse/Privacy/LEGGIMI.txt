@@ -1,0 +1,48 @@
+================================================================================
+          ISTRUZIONI PER IL MODELLO PRIVACY E CONSENSO (FILE WORD)
+================================================================================
+
+In questa cartella ogni scuola di danza può inserire il proprio modulo di informativa 
+e consenso privacy in formato Word (.docx), personalizzato con la propria grafica, 
+clausole legali e logo.
+
+1. NOME DEL FILE
+
+Il modello principale deve essere nominato esattamente:
+ModelloPrivacy.docx
+
+2. SEGNAPOSTO DISPONIBILI PER LA COMPILAZIONE AUTOMATICA
+
+Nel testo del documento Word, nei punti in cui si desidera stampare i dati dell'allievo,
+è sufficiente scrivere i seguenti tag (inclusi i doppi apici graffi):
+
+Dati Anagrafici:
+- {{NOME}}             -> Nome dell'allievo
+- {{COGNOME}}          -> Cognome dell'allievo
+- {{CODICEFISCALE}}    -> Codice Fiscale
+- {{DATANASCITA}}      -> Data di nascita
+- {{SESSO}}            -> Sesso (M / F)
+
+Recapiti e Indirizzo:
+- {{INDIRIZZO}}        -> Via / Piazza
+- {{CIVICO}}           -> Numero civico
+- {{CAP}}              -> CAP
+- {{CITTA}}            -> Comune di residenza
+- {{PROVINCIA}}        -> Provincia
+- {{TELEFONO}}         -> Telefono fisso o cellulare
+- {{EMAIL}}            -> Indirizzo email
+
+Dati Generali Scuola:
+- {{DATA_OGGI}}        -> Data odierna di generazione documento (GG/MM/AAAA)
+- {{NOME_SCUOLA}}      -> Nome della scuola impostato nelle impostazioni
+
+3. MODALITÀ DI STAMPA
+
+Dalla schermata di registrazione allievo, il gestionale proporrà due opzioni:
+
+    1. "Documento Compilato": genera una copia con i campi sostituiti e la apre per la stampa.
+
+    2. "Modulo Vuoto": apre direttamente il modello originale con le righe puntinate vuote.
+
+
+================================================================================
