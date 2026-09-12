@@ -115,6 +115,20 @@
                     Text="📚 Gestione Allievi"
                     TextColor="White" />
 
+                <Button
+                    BackgroundColor="#F59E0B"
+                    Command="{Binding NavigaNotificheCommand}"
+                    FontAttributes="Bold"
+                    Text="📨 Notifiche"
+                    TextColor="White" />
+
+                <Button
+                    BackgroundColor="#64748B"
+                    Command="{Binding NavigaImpostazioniCommand}"
+                    FontAttributes="Bold"
+                    Text="⚙️ Impostazioni"
+                    TextColor="White" />
+
             </VerticalStackLayout>
         </VerticalStackLayout>
 

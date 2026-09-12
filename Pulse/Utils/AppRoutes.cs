@@ -30,4 +30,14 @@ public static class AppRoutes
         public const string PaginaAllievi = "AllieviPage";
         public const string GestioneAllievo = "GestioneAllievoPage";
     }
+
+    public static class Notifiche
+    {
+        public const string Pagina = "NotifichePage";
+    }
+
+    public static class Impostazioni
+    {
+        public const string Pagina = "ImpostazioniPage";
+    }
 }

@@ -1,5 +1,7 @@
-﻿using CommunityToolkit.Maui;
+﻿using System.Reflection;
+using CommunityToolkit.Maui;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Pulse.Models;
 using Pulse.Services;
 using Pulse.ViewModels;
@@ -22,6 +24,24 @@ public static class MauiProgram
               fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
               fonts.AddFont("MaterialSymbols.ttf", "MaterialSymbols");
           });
+
+        // 0. Caricamento configurazione da appsettings.json (embedded resource)
+        var assembly = Assembly.GetExecutingAssembly();
+        using (var stream = assembly.GetManifestResourceStream("Pulse.appsettings.json"))
+        {
+            var configBuilder = new ConfigurationBuilder();
+            if (stream != null)
+            {
+                configBuilder.AddJsonStream(stream);
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("⚠️ appsettings.json non trovato come embedded resource.");
+            }
+
+            var configuration = configBuilder.Build();
+            builder.Services.AddSingleton<IConfiguration>(configuration);
+        }
 
         // 1. Percorso del Database SQLite in AppData
         var dbFileName = "Pulse.db";
@@ -52,6 +72,8 @@ public static class MauiProgram
         builder.Services.AddTransient<AllieviViewModel>();
         builder.Services.AddTransient<GestioneAllievoViewModel>();
         builder.Services.AddTransient<GestioneLezioneViewModel>();
+        builder.Services.AddTransient<NotificheViewModel>();
+        builder.Services.AddTransient<ImpostazioniViewModel>();
 
         // 3. Registrazione Views (Pagine)
         builder.Services.AddTransient<MainPage>();
@@ -64,10 +86,13 @@ public static class MauiProgram
         builder.Services.AddTransient<AllieviPage>();
         builder.Services.AddTransient<GestioneAllievoPage>();
         builder.Services.AddTransient<GestioneLezionePage>();
+        builder.Services.AddTransient<NotifichePage>();
+        builder.Services.AddTransient<ImpostazioniPage>();
 
         // 4. Registrazione Servizi
         builder.Services.AddSingleton<INavigationService, NavigationService>();
         builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
+        builder.Services.AddSingleton<IEmailService, EmailService>();
 
         ConfigureWindowsSpecific(builder);
 

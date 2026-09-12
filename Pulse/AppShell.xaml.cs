@@ -31,7 +31,11 @@ public partial class AppShell : Shell
 
             // 👨‍🎓 Rotte Allievi
             { AppRoutes.Allievi.PaginaAllievi, typeof(AllieviPage) },
-            { AppRoutes.Allievi.GestioneAllievo, typeof(GestioneAllievoPage) }
+            { AppRoutes.Allievi.GestioneAllievo, typeof(GestioneAllievoPage) },
+
+             // 📨 Rotte Notifiche & Impostazioni
+            { AppRoutes.Notifiche.Pagina, typeof(NotifichePage) },
+            { AppRoutes.Impostazioni.Pagina, typeof(ImpostazioniPage) }
         };
 
         foreach (var item in routes)

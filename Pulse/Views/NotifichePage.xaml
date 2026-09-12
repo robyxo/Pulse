@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Pulse.Views.NotifichePage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:Pulse.ViewModels"
+    Title="Notifiche"
+    x:DataType="vm:NotificheViewModel"
+    BackgroundColor="#F8FAFC">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="15">
+
+            <Label
+                FontAttributes="Bold"
+                FontSize="20"
+                Text="📨 Invia Notifica agli Allievi" />
+
+            <Label
+                FontSize="13"
+                Text="Il messaggio verrà inviato via email a tutti gli allievi attivi che hanno un indirizzo email salvato."
+                TextColor="Gray" />
+
+            <Label
+                FontAttributes="Bold"
+                Text="Oggetto:"
+                TextColor="#1E293B" />
+            <Border
+                Padding="10,0"
+                Stroke="#CBD5E1"
+                StrokeShape="RoundRectangle 8">
+                <Entry
+                    HeightRequest="42"
+                    Placeholder="Oggetto dell'email"
+                    Text="{Binding Oggetto}" />
+            </Border>
+
+            <Label
+                FontAttributes="Bold"
+                Text="Messaggio:"
+                TextColor="#1E293B" />
+            <Border
+                Padding="10"
+                Stroke="#CBD5E1"
+                StrokeShape="RoundRectangle 8">
+                <Editor
+                    AutoSize="TextChanges"
+                    HeightRequest="180"
+                    Placeholder="Scrivi qui il messaggio da inviare..."
+                    Text="{Binding Messaggio}" />
+            </Border>
+
+            <Button
+                Margin="0,10,0,0"
+                BackgroundColor="#F59E0B"
+                Command="{Binding InviaNotificaCommand}"
+                CornerRadius="12"
+                FontAttributes="Bold"
+                HeightRequest="50"
+                Text="📨 Invia Notifica"
+                TextColor="White" />
+
+            <ActivityIndicator
+                HorizontalOptions="Center"
+                IsRunning="{Binding IsBusy}"
+                IsVisible="{Binding IsBusy}" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
