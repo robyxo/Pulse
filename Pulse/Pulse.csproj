@@ -36,7 +36,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Remove="Privacy\AutoModelloPrivacy - Copia.docx" />
 	  <None Remove="Privacy\LEGGIMI.txt" />
 	  <None Remove="Privacy\ModelloPrivacy.docx" />
 	</ItemGroup>
@@ -46,7 +45,7 @@
 			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
 		</EmbeddedResource>
 		<EmbeddedResource Include="appsettings.json" />
-		<EmbeddedResource Include="Privacy\AutoModelloPrivacy - Copia.docx" />
+		<EmbeddedResource Include="Privacy\AutoModelloPrivacy.docx" />
 		<EmbeddedResource Include="Privacy\LEGGIMI.txt" />
 		<EmbeddedResource Include="Privacy\ModelloPrivacy.docx" />
 	</ItemGroup>

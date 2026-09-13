@@ -23,6 +23,8 @@ public partial class Corsi
 
     public int? Attivo { get; set; }
 
+    public string? ColoreTesto { get; set; }
+
     public virtual ICollection<Abbonamenti> Abbonamentis { get; set; } = new List<Abbonamenti>();
 
     public virtual ICollection<Iscrizioni> Iscrizionis { get; set; } = new List<Iscrizioni>();

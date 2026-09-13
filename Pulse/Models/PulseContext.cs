@@ -73,6 +73,7 @@ public partial class PulseContext : DbContext
 
             entity.Property(e => e.Attivo).HasDefaultValue(1);
             entity.Property(e => e.Colore).HasDefaultValue("#4F46E5");
+            entity.Property(e => e.ColoreTesto).HasDefaultValue("#000000");
             entity.Property(e => e.CostoAnnuale).HasDefaultValue(0.0);
             entity.Property(e => e.CostoMensile).HasDefaultValue(0.0);
             entity.Property(e => e.CostoSingolo).HasDefaultValue(0.0);
