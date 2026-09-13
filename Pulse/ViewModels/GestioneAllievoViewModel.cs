@@ -11,6 +11,7 @@ public partial class GestioneAllievoViewModel : BaseViewModel
 {
     private readonly IDatabaseService _dbService;
     private readonly RicevutaService _ricevutaService;
+    private readonly PrivacyDocumentService _privacyDocumentService;
     private List<Abbonamenti> _listaAbbonamentiMaster = new();
 
     [ObservableProperty]
@@ -30,6 +31,36 @@ public partial class GestioneAllievoViewModel : BaseViewModel
 
     [ObservableProperty]
     private string _email = string.Empty;
+
+    // --- NUOVI CAMPI ANAGRAFICA (allineati al Model) ---
+    [ObservableProperty]
+    private string _sesso = "M";
+
+    [ObservableProperty]
+    private DateTime _dataNascita = DateTime.Today.AddYears(-20);
+
+    [ObservableProperty]
+    private string _indirizzo = string.Empty;
+
+    [ObservableProperty]
+    private string _nCivico = string.Empty;
+
+    [ObservableProperty]
+    private string _cap = string.Empty;
+
+    [ObservableProperty]
+    private string _citta = string.Empty;
+
+    [ObservableProperty]
+    private string _provincia = string.Empty;
+
+    [ObservableProperty]
+    private string _cellulare = string.Empty;
+
+    [ObservableProperty]
+    private string _allegati = string.Empty;
+
+    public List<string> OpzioniSesso { get; } = new() { "M", "F", "Altro" };
 
     [ObservableProperty]
     private bool _isEdizione = false;
@@ -69,6 +100,7 @@ public partial class GestioneAllievoViewModel : BaseViewModel
     {
         _dbService = dbService;
         _ricevutaService = new RicevutaService();
+        _privacyDocumentService = new PrivacyDocumentService();
         Title = "Gestione Allievo";
     }
 
@@ -81,6 +113,18 @@ public partial class GestioneAllievoViewModel : BaseViewModel
         CodiceFiscale = value.CodiceFiscale ?? string.Empty;
         Telefono = value.Telefono ?? string.Empty;
         Email = value.Email ?? string.Empty;
+
+        Sesso = string.IsNullOrWhiteSpace(value.Sesso) ? "M" : value.Sesso;
+        DataNascita = DateTime.TryParse(value.DataNascita, out var dataNascitaParsata)
+            ? dataNascitaParsata
+            : DateTime.Today.AddYears(-20);
+        Indirizzo = value.Indirizzo ?? string.Empty;
+        NCivico = value.NCivico ?? string.Empty;
+        Cap = value.Cap ?? string.Empty;
+        Citta = value.Citta ?? string.Empty;
+        Provincia = value.Provincia ?? string.Empty;
+        Cellulare = value.Cellulare ?? string.Empty;
+        Allegati = value.Allegati ?? string.Empty;
 
         IsEdizione = value.Id > 0;
 
@@ -374,6 +418,53 @@ public partial class GestioneAllievoViewModel : BaseViewModel
         }
     }
 
+    // ➖ TOGLI 1 SETTIMANA (correzione manuale della scadenza)
+    [RelayCommand]
+    public async Task DiminuisciSettimanaAbbonamentoAsync(Abbonamenti abbonamento)
+    {
+        if (abbonamento == null) return;
+
+        DateTime nuovaScadenza = abbonamento.DataScadenza.AddDays(-7);
+
+        bool conferma = await Shell.Current.DisplayAlert(
+            "Togli 1 Settimana",
+            $"Vuoi anticipare la scadenza di 7 giorni?\nNuova scadenza: {nuovaScadenza:dd/MM/yyyy}",
+            "Sì, Togli",
+            "Annulla");
+
+        if (!conferma) return;
+
+        abbonamento.DataScadenza = nuovaScadenza;
+
+        if (abbonamento.Id > 0)
+        {
+            await _dbService.SalvaAbbonamentoAsync(abbonamento);
+        }
+
+        ApplicaFiltroEPaginazione();
+    }
+
+    // ➕ AGGIUNGI 1 SETTIMANA (recupero lezione persa)
+    [RelayCommand]
+    public async Task AumentaSettimanaAbbonamentoAsync(Abbonamenti abbonamento)
+    {
+        if (abbonamento == null) return;
+
+        abbonamento.DataScadenza = abbonamento.DataScadenza.AddDays(7);
+
+        if (abbonamento.Id > 0)
+        {
+            await _dbService.SalvaAbbonamentoAsync(abbonamento);
+        }
+
+        ApplicaFiltroEPaginazione();
+
+        await Shell.Current.DisplayAlert(
+            "Settimana di Recupero Aggiunta",
+            $"Nuova scadenza: {abbonamento.DataScadenza:dd/MM/yyyy}.",
+            "OK");
+    }
+
     // 🗑️ ELIMINA ABBONAMENTO
     [RelayCommand]
     public async Task EliminaAbbonamentoAsync(Abbonamenti abbonamento)
@@ -426,6 +517,16 @@ public partial class GestioneAllievoViewModel : BaseViewModel
             Allievo.Telefono = Telefono?.Trim();
             Allievo.Email = Email?.Trim();
 
+            Allievo.Sesso = Sesso;
+            Allievo.DataNascita = DataNascita.ToString("yyyy-MM-dd");
+            Allievo.Indirizzo = Indirizzo?.Trim();
+            Allievo.NCivico = NCivico?.Trim();
+            Allievo.Cap = Cap?.Trim();
+            Allievo.Citta = Citta?.Trim();
+            Allievo.Provincia = Provincia?.Trim();
+            Allievo.Cellulare = Cellulare?.Trim();
+            Allievo.Allegati = Allegati?.Trim();
+
             await _dbService.SalvaAllievoAsync(Allievo);
 
             foreach (var abb in _listaAbbonamentiMaster)
@@ -433,9 +534,35 @@ public partial class GestioneAllievoViewModel : BaseViewModel
                 if (abb.AllievoId == 0) abb.AllievoId = Allievo.Id;
                 await _dbService.SalvaAbbonamentoAsync(abb);
             }
-
-            await Shell.Current.Navigation.PopAsync();
         });
+
+        // 🔒 DOCUMENTO PRIVACY
+        bool vuoleStamparePrivacy = await Shell.Current.DisplayAlert(
+            "Documento Privacy",
+            "Vuoi stampare il documento della privacy per questo allievo?",
+            "Sì",
+            "No");
+
+        if (vuoleStamparePrivacy)
+        {
+            string scelta = await Shell.Current.DisplayActionSheet(
+                "Come vuoi il documento?",
+                "Annulla",
+                null,
+                "Documento Compilato",
+                "Modulo Vuoto");
+
+            if (scelta == "Documento Compilato")
+            {
+                await _privacyDocumentService.GeneraECondividiDocumentoCompilatoAsync(Allievo);
+            }
+            else if (scelta == "Modulo Vuoto")
+            {
+                await _privacyDocumentService.ApriModuloVuotoAsync();
+            }
+        }
+
+        await Shell.Current.Navigation.PopAsync();
     }
 
     [RelayCommand]

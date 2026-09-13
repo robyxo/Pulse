@@ -47,6 +47,40 @@
                 </VerticalStackLayout>
             </Grid>
 
+            <!--  SESSO E DATA DI NASCITA  -->
+            <Grid ColumnDefinitions="*, *" ColumnSpacing="12">
+                <VerticalStackLayout Grid.Column="0" Spacing="4">
+                    <Label
+                        FontAttributes="Bold"
+                        Text="Sesso:"
+                        TextColor="#1E293B" />
+                    <Border
+                        Padding="10,0"
+                        Stroke="#CBD5E1"
+                        StrokeShape="RoundRectangle 8">
+                        <Picker
+                            Title="Seleziona"
+                            ItemsSource="{Binding OpzioniSesso}"
+                            SelectedItem="{Binding Sesso}" />
+                    </Border>
+                </VerticalStackLayout>
+                <VerticalStackLayout Grid.Column="1" Spacing="4">
+                    <Label
+                        FontAttributes="Bold"
+                        Text="Data di Nascita:"
+                        TextColor="#1E293B" />
+                    <Border
+                        Padding="10,0"
+                        Stroke="#CBD5E1"
+                        StrokeShape="RoundRectangle 8">
+                        <DatePicker
+                            Date="{Binding DataNascita}"
+                            Format="dd/MM/yyyy"
+                            HeightRequest="42" />
+                    </Border>
+                </VerticalStackLayout>
+            </Grid>
+
             <Label
                 FontAttributes="Bold"
                 Text="Codice Fiscale:"
@@ -60,6 +94,111 @@
                     Placeholder="Es. RSSMRA80A01H501U"
                     Text="{Binding CodiceFiscale}" />
             </Border>
+
+            <!--  INDIRIZZO E N. CIVICO  -->
+            <Grid ColumnDefinitions="*, *" ColumnSpacing="12">
+                <VerticalStackLayout Grid.Column="0" Spacing="4">
+                    <Label
+                        FontAttributes="Bold"
+                        Text="Indirizzo:"
+                        TextColor="#1E293B" />
+                    <Border
+                        Padding="10,0"
+                        Stroke="#CBD5E1"
+                        StrokeShape="RoundRectangle 8">
+                        <Entry
+                            HeightRequest="42"
+                            Placeholder="Es. Via Roma"
+                            Text="{Binding Indirizzo}" />
+                    </Border>
+                </VerticalStackLayout>
+                <VerticalStackLayout Grid.Column="1" Spacing="4">
+                    <Label
+                        FontAttributes="Bold"
+                        Text="N. Civico:"
+                        TextColor="#1E293B" />
+                    <Border
+                        Padding="10,0"
+                        Stroke="#CBD5E1"
+                        StrokeShape="RoundRectangle 8">
+                        <Entry
+                            HeightRequest="42"
+                            Placeholder="Es. 12"
+                            Text="{Binding NCivico}" />
+                    </Border>
+                </VerticalStackLayout>
+            </Grid>
+
+            <!--  CAP E CITTÀ  -->
+            <Grid ColumnDefinitions="*, *" ColumnSpacing="12">
+                <VerticalStackLayout Grid.Column="0" Spacing="4">
+                    <Label
+                        FontAttributes="Bold"
+                        Text="CAP:"
+                        TextColor="#1E293B" />
+                    <Border
+                        Padding="10,0"
+                        Stroke="#CBD5E1"
+                        StrokeShape="RoundRectangle 8">
+                        <Entry
+                            HeightRequest="42"
+                            Keyboard="Numeric"
+                            Placeholder="Es. 63074"
+                            Text="{Binding Cap}" />
+                    </Border>
+                </VerticalStackLayout>
+                <VerticalStackLayout Grid.Column="1" Spacing="4">
+                    <Label
+                        FontAttributes="Bold"
+                        Text="Città:"
+                        TextColor="#1E293B" />
+                    <Border
+                        Padding="10,0"
+                        Stroke="#CBD5E1"
+                        StrokeShape="RoundRectangle 8">
+                        <Entry
+                            HeightRequest="42"
+                            Placeholder="Es. San Benedetto del Tronto"
+                            Text="{Binding Citta}" />
+                    </Border>
+                </VerticalStackLayout>
+            </Grid>
+
+            <!--  PROVINCIA E CELLULARE  -->
+            <Grid ColumnDefinitions="*, *" ColumnSpacing="12">
+                <VerticalStackLayout Grid.Column="0" Spacing="4">
+                    <Label
+                        FontAttributes="Bold"
+                        Text="Provincia:"
+                        TextColor="#1E293B" />
+                    <Border
+                        Padding="10,0"
+                        Stroke="#CBD5E1"
+                        StrokeShape="RoundRectangle 8">
+                        <Entry
+                            HeightRequest="42"
+                            MaxLength="2"
+                            Placeholder="Es. AP"
+                            Text="{Binding Provincia}" />
+                    </Border>
+                </VerticalStackLayout>
+                <VerticalStackLayout Grid.Column="1" Spacing="4">
+                    <Label
+                        FontAttributes="Bold"
+                        Text="Cellulare:"
+                        TextColor="#1E293B" />
+                    <Border
+                        Padding="10,0"
+                        Stroke="#CBD5E1"
+                        StrokeShape="RoundRectangle 8">
+                        <Entry
+                            HeightRequest="42"
+                            Keyboard="Telephone"
+                            Placeholder="Es. 333 1234567"
+                            Text="{Binding Cellulare}" />
+                    </Border>
+                </VerticalStackLayout>
+            </Grid>
 
             <Grid ColumnDefinitions="*, *" ColumnSpacing="12">
                 <VerticalStackLayout Grid.Column="0" Spacing="4">
@@ -93,6 +232,21 @@
                     </Border>
                 </VerticalStackLayout>
             </Grid>
+
+            <!--  NOTE / ALLEGATI  -->
+            <Label
+                FontAttributes="Bold"
+                Text="Note / Allegati:"
+                TextColor="#1E293B" />
+            <Border
+                Padding="10"
+                Stroke="#CBD5E1"
+                StrokeShape="RoundRectangle 8">
+                <Editor
+                    HeightRequest="70"
+                    Placeholder="Note aggiuntive, riferimenti a certificati o documenti allegati..."
+                    Text="{Binding Allegati}" />
+            </Border>
 
             <!--  ================= TABELLA STORICO ABBONAMENTI =================  -->
             <Border
@@ -164,11 +318,11 @@
                         </Border>
                     </Grid>
 
-                    <!--  HEADER TABELLA (Azioni a 170px)  -->
+                    <!--  HEADER TABELLA (Azioni a 260px)  -->
                     <Grid
                         Padding="16,10"
                         BackgroundColor="#F1F5F9"
-                        ColumnDefinitions="2*, 1.2*, 1*, 1*, 170"
+                        ColumnDefinitions="2*, 1.2*, 1*, 1*, 260"
                         ColumnSpacing="10">
                         <Label
                             Grid.Column="0"
@@ -231,7 +385,7 @@
                                     Stroke="#F1F5F9"
                                     StrokeThickness="0.5">
                                     <Grid
-                                        ColumnDefinitions="2*, 1.2*, 1*, 1*, 200"
+                                        ColumnDefinitions="2*, 1.2*, 1*, 1*, 260"
                                         ColumnSpacing="10"
                                         VerticalOptions="Center">
 
@@ -320,6 +474,32 @@
                                                 FontSize="13"
                                                 HeightRequest="32"
                                                 Text="{Binding IconaPausaTesto}"
+                                                WidthRequest="32" />
+
+                                            <Button
+                                                Padding="0"
+                                                BackgroundColor="#FEF9C3"
+                                                Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.DiminuisciSettimanaAbbonamentoCommand}"
+                                                CommandParameter="{Binding .}"
+                                                CornerRadius="16"
+                                                FontAttributes="Bold"
+                                                FontSize="10"
+                                                HeightRequest="32"
+                                                Text="-7g"
+                                                TextColor="#92400E"
+                                                WidthRequest="32" />
+
+                                            <Button
+                                                Padding="0"
+                                                BackgroundColor="#DCFCE7"
+                                                Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.AumentaSettimanaAbbonamentoCommand}"
+                                                CommandParameter="{Binding .}"
+                                                CornerRadius="16"
+                                                FontAttributes="Bold"
+                                                FontSize="10"
+                                                HeightRequest="32"
+                                                Text="+7g"
+                                                TextColor="#166534"
                                                 WidthRequest="32" />
 
                                             <Button

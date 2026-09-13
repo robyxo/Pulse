@@ -8,8 +8,8 @@ clausole legali e logo.
 
 1. NOME DEL FILE
 
-Il modello principale deve essere nominato esattamente:
-ModelloPrivacy.docx
+Il modello principale nominato esattamente:
+ModelloPrivacy.docx per il file default vuoto, oppure AutoModelloPrivacy.docx per il file compilato automaticamente con i dati dell'allievo.
 
 2. SEGNAPOSTO DISPONIBILI PER LA COMPILAZIONE AUTOMATICA
 
