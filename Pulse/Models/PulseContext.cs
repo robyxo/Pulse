@@ -23,6 +23,8 @@ public partial class PulseContext : DbContext
 
     public virtual DbSet<Corsi> Corsis { get; set; }
 
+    public virtual DbSet<Impostazioni> Impostazionis { get; set; }
+
     public virtual DbSet<Insegnanti> Insegnantis { get; set; }
 
     public virtual DbSet<Iscrizioni> Iscrizionis { get; set; }
@@ -32,7 +34,6 @@ public partial class PulseContext : DbContext
     public virtual DbSet<Presenze> Presenzes { get; set; }
 
     public virtual DbSet<Privacy> Privacies { get; set; }
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Abbonamenti>(entity =>
@@ -77,6 +78,17 @@ public partial class PulseContext : DbContext
             entity.Property(e => e.CostoAnnuale).HasDefaultValue(0.0);
             entity.Property(e => e.CostoMensile).HasDefaultValue(0.0);
             entity.Property(e => e.CostoSingolo).HasDefaultValue(0.0);
+        });
+
+        modelBuilder.Entity<Impostazioni>(entity =>
+        {
+            entity.ToTable("Impostazioni");
+
+            entity.Property(e => e.EmailUseSsl).HasDefaultValue(1);
+            entity.Property(e => e.NumeroColoriCorsi).HasDefaultValue(6);
+            entity.Property(e => e.OrarioScaglionato).HasDefaultValue(0);
+            entity.Property(e => e.StampaDocumentoPrivacy).HasDefaultValue(1);
+            entity.Property(e => e.StampaRicevutaCortesia).HasDefaultValue(1);
         });
 
         modelBuilder.Entity<Insegnanti>(entity =>
