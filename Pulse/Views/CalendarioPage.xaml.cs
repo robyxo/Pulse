@@ -199,63 +199,44 @@ public partial class CalendarioPage : ContentPage
                 foreach (var lezione in lezioniFascia)
                 {
                     var badgeColor = _viewModel.StringToColor(lezione.Corso?.Colore ?? "#4F46E5");
+                    var testoColor = _viewModel.StringToColor(lezione.Corso?.ColoreTesto ?? "#FFFFFF");
 
                     var badgeLayout = new VerticalStackLayout
                     {
                         Spacing = 1,
                         Children =
-                        {
-                            new Label
-                            {
-                                Text = $"🕒 {lezione.OraInizio} - {lezione.OraFine}",
-                                TextColor = Colors.White,
-                                FontSize = 10,
-                                FontAttributes = FontAttributes.Bold
-                            },
-                            new Label
-                            {
-                                Text = lezione.Corso?.Nome ?? "",
-                                TextColor = Colors.White,
-                                FontSize = 11,
-                                FontAttributes = FontAttributes.Bold,
-                                LineBreakMode = LineBreakMode.TailTruncation
-                            }
-                        }
+        {
+            new Label
+            {
+                Text = $"🕒 {lezione.OraInizio} - {lezione.OraFine}",
+                TextColor = testoColor,
+                FontSize = 10,
+                FontAttributes = FontAttributes.Bold
+            },
+            new Label
+            {
+                Text = lezione.Corso?.Nome ?? "",
+                TextColor = testoColor,
+                FontSize = 11,
+                FontAttributes = FontAttributes.Bold,
+                LineBreakMode = LineBreakMode.TailTruncation
+            }
+        }
                     };
 
-                    var badge = new Border
+                    var tapNuovo = new TapGestureRecognizer();
+                    tapNuovo.Tapped += async (_, _) =>
                     {
-                        BackgroundColor = badgeColor,
-                        StrokeThickness = 0,
-                        StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 4 },
-                        Padding = 6,
-                        HorizontalOptions = LayoutOptions.Fill,
-                        Content = badgeLayout
+                        await _viewModel.CreaNuovaLezione(giornoCorrente, fascia.OraInizio);
                     };
+                    cellaGiorno.GestureRecognizers.Add(tapNuovo);
 
-                    var tapLezione = new TapGestureRecognizer();
-                    var lez = lezione;
-                    tapLezione.Tapped += async (_, _) =>
-                    {
-                        await _viewModel.GestisciLezione(lez);
-                    };
-                    badge.GestureRecognizers.Add(tapLezione);
-
-                    stackLezioni.Children.Add(badge);
+                    cellaGiorno.Content = stackLezioni;
+                    grid.Add(cellaGiorno, giornoIdx + 1, rigaIndex);
                 }
 
-                var tapNuovo = new TapGestureRecognizer();
-                tapNuovo.Tapped += async (_, _) =>
-                {
-                    await _viewModel.CreaNuovaLezione(giornoCorrente, fascia.OraInizio);
-                };
-                cellaGiorno.GestureRecognizers.Add(tapNuovo);
-
-                cellaGiorno.Content = stackLezioni;
-                grid.Add(cellaGiorno, giornoIdx + 1, rigaIndex);
+                rigaIndex++;
             }
-
-            rigaIndex++;
         }
     }
 

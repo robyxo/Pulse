@@ -498,6 +498,27 @@ public partial class GestioneAllievoViewModel : BaseViewModel
         await _ricevutaService.StampaRicevutaCortesiaAsync(abbonamento, nomeScuola, indirizzoScuola, pivaScuola);
     }
 
+    private void SincronizzaAllievoDaCampi()
+    {
+        Allievo ??= new Allievi();
+
+        Allievo.Nome = Nome.Trim();
+        Allievo.Cognome = Cognome.Trim();
+        Allievo.CodiceFiscale = CodiceFiscale?.Trim().ToUpper();
+        Allievo.Telefono = Telefono?.Trim();
+        Allievo.Email = Email?.Trim();
+
+        Allievo.Sesso = Sesso;
+        Allievo.DataNascita = DataNascita.ToString("yyyy-MM-dd");
+        Allievo.Indirizzo = Indirizzo?.Trim();
+        Allievo.NCivico = NCivico?.Trim();
+        Allievo.Cap = Cap?.Trim();
+        Allievo.Citta = Citta?.Trim();
+        Allievo.Provincia = Provincia?.Trim();
+        Allievo.Cellulare = Cellulare?.Trim();
+        Allievo.Allegati = Allegati?.Trim();
+    }
+
     [RelayCommand]
     public async Task SalvaAllievoAsync()
     {
@@ -509,23 +530,7 @@ public partial class GestioneAllievoViewModel : BaseViewModel
 
         await EseguiConCaricamento(async () =>
         {
-            Allievo ??= new Allievi();
-
-            Allievo.Nome = Nome.Trim();
-            Allievo.Cognome = Cognome.Trim();
-            Allievo.CodiceFiscale = CodiceFiscale?.Trim().ToUpper();
-            Allievo.Telefono = Telefono?.Trim();
-            Allievo.Email = Email?.Trim();
-
-            Allievo.Sesso = Sesso;
-            Allievo.DataNascita = DataNascita.ToString("yyyy-MM-dd");
-            Allievo.Indirizzo = Indirizzo?.Trim();
-            Allievo.NCivico = NCivico?.Trim();
-            Allievo.Cap = Cap?.Trim();
-            Allievo.Citta = Citta?.Trim();
-            Allievo.Provincia = Provincia?.Trim();
-            Allievo.Cellulare = Cellulare?.Trim();
-            Allievo.Allegati = Allegati?.Trim();
+            SincronizzaAllievoDaCampi();
 
             await _dbService.SalvaAllievoAsync(Allievo);
 
@@ -536,33 +541,36 @@ public partial class GestioneAllievoViewModel : BaseViewModel
             }
         });
 
-        // 🔒 DOCUMENTO PRIVACY
-        bool vuoleStamparePrivacy = await Shell.Current.DisplayAlert(
-            "Documento Privacy",
-            "Vuoi stampare il documento della privacy per questo allievo?",
-            "Sì",
-            "No");
+        await Shell.Current.Navigation.PopAsync();
+    }
 
-        if (vuoleStamparePrivacy)
+    // 🔒 DOCUMENTO PRIVACY (ora su bottone dedicato, non più automatico al salvataggio)
+    [RelayCommand]
+    public async Task ApriDocumentoPrivacyAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Nome) || string.IsNullOrWhiteSpace(Cognome))
         {
-            string scelta = await Shell.Current.DisplayActionSheet(
-                "Come vuoi il documento?",
-                "Annulla",
-                null,
-                "Documento Compilato",
-                "Modulo Vuoto");
-
-            if (scelta == "Documento Compilato")
-            {
-                await _privacyDocumentService.GeneraECondividiDocumentoCompilatoAsync(Allievo);
-            }
-            else if (scelta == "Modulo Vuoto")
-            {
-                await _privacyDocumentService.ApriModuloVuotoAsync();
-            }
+            await Shell.Current.DisplayAlert("Attenzione", "Inserisci sia il nome che il cognome.", "OK");
+            return;
         }
 
-        await Shell.Current.Navigation.PopAsync();
+        SincronizzaAllievoDaCampi();
+
+        string scelta = await Shell.Current.DisplayActionSheet(
+            "Documento Privacy - Come lo vuoi?",
+            "Annulla",
+            null,
+            "Documento Compilato",
+            "Modulo Vuoto");
+
+        if (scelta == "Documento Compilato")
+        {
+            await _privacyDocumentService.GeneraECondividiDocumentoCompilatoAsync(Allievo);
+        }
+        else if (scelta == "Modulo Vuoto")
+        {
+            await _privacyDocumentService.ApriModuloVuotoAsync();
+        }
     }
 
     [RelayCommand]

@@ -116,16 +116,111 @@
                     Stroke="#CBD5E1"
                     StrokeShape="RoundRectangle 20"
                     WidthRequest="40" />
+                <Label
+                    FontSize="12"
+                    Text="Scegli uno dei colori qui sotto"
+                    TextColor="#64748B"
+                    VerticalOptions="Center" />
+            </HorizontalStackLayout>
+
+            <FlexLayout
+                AlignItems="Center"
+                Direction="Row"
+                JustifyContent="Start"
+                Wrap="Wrap">
+                <Button
+                    Margin="3"
+                    BackgroundColor="#4F46E5"
+                    Command="{Binding SelezionaColorePresetCommand}"
+                    CommandParameter="#4F46E5"
+                    CornerRadius="18"
+                    HeightRequest="36"
+                    WidthRequest="36" />
+                <Button
+                    Margin="3"
+                    BackgroundColor="#10B981"
+                    Command="{Binding SelezionaColorePresetCommand}"
+                    CommandParameter="#10B981"
+                    CornerRadius="18"
+                    HeightRequest="36"
+                    WidthRequest="36" />
+                <Button
+                    Margin="3"
+                    BackgroundColor="#EF4444"
+                    Command="{Binding SelezionaColorePresetCommand}"
+                    CommandParameter="#EF4444"
+                    CornerRadius="18"
+                    HeightRequest="36"
+                    WidthRequest="36" />
+                <Button
+                    Margin="3"
+                    BackgroundColor="#F59E0B"
+                    Command="{Binding SelezionaColorePresetCommand}"
+                    CommandParameter="#F59E0B"
+                    CornerRadius="18"
+                    HeightRequest="36"
+                    WidthRequest="36" />
+                <Button
+                    Margin="3"
+                    BackgroundColor="#EC4899"
+                    Command="{Binding SelezionaColorePresetCommand}"
+                    CommandParameter="#EC4899"
+                    CornerRadius="18"
+                    HeightRequest="36"
+                    WidthRequest="36" />
+                <Button
+                    Margin="3"
+                    BackgroundColor="#0EA5E9"
+                    Command="{Binding SelezionaColorePresetCommand}"
+                    CommandParameter="#0EA5E9"
+                    CornerRadius="18"
+                    HeightRequest="36"
+                    WidthRequest="36" />
+            </FlexLayout>
+
+            <!--  COLORE TESTO CORSO  -->
+            <Label
+                FontAttributes="Bold"
+                Text="Colore testo corso:"
+                TextColor="#1E293B" />
+
+            <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
                 <Border
-                    Padding="10,0"
+                    Padding="12,0"
+                    BackgroundColor="{Binding ColoreHex}"
+                    HeightRequest="40"
                     Stroke="#CBD5E1"
                     StrokeShape="RoundRectangle 8"
-                    WidthRequest="140">
-                    <Entry
-                        HeightRequest="45"
-                        Placeholder="#4F46E5"
-                        Text="{Binding ColoreHex}" />
+                    VerticalOptions="Center">
+                    <Label
+                        FontAttributes="Bold"
+                        HorizontalOptions="Center"
+                        Text="Anteprima"
+                        TextColor="{Binding ColoreTestoHex}"
+                        VerticalOptions="Center" />
                 </Border>
+
+                <Button
+                    BackgroundColor="#1E293B"
+                    Command="{Binding SelezionaColoreTestoCommand}"
+                    CommandParameter="#000000"
+                    CornerRadius="8"
+                    FontSize="12"
+                    HeightRequest="40"
+                    Text="⚫ Nero"
+                    TextColor="White"
+                    WidthRequest="90" />
+
+                <Button
+                    BackgroundColor="#1E293B"
+                    Command="{Binding SelezionaColoreTestoCommand}"
+                    CommandParameter="#FFFFFF"
+                    CornerRadius="8"
+                    FontSize="12"
+                    HeightRequest="40"
+                    Text="⚪ Bianco"
+                    TextColor="White"
+                    WidthRequest="90" />
             </HorizontalStackLayout>
 
             <Label

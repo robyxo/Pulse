@@ -576,16 +576,31 @@
                 </VerticalStackLayout>
             </Border>
 
-            <!--  PULSANTI SALVA ED ELIMINA ALLIEVO  -->
-            <Button
+            <!--  PULSANTI SALVA / PRIVACY / ELIMINA ALLIEVO  -->
+            <Grid
                 Margin="0,10,0,0"
-                BackgroundColor="#10B981"
-                Command="{Binding SalvaAllievoCommand}"
-                CornerRadius="8"
-                FontAttributes="Bold"
-                HeightRequest="46"
-                Text="Salva Allievo"
-                TextColor="White" />
+                ColumnDefinitions="*, Auto"
+                ColumnSpacing="10">
+                <Button
+                    Grid.Column="0"
+                    BackgroundColor="#10B981"
+                    Command="{Binding SalvaAllievoCommand}"
+                    CornerRadius="8"
+                    FontAttributes="Bold"
+                    HeightRequest="46"
+                    Text="Salva Allievo"
+                    TextColor="White" />
+
+                <Button
+                    Grid.Column="1"
+                    BackgroundColor="#6366F1"
+                    Command="{Binding ApriDocumentoPrivacyCommand}"
+                    CornerRadius="8"
+                    FontSize="20"
+                    HeightRequest="46"
+                    Text="📄"
+                    WidthRequest="56" />
+            </Grid>
 
             <Button
                 BackgroundColor="#EF4444"

@@ -204,6 +204,17 @@
                 TextColor="White" />
 
             <Button
+                Margin="0,10,0,0"
+                BackgroundColor="#F59E0B"
+                Command="{Binding SaltaLezioneCommand}"
+                CornerRadius="8"
+                FontAttributes="Bold"
+                HeightRequest="48"
+                IsVisible="{Binding IsEdizione}"
+                Text="⏭️ Salta Lezione (+7gg abbonamenti)"
+                TextColor="White" />
+
+            <Button
                 BackgroundColor="#EF4444"
                 Command="{Binding EliminaLezioneCommand}"
                 CornerRadius="8"

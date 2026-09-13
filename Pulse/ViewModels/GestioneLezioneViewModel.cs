@@ -67,6 +67,11 @@ public partial class GestioneLezioneViewModel : BaseViewModel
         _ = InizializzaDatiAsync();
     }
 
+    partial void OnOraInizioChanged(TimeSpan value)
+    {
+        OraFine = value.Add(TimeSpan.FromHours(1));
+    }
+
     private async Task InizializzaDatiAsync()
     {
         await EseguiConCaricamento(async () =>
@@ -255,4 +260,38 @@ public partial class GestioneLezioneViewModel : BaseViewModel
             });
         }
     }
+
+    [RelayCommand]
+    public async Task SaltaLezioneAsync()
+    {
+        if (CorsoSelezionato == null || ListaAllievi.Count == 0)
+        {
+            await Shell.Current.DisplayAlert("Attenzione", "Nessun allievo con abbonamento attivo da prorogare per questo corso.", "OK");
+            return;
+        }
+
+        bool conferma = await Shell.Current.DisplayAlert(
+            "Salta Lezione",
+            $"⚠️ Attenzione: confermando, a tutti gli allievi con abbonamento attivo su '{CorsoSelezionato.Nome}' verrà aggiunta automaticamente 1 settimana di validità, per recuperare la lezione saltata.\n\nProcedere?",
+            "Sì, Salta Lezione",
+            "Annulla");
+
+        if (!conferma) return;
+
+        await EseguiConCaricamento(async () =>
+        {
+            foreach (var item in ListaAllievi)
+            {
+                if (item.Abbonamento == null) continue;
+
+                item.Abbonamento.DataScadenza = item.Abbonamento.DataScadenza.AddDays(7);
+                await _dbService.SalvaAbbonamentoAsync(item.Abbonamento);
+            }
+
+            await CaricaAllieviPerCorsoAsync();
+        });
+
+        await Shell.Current.DisplayAlert("Fatto", "Lezione saltata: gli abbonamenti degli allievi sono stati prorogati di 1 settimana.", "OK");
+    }
+
 }

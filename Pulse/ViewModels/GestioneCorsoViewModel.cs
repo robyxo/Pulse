@@ -23,6 +23,9 @@ public partial class GestioneCorsoViewModel : BaseViewModel
     [ObservableProperty]
     private string _coloreHex = "#4F46E5";
 
+    [ObservableProperty]
+    private string _coloreTestoHex = "#000000";
+
     // 💶 PROPRIETÀ PREZZI ABBONAMENTO
     [ObservableProperty]
     private double? _costoSingolo;
@@ -56,6 +59,8 @@ public partial class GestioneCorsoViewModel : BaseViewModel
         CostoAnnuale = value.CostoAnnuale;
 
         IsEdizione = value.Id > 0;
+
+        ColoreTestoHex = string.IsNullOrWhiteSpace(value.ColoreTesto) ? "#000000" : value.ColoreTesto;
     }
 
     [RelayCommand]
@@ -64,6 +69,15 @@ public partial class GestioneCorsoViewModel : BaseViewModel
         if (!string.IsNullOrWhiteSpace(hex))
         {
             ColoreHex = hex;
+        }
+    }
+
+    [RelayCommand]
+    public void SelezionaColoreTesto(string hex)
+    {
+        if (!string.IsNullOrWhiteSpace(hex))
+        {
+            ColoreTestoHex = hex;
         }
     }
 
@@ -83,6 +97,7 @@ public partial class GestioneCorsoViewModel : BaseViewModel
             Corso.Nome = Nome.Trim();
             Corso.Descrizione = Descrizione?.Trim();
             Corso.Colore = string.IsNullOrWhiteSpace(ColoreHex) ? "#4F46E5" : ColoreHex.Trim();
+            Corso.ColoreTesto = string.IsNullOrWhiteSpace(ColoreTestoHex) ? "#000000" : ColoreTestoHex.Trim();
 
             // Assegnazione Prezzi
             Corso.CostoSingolo = CostoSingolo ?? 0;
