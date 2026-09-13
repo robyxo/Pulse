@@ -36,4 +36,8 @@ public partial class Impostazioni
     public int? EmailUseSsl { get; set; }
 
     public string? BackupPath { get; set; }
+
+    public string? UltimoBackupData { get; set; }
+
+    public string? UltimoRipristinoData { get; set; }
 }

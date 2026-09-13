@@ -34,6 +34,7 @@ public partial class PulseContext : DbContext
     public virtual DbSet<Presenze> Presenzes { get; set; }
 
     public virtual DbSet<Privacy> Privacies { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Abbonamenti>(entity =>
