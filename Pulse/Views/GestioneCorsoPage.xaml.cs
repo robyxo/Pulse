@@ -9,4 +9,13 @@ public partial class GestioneCorsoPage : ContentPage
         InitializeComponent();
         BindingContext = viewModel;
     }
+    private void ColorePreset_Clicked(object sender, EventArgs e)
+    {
+        if (sender is Button button &&
+            button.BindingContext is Pulse.DTO.OpzioneColore opzione &&
+            BindingContext is GestioneCorsoViewModel viewModel)
+        {
+            viewModel.SelezionaColorePresetCommand.Execute(opzione.Hex);
+        }
+    }
 }

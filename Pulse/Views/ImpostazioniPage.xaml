@@ -100,6 +100,36 @@
                 </VerticalStackLayout>
             </Border>
 
+            <!--  SEZIONE: COLORI CORSI  -->
+            <Border
+                Padding="16"
+                BackgroundColor="White"
+                Stroke="#E2E8F0"
+                StrokeShape="RoundRectangle 12">
+                <VerticalStackLayout Spacing="10">
+                    <Label
+                        FontAttributes="Bold"
+                        FontSize="16"
+                        Text="🎨 Colori Corsi" />
+
+                    <Grid ColumnDefinitions="*, Auto">
+                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                            <Label FontAttributes="Bold" Text="Numero colori disponibili" />
+                            <Label
+                                FontSize="12"
+                                Text="Quanti colori proporre nella palette di Gestione Corso (da 1 a 20)."
+                                TextColor="Gray" />
+                        </VerticalStackLayout>
+                        <Border Stroke="#CBD5E1" StrokeShape="RoundRectangle 8">
+                            <Picker
+                                ItemsSource="{Binding OpzioniNumeroColori}"
+                                SelectedItem="{Binding NumeroColoriCorsi}"
+                                WidthRequest="80" />
+                        </Border>
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
             <!--  PULSANTE SALVA  -->
             <Button
                 BackgroundColor="#10B981"

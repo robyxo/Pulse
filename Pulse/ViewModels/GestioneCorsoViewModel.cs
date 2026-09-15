@@ -1,8 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Pulse.DTO;
 using Pulse.Models;
 using Pulse.Services;
 using Pulse.Utils;
+using System.Collections.ObjectModel;
 
 namespace Pulse.ViewModels;
 
@@ -10,6 +12,16 @@ namespace Pulse.ViewModels;
 public partial class GestioneCorsoViewModel : BaseViewModel
 {
     private readonly IDatabaseService _dbService;
+    private readonly IImpostazioniService _impostazioniService;
+
+    // Palette "master": i primi N (in base a Impostazioni.NumeroColoriCorsi) vengono mostrati
+    private static readonly List<string> _paletteMaster = new()
+    {
+        "#4F46E5", "#10B981", "#EF4444", "#F59E0B", "#EC4899", "#0EA5E9",
+        "#8B5CF6", "#14B8A6", "#F97316", "#84CC16", "#06B6D4", "#A855F7",
+        "#E11D48", "#22C55E", "#EAB308", "#6366F1", "#D946EF", "#0D9488",
+        "#F43F5E", "#64748B"
+    };
 
     [ObservableProperty]
     private Corsi _corso = new();
@@ -26,6 +38,9 @@ public partial class GestioneCorsoViewModel : BaseViewModel
     [ObservableProperty]
     private string _coloreTestoHex = "#000000";
 
+    [ObservableProperty]
+    private ObservableCollection<OpzioneColore> _paletteColori = new();
+
     // 💶 PROPRIETÀ PREZZI ABBONAMENTO
     [ObservableProperty]
     private double? _costoSingolo;
@@ -39,11 +54,31 @@ public partial class GestioneCorsoViewModel : BaseViewModel
     [ObservableProperty]
     private bool _isEdizione = false;
 
-    public GestioneCorsoViewModel(INavigationService navigationService, IDatabaseService dbService)
+    public GestioneCorsoViewModel(INavigationService navigationService, IDatabaseService dbService, IImpostazioniService impostazioniService)
         : base(navigationService)
     {
         _dbService = dbService;
+        _impostazioniService = impostazioniService;
         Title = "Gestione Corso";
+
+        _ = CaricaPaletteColoriAsync();
+    }
+
+    private async Task CaricaPaletteColoriAsync()
+    {
+        var impostazioni = await _impostazioniService.GetImpostazioniAsync();
+        int numero = Math.Clamp(impostazioni.NumeroColoriCorsi ?? 6, 1, _paletteMaster.Count);
+
+        PaletteColori = new ObservableCollection<OpzioneColore>(
+            _paletteMaster.Take(numero).Select(c => new OpzioneColore { Hex = c, IsSelezionato = c == ColoreHex }));
+    }
+
+    partial void OnColoreHexChanged(string value)
+    {
+        foreach (var opzione in PaletteColori)
+        {
+            opzione.IsSelezionato = opzione.Hex == value;
+        }
     }
 
     partial void OnCorsoChanged(Corsi value)

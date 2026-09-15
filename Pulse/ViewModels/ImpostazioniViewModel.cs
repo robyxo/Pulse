@@ -24,6 +24,12 @@ public partial class ImpostazioniViewModel : BaseViewModel
     [ObservableProperty]
     private bool _stampaDocumentoPrivacyAttiva;
 
+    // --- COLORI CORSI ---
+    [ObservableProperty]
+    private int _numeroColoriCorsi = 6;
+
+    public List<int> OpzioniNumeroColori { get; } = Enumerable.Range(1, 20).ToList();
+
     public ImpostazioniViewModel(INavigationService navigationService, IImpostazioniService impostazioniService)
         : base(navigationService)
     {
@@ -40,6 +46,7 @@ public partial class ImpostazioniViewModel : BaseViewModel
             OrarioScaglionatoAttivo = Impostazioni.OrarioScaglionato == 1;
             StampaRicevutaCortesiaAttiva = Impostazioni.StampaRicevutaCortesia == 1;
             StampaDocumentoPrivacyAttiva = Impostazioni.StampaDocumentoPrivacy == 1;
+            NumeroColoriCorsi = Impostazioni.NumeroColoriCorsi ?? 6;
         });
     }
 
@@ -51,6 +58,7 @@ public partial class ImpostazioniViewModel : BaseViewModel
             Impostazioni.OrarioScaglionato = OrarioScaglionatoAttivo ? 1 : 0;
             Impostazioni.StampaRicevutaCortesia = StampaRicevutaCortesiaAttiva ? 1 : 0;
             Impostazioni.StampaDocumentoPrivacy = StampaDocumentoPrivacyAttiva ? 1 : 0;
+            Impostazioni.NumeroColoriCorsi = NumeroColoriCorsi;
 
             await _impostazioniService.SalvaImpostazioniAsync(Impostazioni);
             await Shell.Current.DisplayAlert("Fatto", "Impostazioni salvate correttamente.", "OK");

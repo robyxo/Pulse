@@ -3,7 +3,9 @@
     x:Class="Pulse.Views.GestioneCorsoPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:dto="clr-namespace:Pulse.DTO"
     xmlns:vm="clr-namespace:Pulse.ViewModels"
+    x:Name="PageRoot"
     Title="Gestione Corso"
     x:DataType="vm:GestioneCorsoViewModel"
     BackgroundColor="#F8FAFC">
@@ -125,57 +127,34 @@
 
             <FlexLayout
                 AlignItems="Center"
+                BindableLayout.ItemsSource="{Binding PaletteColori}"
                 Direction="Row"
                 JustifyContent="Start"
                 Wrap="Wrap">
-                <Button
-                    Margin="3"
-                    BackgroundColor="#4F46E5"
-                    Command="{Binding SelezionaColorePresetCommand}"
-                    CommandParameter="#4F46E5"
-                    CornerRadius="18"
-                    HeightRequest="36"
-                    WidthRequest="36" />
-                <Button
-                    Margin="3"
-                    BackgroundColor="#10B981"
-                    Command="{Binding SelezionaColorePresetCommand}"
-                    CommandParameter="#10B981"
-                    CornerRadius="18"
-                    HeightRequest="36"
-                    WidthRequest="36" />
-                <Button
-                    Margin="3"
-                    BackgroundColor="#EF4444"
-                    Command="{Binding SelezionaColorePresetCommand}"
-                    CommandParameter="#EF4444"
-                    CornerRadius="18"
-                    HeightRequest="36"
-                    WidthRequest="36" />
-                <Button
-                    Margin="3"
-                    BackgroundColor="#F59E0B"
-                    Command="{Binding SelezionaColorePresetCommand}"
-                    CommandParameter="#F59E0B"
-                    CornerRadius="18"
-                    HeightRequest="36"
-                    WidthRequest="36" />
-                <Button
-                    Margin="3"
-                    BackgroundColor="#EC4899"
-                    Command="{Binding SelezionaColorePresetCommand}"
-                    CommandParameter="#EC4899"
-                    CornerRadius="18"
-                    HeightRequest="36"
-                    WidthRequest="36" />
-                <Button
-                    Margin="3"
-                    BackgroundColor="#0EA5E9"
-                    Command="{Binding SelezionaColorePresetCommand}"
-                    CommandParameter="#0EA5E9"
-                    CornerRadius="18"
-                    HeightRequest="36"
-                    WidthRequest="36" />
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="dto:OpzioneColore">
+                        <Button
+                            Margin="3"
+                            Padding="0"
+                            BackgroundColor="{Binding Hex}"
+                            BorderColor="Transparent"
+                            BorderWidth="3"
+                            Clicked="ColorePreset_Clicked"
+                            CornerRadius="18"
+                            HeightRequest="36"
+                            Text=""
+                            WidthRequest="36">
+                            <Button.Triggers>
+                                <DataTrigger
+                                    Binding="{Binding IsSelezionato}"
+                                    TargetType="Button"
+                                    Value="True">
+                                    <Setter Property="BorderColor" Value="#1E293B" />
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
             </FlexLayout>
 
             <!--  COLORE TESTO CORSO  -->
