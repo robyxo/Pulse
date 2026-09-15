@@ -10,6 +10,7 @@ namespace Pulse.ViewModels;
 public partial class GestioneAllievoViewModel : BaseViewModel
 {
     private readonly IDatabaseService _dbService;
+    private readonly IImpostazioniService _impostazioniService;
     private readonly RicevutaService _ricevutaService;
     private readonly PrivacyDocumentService _privacyDocumentService;
     private List<Abbonamenti> _listaAbbonamentiMaster = new();
@@ -65,6 +66,9 @@ public partial class GestioneAllievoViewModel : BaseViewModel
     [ObservableProperty]
     private bool _isEdizione = false;
 
+    [ObservableProperty]
+    private bool _mostraBottonePrivacy = true;
+
     // --- TABELLA E PAGINAZIONE ABBONAMENTI ---
     [ObservableProperty]
     private ObservableCollection<Abbonamenti> _listaAbbonamentiPaginata = new();
@@ -95,13 +99,25 @@ public partial class GestioneAllievoViewModel : BaseViewModel
 
     private const int ElementiPerPagina = 5;
 
-    public GestioneAllievoViewModel(INavigationService navigationService, IDatabaseService dbService)
-        : base(navigationService)
+    private bool _stampaRicevutaCortesiaAttiva = true;
+
+    public GestioneAllievoViewModel(INavigationService navigationService, IDatabaseService dbService, IImpostazioniService impostazioniService)
+     : base(navigationService)
     {
         _dbService = dbService;
+        _impostazioniService = impostazioniService;
         _ricevutaService = new RicevutaService();
         _privacyDocumentService = new PrivacyDocumentService();
         Title = "Gestione Allievo";
+
+        _ = CaricaFlagImpostazioniAsync();
+    }
+
+    private async Task CaricaFlagImpostazioniAsync()
+    {
+        var impostazioni = await _impostazioniService.GetImpostazioniAsync();
+        _stampaRicevutaCortesiaAttiva = impostazioni.StampaRicevutaCortesia == 1;
+        MostraBottonePrivacy = impostazioni.StampaDocumentoPrivacy == 1;
     }
 
     partial void OnAllievoChanged(Allievi value)
@@ -310,15 +326,18 @@ public partial class GestioneAllievoViewModel : BaseViewModel
             ApplicaFiltroEPaginazione();
         }
 
-        bool vuoleStampare = await Shell.Current.DisplayAlert(
-            "Abbonamento Creato",
-            $"Abbonamento registrato con successo!\nScadenza: {scadenza:dd/MM/yyyy}.\n\nVuoi stampare la ricevuta di cortesia?",
-            "Sì, Stampa",
-            "No");
-
-        if (vuoleStampare)
+        if (_stampaRicevutaCortesiaAttiva)
         {
-            await StampaRicevutaAsync(nuovo);
+            bool vuoleStampare = await Shell.Current.DisplayAlert(
+                "Abbonamento Creato",
+                $"Abbonamento registrato con successo!\nScadenza: {scadenza:dd/MM/yyyy}.\n\nVuoi stampare la ricevuta di cortesia?",
+                "Sì, Stampa",
+                "No");
+
+            if (vuoleStampare)
+            {
+                await StampaRicevutaAsync(nuovo);
+            }
         }
     }
 
@@ -406,15 +425,18 @@ public partial class GestioneAllievoViewModel : BaseViewModel
 
         ApplicaFiltroEPaginazione();
 
-        bool vuoleStampare = await Shell.Current.DisplayAlert(
-            "Rinnovato",
-            $"Abbonamento rinnovato fino al {abbonamento.DataScadenza:dd/MM/yyyy}!\n\nVuoi stampare la ricevuta di cortesia?",
-            "Sì, Stampa",
-            "No");
-
-        if (vuoleStampare)
+        if (_stampaRicevutaCortesiaAttiva)
         {
-            await StampaRicevutaAsync(abbonamento);
+            bool vuoleStampare = await Shell.Current.DisplayAlert(
+                "Rinnovato",
+                $"Abbonamento rinnovato fino al {abbonamento.DataScadenza:dd/MM/yyyy}!\n\nVuoi stampare la ricevuta di cortesia?",
+                "Sì, Stampa",
+                "No");
+
+            if (vuoleStampare)
+            {
+                await StampaRicevutaAsync(abbonamento);
+            }
         }
     }
 

@@ -16,6 +16,14 @@ public partial class ImpostazioniViewModel : BaseViewModel
     [ObservableProperty]
     private bool _orarioScaglionatoAttivo;
 
+    // --- RICEVUTE ---
+    [ObservableProperty]
+    private bool _stampaRicevutaCortesiaAttiva;
+
+    // --- DOCUMENTO PRIVACY ---
+    [ObservableProperty]
+    private bool _stampaDocumentoPrivacyAttiva;
+
     public ImpostazioniViewModel(INavigationService navigationService, IImpostazioniService impostazioniService)
         : base(navigationService)
     {
@@ -30,6 +38,8 @@ public partial class ImpostazioniViewModel : BaseViewModel
         {
             Impostazioni = await _impostazioniService.GetImpostazioniAsync();
             OrarioScaglionatoAttivo = Impostazioni.OrarioScaglionato == 1;
+            StampaRicevutaCortesiaAttiva = Impostazioni.StampaRicevutaCortesia == 1;
+            StampaDocumentoPrivacyAttiva = Impostazioni.StampaDocumentoPrivacy == 1;
         });
     }
 
@@ -39,6 +49,8 @@ public partial class ImpostazioniViewModel : BaseViewModel
         await EseguiConCaricamento(async () =>
         {
             Impostazioni.OrarioScaglionato = OrarioScaglionatoAttivo ? 1 : 0;
+            Impostazioni.StampaRicevutaCortesia = StampaRicevutaCortesiaAttiva ? 1 : 0;
+            Impostazioni.StampaDocumentoPrivacy = StampaDocumentoPrivacyAttiva ? 1 : 0;
 
             await _impostazioniService.SalvaImpostazioniAsync(Impostazioni);
             await Shell.Current.DisplayAlert("Fatto", "Impostazioni salvate correttamente.", "OK");

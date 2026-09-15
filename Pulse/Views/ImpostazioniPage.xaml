@@ -44,6 +44,62 @@
                 </VerticalStackLayout>
             </Border>
 
+            <!--  SEZIONE: RICEVUTE  -->
+            <Border
+                Padding="16"
+                BackgroundColor="White"
+                Stroke="#E2E8F0"
+                StrokeShape="RoundRectangle 12">
+                <VerticalStackLayout Spacing="10">
+                    <Label
+                        FontAttributes="Bold"
+                        FontSize="16"
+                        Text="🧾 Ricevute" />
+
+                    <Grid ColumnDefinitions="*, Auto">
+                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                            <Label FontAttributes="Bold" Text="Stampa Ricevuta di Cortesia" />
+                            <Label
+                                FontSize="12"
+                                Text="Se attivo, dopo ogni incasso viene proposta la stampa della ricevuta di cortesia."
+                                TextColor="Gray" />
+                        </VerticalStackLayout>
+                        <Switch
+                            Grid.Column="1"
+                            IsToggled="{Binding StampaRicevutaCortesiaAttiva}"
+                            VerticalOptions="Center" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <!--  SEZIONE: DOCUMENTO PRIVACY  -->
+            <Border
+                Padding="16"
+                BackgroundColor="White"
+                Stroke="#E2E8F0"
+                StrokeShape="RoundRectangle 12">
+                <VerticalStackLayout Spacing="10">
+                    <Label
+                        FontAttributes="Bold"
+                        FontSize="16"
+                        Text="🔒 Documento Privacy" />
+
+                    <Grid ColumnDefinitions="*, Auto">
+                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                            <Label FontAttributes="Bold" Text="Stampa Documento Privacy" />
+                            <Label
+                                FontSize="12"
+                                Text="Se disattivo, il bottone 📄 per il documento privacy sparisce dalla scheda Allievo."
+                                TextColor="Gray" />
+                        </VerticalStackLayout>
+                        <Switch
+                            Grid.Column="1"
+                            IsToggled="{Binding StampaDocumentoPrivacyAttiva}"
+                            VerticalOptions="Center" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
             <!--  PULSANTE SALVA  -->
             <Button
                 BackgroundColor="#10B981"

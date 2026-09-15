@@ -13,6 +13,10 @@ public partial class GestioneLezioneViewModel : BaseViewModel
 {
     private readonly IDatabaseService _dbService;
 
+    private readonly IImpostazioniService _impostazioniService;
+
+    private bool _stampaRicevutaCortesiaAttiva = true;
+
     [ObservableProperty]
     private Lezioni _lezione = new();
 
@@ -54,11 +58,20 @@ public partial class GestioneLezioneViewModel : BaseViewModel
         "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"
     };
 
-    public GestioneLezioneViewModel(INavigationService navigationService, IDatabaseService dbService)
+    public GestioneLezioneViewModel(INavigationService navigationService, IDatabaseService dbService, IImpostazioniService impostazioniService)
         : base(navigationService)
     {
         _dbService = dbService;
+        _impostazioniService = impostazioniService;
         Title = "Gestione Lezione";
+
+        _ = CaricaFlagImpostazioniAsync();
+    }
+
+    private async Task CaricaFlagImpostazioniAsync()
+    {
+        var impostazioni = await _impostazioniService.GetImpostazioniAsync();
+        _stampaRicevutaCortesiaAttiva = impostazioni.StampaRicevutaCortesia == 1;
     }
 
     partial void OnLezioneChanged(Lezioni value)
@@ -193,20 +206,23 @@ public partial class GestioneLezioneViewModel : BaseViewModel
             await CaricaAllieviPerCorsoAsync();
         });
 
-        bool stampa = await Shell.Current.DisplayAlert(
-            "Pagamento Registrato",
-            $"Incasso di € {importo:N2} salvato con successo.\nNuova scadenza: {dataFine:dd/MM/yyyy}.\n\nVuoi stampare la ricevuta di cortesia?",
-            "Sì, Stampa",
-            "No");
-
-        if (stampa)
+        if (_stampaRicevutaCortesiaAttiva)
         {
-            string nomeScuola = Preferences.Get("Scuola_Nome", "ASD SCUOLA DI DANZA PULSE");
-            string indirizzoScuola = Preferences.Get("Scuola_Indirizzo", "Via Roma 123 - San Benedetto del Tronto (AP)");
-            string pivaScuola = Preferences.Get("Scuola_PIVA", "01234567890");
+            bool stampa = await Shell.Current.DisplayAlert(
+                "Pagamento Registrato",
+                $"Incasso di € {importo:N2} salvato con successo.\nNuova scadenza: {dataFine:dd/MM/yyyy}.\n\nVuoi stampare la ricevuta di cortesia?",
+                "Sì, Stampa",
+                "No");
 
-            var ricevutaService = new RicevutaService();
-            await ricevutaService.StampaRicevutaCortesiaAsync(nuovoAbbonamento, nomeScuola, indirizzoScuola, pivaScuola);
+            if (stampa)
+            {
+                string nomeScuola = Preferences.Get("Scuola_Nome", "ASD SCUOLA DI DANZA PULSE");
+                string indirizzoScuola = Preferences.Get("Scuola_Indirizzo", "Via Roma 123 - San Benedetto del Tronto (AP)");
+                string pivaScuola = Preferences.Get("Scuola_PIVA", "01234567890");
+
+                var ricevutaService = new RicevutaService();
+                await ricevutaService.StampaRicevutaCortesiaAsync(nuovoAbbonamento, nomeScuola, indirizzoScuola, pivaScuola);
+            }
         }
     }
 

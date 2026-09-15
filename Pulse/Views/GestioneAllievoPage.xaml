@@ -598,6 +598,7 @@
                     CornerRadius="8"
                     FontSize="20"
                     HeightRequest="46"
+                    IsVisible="{Binding MostraBottonePrivacy}"
                     Text="📄"
                     WidthRequest="56" />
             </Grid>
