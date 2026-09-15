@@ -50,18 +50,42 @@
                     WidthRequest="40" />
             </HorizontalStackLayout>
 
-            <HorizontalStackLayout HorizontalOptions="Center" Spacing="10">
-                <Label
-                    FontAttributes="Bold"
-                    Text="Dalle:"
-                    VerticalOptions="Center" />
-                <TimePicker Time="{Binding OraInizio}" WidthRequest="90" />
-                <Label
-                    FontAttributes="Bold"
-                    Text="Alle:"
-                    VerticalOptions="Center" />
-                <TimePicker Time="{Binding OraFine}" WidthRequest="90" />
-            </HorizontalStackLayout>
+            <VerticalStackLayout IsVisible="{Binding OrarioScaglionatoAttivo}" Spacing="8">
+
+                <HorizontalStackLayout HorizontalOptions="Center" Spacing="10">
+                    <Label
+                        FontAttributes="Bold"
+                        Text="Dalle:"
+                        VerticalOptions="Center" />
+                    <TimePicker
+                        Format="HH:mm"
+                        Time="{Binding OraInizio}"
+                        WidthRequest="90" />
+                    <Label
+                        FontAttributes="Bold"
+                        Text="Alle:"
+                        VerticalOptions="Center" />
+                    <TimePicker
+                        Format="HH:mm"
+                        Time="{Binding OraFine}"
+                        WidthRequest="90" />
+                </HorizontalStackLayout>
+
+                <HorizontalStackLayout HorizontalOptions="Center" Spacing="10">
+                    <Label
+                        FontAttributes="Bold"
+                        Text="Intervallo:"
+                        VerticalOptions="Center" />
+                    <Border Stroke="#CBD5E1" StrokeShape="RoundRectangle 8">
+                        <Picker
+                            ItemDisplayBinding="{Binding Etichetta}"
+                            ItemsSource="{Binding OpzioniIntervallo}"
+                            SelectedItem="{Binding IntervalloSelezionato}"
+                            WidthRequest="150" />
+                    </Border>
+                </HorizontalStackLayout>
+
+            </VerticalStackLayout>
 
         </VerticalStackLayout>
 

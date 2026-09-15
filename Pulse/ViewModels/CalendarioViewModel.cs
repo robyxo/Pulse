@@ -12,45 +12,89 @@ namespace Pulse.ViewModels;
 public partial class CalendarioViewModel : BaseViewModel
 {
     private readonly IDatabaseService _databaseService;
+    private readonly IImpostazioniService _impostazioniService;
 
     // Messaggio per notificare la View di ridisegnare la griglia
     public class RefreshGridMessage { }
 
     [ObservableProperty] private List<Lezioni> _lezioniSettimana = new();
     [ObservableProperty] private DateTime _settimanaCorrente = DateTime.Now;
-    [ObservableProperty] private TimeSpan _oraInizio = new(10, 0, 0);
+    [ObservableProperty] private TimeSpan _oraInizio = new(8, 0, 0);
     [ObservableProperty] private TimeSpan _oraFine = new(24, 0, 0);
     [ObservableProperty] private int _intervalloMinuti = 30;
     [ObservableProperty] private List<FasciaOraria> _fasceOrarie = new();
     [ObservableProperty] private bool _mostraSoloAttive = false;
+    [ObservableProperty] private bool _orarioScaglionatoAttivo;
+    [ObservableProperty] private OpzioneIntervallo? _intervalloSelezionato;
 
-    public List<int> IntervalliDisponibili { get; } = new() { 15, 30, 60 };
+    public List<OpzioneIntervallo> OpzioniIntervallo { get; } = new()
+    {
+        new OpzioneIntervallo { Minuti = 30, Etichetta = "30 minuti" },
+        new OpzioneIntervallo { Minuti = 60, Etichetta = "1 ora" },
+        new OpzioneIntervallo { Minuti = 90, Etichetta = "1 ora e 30" },
+        new OpzioneIntervallo { Minuti = 120, Etichetta = "2 ore" }
+    };
 
-    // Aggiungi questo nella tua classe CalendarioViewModel
     public List<DayOfWeek> GiorniSettimana { get; } = new()
-{
-    DayOfWeek.Monday,
-    DayOfWeek.Tuesday,
-    DayOfWeek.Wednesday,
-    DayOfWeek.Thursday,
-    DayOfWeek.Friday,
-    DayOfWeek.Saturday,
-    DayOfWeek.Sunday
-};
+    {
+        DayOfWeek.Monday,
+        DayOfWeek.Tuesday,
+        DayOfWeek.Wednesday,
+        DayOfWeek.Thursday,
+        DayOfWeek.Friday,
+        DayOfWeek.Saturday,
+        DayOfWeek.Sunday
+    };
 
-    public CalendarioViewModel(INavigationService navigationService, IDatabaseService databaseService)
-        : base(navigationService)
+    public CalendarioViewModel(INavigationService navigationService, IDatabaseService databaseService, IImpostazioniService impostazioniService)
+     : base(navigationService)
     {
         _databaseService = databaseService;
+        _impostazioniService = impostazioniService;
         Title = "Calendario";
+
+        // Ripristina gli ultimi filtri usati (Dalle / Alle / Intervallo)
+        if (TimeSpan.TryParse(Preferences.Get("Calendario_OraInizio", string.Empty), out var oraInizioSalvata))
+            OraInizio = oraInizioSalvata;
+
+        if (TimeSpan.TryParse(Preferences.Get("Calendario_OraFine", string.Empty), out var oraFineSalvata))
+            OraFine = oraFineSalvata;
+
+        IntervalloMinuti = Preferences.Get("Calendario_IntervalloMinuti", IntervalloMinuti);
+
+        IntervalloSelezionato = OpzioniIntervallo.FirstOrDefault(o => o.Minuti == IntervalloMinuti) ?? OpzioniIntervallo.First();
+
         GeneraFasceOrarie();
     }
 
     // Quando cambiano i filtri, aggiorniamo e inviamo il messaggio
-    partial void OnIntervalloMinutiChanged(int value) => 
+    // Quando cambiano i filtri, salviamo e aggiorniamo la vista
+    partial void OnIntervalloMinutiChanged(int value)
+    {
+        Preferences.Set("Calendario_IntervalloMinuti", value);
         AggiornaVista();
+    }
+
     partial void OnMostraSoloAttiveChanged(bool value) =>
         AggiornaVista();
+
+    partial void OnOraInizioChanged(TimeSpan value)
+    {
+        Preferences.Set("Calendario_OraInizio", value.ToString());
+        AggiornaVista();
+    }
+
+    partial void OnOraFineChanged(TimeSpan value)
+    {
+        Preferences.Set("Calendario_OraFine", value.ToString());
+        AggiornaVista();
+    }
+
+    partial void OnIntervalloSelezionatoChanged(OpzioneIntervallo? value)
+    {
+        if (value == null) return;
+        IntervalloMinuti = value.Minuti; // scatena già OnIntervalloMinutiChanged -> AggiornaVista
+    }
 
     private void AggiornaVista()
     {
@@ -75,6 +119,9 @@ public partial class CalendarioViewModel : BaseViewModel
     {
         await EseguiConCaricamento(async () =>
         {
+            var impostazioni = await _impostazioniService.GetImpostazioniAsync();
+            OrarioScaglionatoAttivo = impostazioni.OrarioScaglionato == 1;
+
             LezioniSettimana = await _databaseService.GetLezioniSettimana(SettimanaCorrente);
             WeakReferenceMessenger.Default.Send(new RefreshGridMessage());
         });
