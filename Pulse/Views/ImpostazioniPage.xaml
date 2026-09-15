@@ -8,29 +8,52 @@
     x:DataType="vm:ImpostazioniViewModel"
     BackgroundColor="#F8FAFC">
 
-    <VerticalStackLayout
-        Padding="20"
-        HorizontalOptions="Center"
-        Spacing="15"
-        VerticalOptions="Center">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="20">
 
-        <Label
-            FontSize="50"
-            HorizontalOptions="Center"
-            Text="⚙️" />
+            <Label
+                FontAttributes="Bold"
+                FontSize="24"
+                Text="⚙️ Impostazioni" />
 
-        <Label
-            FontAttributes="Bold"
-            FontSize="24"
-            HorizontalOptions="Center"
-            Text="Impostazioni" />
+            <!--  SEZIONE: VISTA CALENDARIO  -->
+            <Border
+                Padding="16"
+                BackgroundColor="White"
+                Stroke="#E2E8F0"
+                StrokeShape="RoundRectangle 12">
+                <VerticalStackLayout Spacing="10">
+                    <Label
+                        FontAttributes="Bold"
+                        FontSize="16"
+                        Text="🗓️ Vista Calendario" />
 
-        <Label
-            FontSize="15"
-            HorizontalOptions="Center"
-            HorizontalTextAlignment="Center"
-            Text="Sezione in costruzione: qui troverai a breve i dati della scuola e le altre configurazioni."
-            TextColor="Gray" />
+                    <Grid ColumnDefinitions="*, Auto">
+                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                            <Label FontAttributes="Bold" Text="Orario Scaglionato" />
+                            <Label
+                                FontSize="12"
+                                Text="Se attivo, il Calendario mostra fasce orarie precise invece delle bande Mattina/Pomeriggio/Sera."
+                                TextColor="Gray" />
+                        </VerticalStackLayout>
+                        <Switch
+                            Grid.Column="1"
+                            IsToggled="{Binding OrarioScaglionatoAttivo}"
+                            VerticalOptions="Center" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
 
-    </VerticalStackLayout>
+            <!--  PULSANTE SALVA  -->
+            <Button
+                BackgroundColor="#10B981"
+                Command="{Binding SalvaImpostazioniCommand}"
+                CornerRadius="8"
+                FontAttributes="Bold"
+                HeightRequest="46"
+                Text="💾 Salva Impostazioni"
+                TextColor="White" />
+
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>

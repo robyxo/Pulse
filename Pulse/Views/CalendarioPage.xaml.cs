@@ -133,23 +133,23 @@ public partial class CalendarioPage : ContentPage
                     HorizontalOptions = LayoutOptions.Center,
                     Spacing = 2,
                     Children =
+                {
+                    new Label
                     {
-                        new Label
-                        {
-                            Text = fascia.TitoloFormattato,
-                            FontAttributes = FontAttributes.Bold,
-                            FontSize = 11,
-                            TextColor = Color.FromArgb("#1E40AF"),
-                            HorizontalTextAlignment = TextAlignment.Center
-                        },
-                        new Label
-                        {
-                            Text = "✏️ Modifica",
-                            FontSize = 9,
-                            TextColor = Color.FromArgb("#3B82F6"),
-                            HorizontalTextAlignment = TextAlignment.Center
-                        }
+                        Text = fascia.TitoloFormattato,
+                        FontAttributes = FontAttributes.Bold,
+                        FontSize = 11,
+                        TextColor = Color.FromArgb("#1E40AF"),
+                        HorizontalTextAlignment = TextAlignment.Center
+                    },
+                    new Label
+                    {
+                        Text = "✏️ Modifica",
+                        FontSize = 9,
+                        TextColor = Color.FromArgb("#3B82F6"),
+                        HorizontalTextAlignment = TextAlignment.Center
                     }
+                }
                 }
             };
 
@@ -196,6 +196,7 @@ public partial class CalendarioPage : ContentPage
                     VerticalOptions = LayoutOptions.Fill
                 };
 
+                // Un badge colorato per ogni lezione presente in questa cella
                 foreach (var lezione in lezioniFascia)
                 {
                     var badgeColor = _viewModel.StringToColor(lezione.Corso?.Colore ?? "#4F46E5");
@@ -205,38 +206,59 @@ public partial class CalendarioPage : ContentPage
                     {
                         Spacing = 1,
                         Children =
-        {
-            new Label
-            {
-                Text = $"🕒 {lezione.OraInizio} - {lezione.OraFine}",
-                TextColor = testoColor,
-                FontSize = 10,
-                FontAttributes = FontAttributes.Bold
-            },
-            new Label
-            {
-                Text = lezione.Corso?.Nome ?? "",
-                TextColor = testoColor,
-                FontSize = 11,
-                FontAttributes = FontAttributes.Bold,
-                LineBreakMode = LineBreakMode.TailTruncation
-            }
-        }
-                    };
-
-                    var tapNuovo = new TapGestureRecognizer();
-                    tapNuovo.Tapped += async (_, _) =>
                     {
-                        await _viewModel.CreaNuovaLezione(giornoCorrente, fascia.OraInizio);
+                        new Label
+                        {
+                            Text = $"🕒 {lezione.OraInizio} - {lezione.OraFine}",
+                            TextColor = testoColor,
+                            FontSize = 10,
+                            FontAttributes = FontAttributes.Bold
+                        },
+                        new Label
+                        {
+                            Text = lezione.Corso?.Nome ?? "",
+                            TextColor = testoColor,
+                            FontSize = 11,
+                            FontAttributes = FontAttributes.Bold,
+                            LineBreakMode = LineBreakMode.TailTruncation
+                        }
+                    }
                     };
-                    cellaGiorno.GestureRecognizers.Add(tapNuovo);
 
-                    cellaGiorno.Content = stackLezioni;
-                    grid.Add(cellaGiorno, giornoIdx + 1, rigaIndex);
+                    var badge = new Border
+                    {
+                        BackgroundColor = badgeColor,
+                        Padding = 6,
+                        StrokeThickness = 0,
+                        Content = badgeLayout
+                    };
+
+                    // Tap sul singolo badge = apri/modifica quella lezione
+                    var lezioneCorrente = lezione;
+                    var tapModificaLezione = new TapGestureRecognizer();
+                    tapModificaLezione.Tapped += async (_, _) =>
+                    {
+                        await _viewModel.GestisciLezione(lezioneCorrente);
+                    };
+                    badge.GestureRecognizers.Add(tapModificaLezione);
+
+                    stackLezioni.Children.Add(badge);
                 }
 
-                rigaIndex++;
+                // Tap sullo spazio vuoto della cella = crea nuova lezione
+                // (fuori dal foreach: deve funzionare anche quando la cella non ha lezioni)
+                var tapNuovo = new TapGestureRecognizer();
+                tapNuovo.Tapped += async (_, _) =>
+                {
+                    await _viewModel.CreaNuovaLezione(giornoCorrente, fascia.OraInizio);
+                };
+                cellaGiorno.GestureRecognizers.Add(tapNuovo);
+
+                cellaGiorno.Content = stackLezioni;
+                grid.Add(cellaGiorno, giornoIdx + 1, rigaIndex);
             }
+
+            rigaIndex++;
         }
     }
 
