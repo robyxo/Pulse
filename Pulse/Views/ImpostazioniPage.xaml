@@ -242,7 +242,23 @@
                     </Grid>
 
                     <VerticalStackLayout Spacing="4">
-                        <Label FontAttributes="Bold" Text="Email" />
+                        <Grid ColumnDefinitions="*, Auto">
+                            <Label
+                                Grid.Column="0"
+                                FontAttributes="Bold"
+                                Text="Email" />
+                            <Button
+                                Grid.Column="1"
+                                Padding="0"
+                                BackgroundColor="#E2E8F0"
+                                Command="{Binding MostraGuidaEmailCommand}"
+                                CornerRadius="12"
+                                FontAttributes="Bold"
+                                HeightRequest="24"
+                                Text="?"
+                                TextColor="#1E293B"
+                                WidthRequest="24" />
+                        </Grid>
                         <Border
                             Padding="10,0"
                             Stroke="#CBD5E1"
@@ -338,6 +354,19 @@
                         TextColor="White" />
                 </VerticalStackLayout>
             </Border>
+            <VerticalStackLayout Spacing="4">
+                <Label FontAttributes="Bold" Text="Email di test (facoltativa)" />
+                <Border
+                    Padding="10,0"
+                    Stroke="#CBD5E1"
+                    StrokeShape="RoundRectangle 8">
+                    <Entry
+                        HeightRequest="42"
+                        Keyboard="Email"
+                        Placeholder="Lascia vuoto per inviare all'email della scuola stessa"
+                        Text="{Binding EmailDestinatarioTest}" />
+                </Border>
+            </VerticalStackLayout>
 
             <!--  PULSANTE SALVA  -->
             <Button

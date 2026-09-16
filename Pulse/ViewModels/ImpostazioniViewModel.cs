@@ -31,6 +31,106 @@ public partial class ImpostazioniViewModel : BaseViewModel
             ["icloud.com"] = ("smtp.mail.me.com", 587, true),
         };
 
+    private enum ProviderEmail { Gmail, Microsoft, Yahoo, ItalianoGenerico, Sconosciuto }
+
+    private ProviderEmail RilevaProviderCorrente()
+    {
+        string dominio = string.Empty;
+        if (!string.IsNullOrWhiteSpace(EmailSmtpUser) && EmailSmtpUser.Contains('@'))
+            dominio = EmailSmtpUser.Split('@').Last().Trim().ToLowerInvariant();
+
+        return dominio switch
+        {
+            "gmail.com" or "googlemail.com" => ProviderEmail.Gmail,
+            "outlook.com" or "outlook.it" or "hotmail.com" or "hotmail.it" or "live.com" => ProviderEmail.Microsoft,
+            "yahoo.com" or "yahoo.it" => ProviderEmail.Yahoo,
+            "libero.it" or "virgilio.it" or "alice.it" or "tin.it" or "aruba.it" or "pec.aruba.it" => ProviderEmail.ItalianoGenerico,
+            _ => ProviderEmail.Sconosciuto
+        };
+    }
+
+    [RelayCommand]
+    public async Task MostraGuidaEmailAsync()
+    {
+        var provider = RilevaProviderCorrente();
+        string titolo;
+        string messaggio;
+        string? url = null;
+
+        switch (provider)
+        {
+            case ProviderEmail.Gmail:
+                titolo = "Come configurare Gmail";
+                messaggio = "Con Gmail non puoi usare la password normale del tuo account: Google la blocca per l'invio automatico.\n\n" +
+                            "1. Premi 'Apri Pagina' qui sotto: si aprirà la pagina Google per creare una password per le app (se non hai ancora attivato la Verifica in 2 passaggi, Google te lo chiederà prima).\n" +
+                            "2. Scrivi un nome (es. 'Pulse') e premi Crea.\n" +
+                            "3. Copia la password di 16 caratteri che appare.\n" +
+                            "4. Torna in Pulse, incollala nel campo Password al posto della tua password Gmail normale.\n" +
+                            "5. Salva le Impostazioni e riprova il test.";
+                url = "https://myaccount.google.com/apppasswords";
+                break;
+
+            case ProviderEmail.Microsoft:
+                titolo = "Come configurare Outlook / Hotmail / Microsoft 365";
+                messaggio = "Se è un account personale (@outlook.it, @hotmail.it, @live.com):\n" +
+                            "1. Premi 'Apri Pagina' qui sotto: si aprirà la pagina di sicurezza del tuo account Microsoft.\n" +
+                            "2. Attiva la 'Verifica in due passaggi' se non è già attiva.\n" +
+                            "3. Cerca 'Opzioni di sicurezza avanzate' > 'Password per le app' e creane una.\n" +
+                            "4. Usa quella password di 16 caratteri nel campo Password di Pulse.\n\n" +
+                            "Se invece è un indirizzo aziendale/Microsoft 365 (dominio della scuola, gestito da un amministratore):\n" +
+                            "Microsoft sta disattivando l'invio SMTP con utente e password per questi account, quindi potrebbe non funzionare comunque. Conviene usare un indirizzo Gmail per l'invio, oppure chiedere all'amministratore IT di riabilitare 'SMTP AUTH' per questa casella nel pannello Microsoft 365.";
+                url = "https://account.microsoft.com/security";
+                break;
+
+            case ProviderEmail.Yahoo:
+                titolo = "Come configurare Yahoo";
+                messaggio = "Anche Yahoo richiede una password per le app, non quella normale:\n\n" +
+                            "1. Premi 'Apri Pagina' qui sotto: si aprirà la pagina di sicurezza del tuo account Yahoo.\n" +
+                            "2. Attiva la verifica in due passaggi se non è già attiva.\n" +
+                            "3. Cerca 'Genera password per app', scegli 'Altra app' e scrivi 'Pulse'.\n" +
+                            "4. Copia la password generata e incollala nel campo Password di Pulse.\n" +
+                            "5. Salva le Impostazioni e riprova il test.";
+                url = "https://login.yahoo.com/account/security";
+                break;
+
+            case ProviderEmail.ItalianoGenerico:
+                titolo = "Come configurare Libero / Aruba / Alice / Tin";
+                messaggio = "Con questi provider di solito basta la password normale della webmail (non serve una password per le app).\n\n" +
+                            "Se il test fallisce comunque:\n" +
+                            "- Controlla di aver scritto correttamente email e password.\n" +
+                            "- Prova a cambiare la Porta da 465 a 587 nei campi avanzati (premi '+').\n" +
+                            "- Verifica sul sito del tuo gestore che l'accesso 'da programmi esterni' (SMTP) sia abilitato sulla tua casella.";
+                break;
+
+            default:
+                titolo = "Come configurare la tua email";
+                messaggio = "Scrivi prima l'indirizzo email della scuola nel campo Email: Pulse riconoscerà automaticamente i principali provider (Gmail, Outlook, Yahoo, Libero, Aruba...) e mostrerà qui la guida specifica.\n\n" +
+                            "In generale, se l'invio fallisce con un errore di autenticazione, quasi sempre serve generare una 'password per le app' dalle impostazioni di sicurezza del tuo account email, invece della password normale.";
+                break;
+        }
+
+        if (url != null)
+        {
+            bool apriPagina = await Shell.Current.DisplayAlert(titolo, messaggio, "Apri Pagina", "Chiudi");
+
+            if (apriPagina)
+            {
+                try
+                {
+                    await Launcher.Default.OpenAsync(new Uri(url));
+                }
+                catch (Exception ex)
+                {
+                    await Shell.Current.DisplayAlert("Errore", $"Impossibile aprire il browser: {ex.Message}", "OK");
+                }
+            }
+        }
+        else
+        {
+            await Shell.Current.DisplayAlert(titolo, messaggio, "OK");
+        }
+    }
+
     [ObservableProperty]
     private Impostazioni _impostazioni = new();
 
@@ -96,6 +196,9 @@ public partial class ImpostazioniViewModel : BaseViewModel
     [ObservableProperty]
     private bool _mostraCampiAvanzatiEmail;
 
+    [ObservableProperty]
+    private string? _emailDestinatarioTest;
+
     public ImpostazioniViewModel(INavigationService navigationService, IImpostazioniService impostazioniService, IEmailService emailService)
         : base(navigationService)
     {
@@ -140,9 +243,13 @@ public partial class ImpostazioniViewModel : BaseViewModel
             return;
         }
 
+        string destinatario = string.IsNullOrWhiteSpace(EmailDestinatarioTest)
+            ? EmailSmtpUser
+            : EmailDestinatarioTest.Trim();
+
         bool conferma = await Shell.Current.DisplayAlert(
             "Test Email",
-            $"Verrà inviata una email di prova a:\n{EmailSmtpUser}\n\nConfermi?",
+            $"Verrà inviata una email di prova a:\n{destinatario}\n\nConfermi?",
             "Sì, Invia",
             "Annulla");
 
@@ -152,10 +259,10 @@ public partial class ImpostazioniViewModel : BaseViewModel
         {
             await SalvaImpostazioniInternoAsync();
 
-            var (successo, errore) = await _emailService.InviaEmailTestAsync(EmailSmtpUser);
+            var (successo, errore) = await _emailService.InviaEmailTestAsync(destinatario);
 
             if (successo)
-                await Shell.Current.DisplayAlert("Fatto", $"Email di prova inviata correttamente a {EmailSmtpUser}.", "OK");
+                await Shell.Current.DisplayAlert("Fatto", $"Email di prova inviata correttamente a {destinatario}.", "OK");
             else
                 await Shell.Current.DisplayAlert("Errore Invio", $"Invio non riuscito:\n{errore}", "OK");
         });
