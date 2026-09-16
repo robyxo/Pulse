@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Pulse.Views.CalendarioEventiPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:Pulse.ViewModels"
+    x:Name="PageRoot"
+    Title="Calendario Eventi"
+    x:DataType="vm:CalendarioEventiViewModel"
+    BackgroundColor="#F3F4F6">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="15" Spacing="15">
+
+            <Label
+                FontAttributes="Bold"
+                FontSize="20"
+                Text="📆 Calendario Eventi" />
+
+            <Label
+                FontSize="13"
+                Text="Crea una 'Chiusura' (es. festività) per estendere automaticamente la scadenza degli abbonamenti attivi che si sovrappongono al periodo, oppure crea un 'Evento' informativo (es. una promozione) da segnalare via email agli allievi."
+                TextColor="Gray" />
+
+            <!--  FORM  -->
+            <Border
+                Padding="15"
+                BackgroundColor="White"
+                Stroke="#CBD5E1"
+                StrokeShape="RoundRectangle 12">
+                <VerticalStackLayout Spacing="10">
+
+                    <Label
+                        FontAttributes="Bold"
+                        IsVisible="{Binding IsModifica}"
+                        Text="✏️ Modifica in corso"
+                        TextColor="#F59E0B" />
+
+                    <Label
+                        FontAttributes="Bold"
+                        Text="Tipo:"
+                        TextColor="#1E293B" />
+                    <Border Stroke="#CBD5E1" StrokeShape="RoundRectangle 8">
+                        <Picker ItemsSource="{Binding OpzioniTipo}" SelectedItem="{Binding TipoSelezionato}" />
+                    </Border>
+
+                    <HorizontalStackLayout Spacing="15">
+                        <VerticalStackLayout Spacing="4">
+                            <Label
+                                FontAttributes="Bold"
+                                Text="Dal:"
+                                TextColor="#1E293B" />
+                            <DatePicker Date="{Binding DataInizioForm}" Format="dd/MM/yyyy" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Spacing="4">
+                            <Label
+                                FontAttributes="Bold"
+                                Text="Al:"
+                                TextColor="#1E293B" />
+                            <DatePicker Date="{Binding DataFineForm}" Format="dd/MM/yyyy" />
+                        </VerticalStackLayout>
+                    </HorizontalStackLayout>
+
+                    <Label
+                        FontAttributes="Bold"
+                        Text="Motivo / Descrizione:"
+                        TextColor="#1E293B" />
+                    <Border
+                        Padding="10,0"
+                        Stroke="#CBD5E1"
+                        StrokeShape="RoundRectangle 8">
+                        <Entry
+                            HeightRequest="42"
+                            Placeholder="Es. Chiusura Festività Natalizie"
+                            Text="{Binding MotivoForm}" />
+                    </Border>
+
+                    <HorizontalStackLayout Spacing="10">
+                        <Button
+                            BackgroundColor="#10B981"
+                            Command="{Binding SalvaCommand}"
+                            CornerRadius="10"
+                            FontAttributes="Bold"
+                            HeightRequest="46"
+                            Text="💾 Salva"
+                            TextColor="White"
+                            WidthRequest="140" />
+                        <Button
+                            BackgroundColor="#64748B"
+                            Command="{Binding NuovoElementoCommand}"
+                            CornerRadius="10"
+                            FontAttributes="Bold"
+                            HeightRequest="46"
+                            IsVisible="{Binding IsModifica}"
+                            Text="✖ Annulla"
+                            TextColor="White"
+                            WidthRequest="140" />
+                    </HorizontalStackLayout>
+
+                </VerticalStackLayout>
+            </Border>
+
+            <!--  LISTA  -->
+            <Label
+                Margin="0,10,0,0"
+                FontAttributes="Bold"
+                FontSize="16"
+                Text="Chiusure ed Eventi registrati" />
+
+            <CollectionView ItemsSource="{Binding ListaChiusureEventi}">
+                <CollectionView.EmptyView>
+                    <Label
+                        Margin="0,20"
+                        HorizontalOptions="Center"
+                        Text="Nessuna chiusura o evento registrato."
+                        TextColor="Gray" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="x:Object">
+                        <Border
+                            Margin="0,0,0,8"
+                            Padding="12"
+                            BackgroundColor="White"
+                            Stroke="#E2E8F0"
+                            StrokeShape="RoundRectangle 10">
+                            <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto">
+
+                                <Label
+                                    Grid.Row="0"
+                                    Grid.Column="0"
+                                    FontSize="22"
+                                    Text="{Binding IconaTipo}"
+                                    VerticalOptions="Center" />
+
+                                <VerticalStackLayout
+                                    Grid.Row="0"
+                                    Grid.Column="1"
+                                    Margin="10,0"
+                                    Spacing="2">
+                                    <Label
+                                        FontAttributes="Bold"
+                                        Text="{Binding Motivo}"
+                                        TextColor="#1E293B" />
+                                    <Label
+                                        FontSize="12"
+                                        Text="{Binding PeriodoVisualizzato}"
+                                        TextColor="Gray" />
+                                    <Label
+                                        FontSize="11"
+                                        Text="{Binding EtichettaTipo}"
+                                        TextColor="{Binding ColoreTipo}" />
+                                </VerticalStackLayout>
+
+                                <HorizontalStackLayout
+                                    Grid.Row="0"
+                                    Grid.Column="2"
+                                    Spacing="6">
+                                    <Button
+                                        Padding="0"
+                                        BackgroundColor="#F1F5F9"
+                                        Command="{Binding BindingContext.ModificaElementoCommand, Source={x:Reference PageRoot}}"
+                                        CommandParameter="{Binding .}"
+                                        CornerRadius="18"
+                                        FontSize="14"
+                                        HeightRequest="36"
+                                        Text="✏️"
+                                        WidthRequest="36" />
+                                    <Button
+                                        Padding="0"
+                                        BackgroundColor="#FEE2E2"
+                                        Command="{Binding BindingContext.EliminaElementoCommand, Source={x:Reference PageRoot}}"
+                                        CommandParameter="{Binding .}"
+                                        CornerRadius="18"
+                                        FontSize="14"
+                                        HeightRequest="36"
+                                        Text="🗑️"
+                                        WidthRequest="36" />
+                                </HorizontalStackLayout>
+
+                                <Label
+                                    Grid.Row="1"
+                                    Grid.Column="0"
+                                    Grid.ColumnSpan="3"
+                                    Margin="0,6,0,0"
+                                    FontSize="11"
+                                    IsVisible="{Binding EmailGiaInviata}"
+                                    Text="✅ Email evento già inviata"
+                                    TextColor="#10B981" />
+
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <ActivityIndicator
+                HorizontalOptions="Center"
+                IsRunning="{Binding IsBusy}"
+                IsVisible="{Binding IsBusy}" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

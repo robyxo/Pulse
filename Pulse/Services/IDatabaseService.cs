@@ -52,7 +52,7 @@ public interface IDatabaseService
     // CALENDARIO CHIUSURE
     // ================================================
     Task<List<CalendarioChiusure>> GetChiusureAsync();
-    Task<bool> SalvaChiusuraAsync(CalendarioChiusure chiusura);
+    Task<(bool Successo, int AbbonamentiEstesi)> SalvaChiusuraAsync(CalendarioChiusure chiusura);
     Task<bool> EliminaChiusuraAsync(int id);
 
     // ================================================

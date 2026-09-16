@@ -78,6 +78,9 @@
 
 	<!-- QUESTI 2 BLOCCO ERANO MANCANTI -->
 	<ItemGroup>
+		<Compile Update="Views\CalendarioEventiPage.xaml.cs">
+		  <DependentUpon>CalendarioEventiPage.xaml</DependentUpon>
+		</Compile>
 		<Compile Update="Views\CalendarioPage.xaml.cs">
 			<DependentUpon>CalendarioPage.xaml</DependentUpon>
 		</Compile>
@@ -97,6 +100,9 @@
 
 	<ItemGroup>
 		<MauiXaml Update="Views\AllieviPage.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
+		<MauiXaml Update="Views\CalendarioEventiPage.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Views\CorsiPage.xaml">

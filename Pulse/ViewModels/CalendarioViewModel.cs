@@ -210,4 +210,8 @@ public partial class CalendarioViewModel : BaseViewModel
     public async Task NavigaImpostazioni() =>
         await Shell.Current.GoToAsync(AppRoutes.Impostazioni.Pagina);
 
+    [RelayCommand]
+    public async Task NavigaCalendarioEventi() =>
+    await Shell.Current.GoToAsync(AppRoutes.Calendario.Eventi);
+
 }

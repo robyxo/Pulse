@@ -74,6 +74,7 @@ public static class MauiProgram
         builder.Services.AddTransient<GestioneLezioneViewModel>();
         builder.Services.AddTransient<NotificheViewModel>();
         builder.Services.AddTransient<ImpostazioniViewModel>();
+        builder.Services.AddTransient<CalendarioEventiViewModel>();
 
         // 3. Registrazione Views (Pagine)
         builder.Services.AddTransient<MainPage>();
@@ -88,6 +89,7 @@ public static class MauiProgram
         builder.Services.AddTransient<GestioneLezionePage>();
         builder.Services.AddTransient<NotifichePage>();
         builder.Services.AddTransient<ImpostazioniPage>();
+        builder.Services.AddTransient<CalendarioEventiPage>();
 
         // 4. Registrazione Servizi
         builder.Services.AddSingleton<INavigationService, NavigationService>();

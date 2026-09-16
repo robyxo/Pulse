@@ -20,6 +20,7 @@ public partial class AppShell : Shell
             // 📅 Rotte Calendario & Lezioni
             { AppRoutes.Calendario.Pagina, typeof(CalendarioPage) },
             { AppRoutes.Calendario.GestioneLezione, typeof(GestioneLezionePage) },
+            { AppRoutes.Calendario.Eventi, typeof(CalendarioEventiPage) },
             
             // 📚 Rotte Corsi
             { AppRoutes.Corsi.PaginaCorsi, typeof(CorsiPage) },

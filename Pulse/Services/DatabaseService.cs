@@ -261,8 +261,10 @@ public class DatabaseService : IDatabaseService
             .ToListAsync();
     }
 
-    public async Task<bool> SalvaChiusuraAsync(CalendarioChiusure chiusura)
+    public async Task<(bool Successo, int AbbonamentiEstesi)> SalvaChiusuraAsync(CalendarioChiusure chiusura)
     {
+        bool eraNuova = chiusura.Id == 0;
+
         if (chiusura.Id == 0)
         {
             _context.CalendarioChiusures.Add(chiusura);
@@ -272,7 +274,45 @@ public class DatabaseService : IDatabaseService
             _context.CalendarioChiusures.Update(chiusura);
         }
 
-        return await _context.SaveChangesAsync() > 0;
+        bool salvataggioOk = await _context.SaveChangesAsync() > 0;
+        int abbonamentiEstesi = 0;
+
+        // Estensione automatica: solo per NUOVE "Chiusure" (mai per gli "Eventi",
+        // e mai in automatico quando si modifica una chiusura già esistente,
+        // per evitare di estendere più volte gli stessi abbonamenti).
+        if (salvataggioOk
+            && eraNuova
+            && string.Equals(chiusura.Tipo, "Chiusura", StringComparison.OrdinalIgnoreCase)
+            && DateTime.TryParse(chiusura.DataInizio, out var dataInizioChiusura)
+            && DateTime.TryParse(chiusura.DataFine, out var dataFineChiusura))
+        {
+            int giorniChiusura = (dataFineChiusura.Date - dataInizioChiusura.Date).Days + 1;
+
+            if (giorniChiusura > 0)
+            {
+                // Solo gli abbonamenti ATTUALMENTE ATTIVI il cui periodo si sovrappone
+                // alla chiusura (già esistenti a DB in questo momento).
+                var abbonamentiSovrapposti = await _context.Abbonamentis
+                    .Where(a => a.Attivo == 1
+                        && a.DataInizio.Date <= dataFineChiusura.Date
+                        && a.DataScadenza.Date >= dataInizioChiusura.Date)
+                    .ToListAsync();
+
+                foreach (var abbonamento in abbonamentiSovrapposti)
+                {
+                    abbonamento.DataScadenza = abbonamento.DataScadenza.AddDays(giorniChiusura);
+                    _context.Abbonamentis.Update(abbonamento);
+                }
+
+                if (abbonamentiSovrapposti.Count > 0)
+                {
+                    await _context.SaveChangesAsync();
+                    abbonamentiEstesi = abbonamentiSovrapposti.Count;
+                }
+            }
+        }
+
+        return (salvataggioOk, abbonamentiEstesi);
     }
 
     public async Task<bool> EliminaChiusuraAsync(int id)

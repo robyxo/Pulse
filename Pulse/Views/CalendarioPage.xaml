@@ -153,6 +153,13 @@
                     Text="⚙️ Impostazioni"
                     TextColor="White" />
 
+                <Button
+                    BackgroundColor="#7C3AED"
+                    Command="{Binding NavigaCalendarioEventiCommand}"
+                    FontAttributes="Bold"
+                    Text="📆 Calendario Eventi"
+                    TextColor="White" />
+
             </VerticalStackLayout>
         </VerticalStackLayout>
 

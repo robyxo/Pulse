@@ -11,6 +11,7 @@ public static class AppRoutes
     {
         public const string Pagina = "calendario";
         public const string GestioneLezione = "GestioneLezionePage";
+        public const string Eventi = "CalendarioEventiPage";
     }
 
     public static class Corsi
