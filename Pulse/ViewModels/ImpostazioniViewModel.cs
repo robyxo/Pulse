@@ -9,6 +9,7 @@ public partial class ImpostazioniViewModel : BaseViewModel
 {
     private readonly IImpostazioniService _impostazioniService;
     private readonly IEmailService _emailService;
+    private readonly IBackupService _backupService;
 
     private static readonly Dictionary<string, (string Host, int Porta, bool Ssl)> ProviderNoti =
         new(StringComparer.OrdinalIgnoreCase)
@@ -174,7 +175,7 @@ public partial class ImpostazioniViewModel : BaseViewModel
 
     public List<int> OpzioniNumeroColori { get; } = Enumerable.Range(1, 20).ToList();
 
-    // --- EMAIL SCUOLA ---
+    // --- EMAIL ---
     [ObservableProperty]
     private string? _emailSmtpUser;
 
@@ -199,11 +200,12 @@ public partial class ImpostazioniViewModel : BaseViewModel
     [ObservableProperty]
     private string? _emailDestinatarioTest;
 
-    public ImpostazioniViewModel(INavigationService navigationService, IImpostazioniService impostazioniService, IEmailService emailService)
-        : base(navigationService)
+    public ImpostazioniViewModel(INavigationService navigationService, IImpostazioniService impostazioniService, IEmailService emailService, IBackupService backupService)
+    : base(navigationService)
     {
         _impostazioniService = impostazioniService;
         _emailService = emailService;
+        _backupService = backupService;
         Title = "Impostazioni";
     }
 
@@ -268,6 +270,19 @@ public partial class ImpostazioniViewModel : BaseViewModel
         });
     }
 
+    // --- BACKUP E RIPRISTINO ---
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HaBackupPrecedente))]
+    private string? _ultimoBackupData;
+
+    public bool HaBackupPrecedente => !string.IsNullOrWhiteSpace(UltimoBackupData);
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HaRipristinoPrecedente))]
+    private string? _ultimoRipristinoData;
+
+    public bool HaRipristinoPrecedente => !string.IsNullOrWhiteSpace(UltimoRipristinoData);
+
     [RelayCommand]
     public async Task CaricaImpostazioniAsync()
     {
@@ -291,6 +306,9 @@ public partial class ImpostazioniViewModel : BaseViewModel
             EmailSmtpHost = Impostazioni.EmailSmtpHost;
             EmailSmtpPort = Impostazioni.EmailSmtpPort ?? 587;
             EmailUseSslAttiva = Impostazioni.EmailUseSsl != 0;
+
+            UltimoBackupData = Impostazioni.UltimoBackupData;
+            UltimoRipristinoData = Impostazioni.UltimoRipristinoData;
         });
     }
 
@@ -372,6 +390,121 @@ public partial class ImpostazioniViewModel : BaseViewModel
         {
             await SalvaImpostazioniInternoAsync();
             await Shell.Current.DisplayAlert("Fatto", "Impostazioni salvate correttamente.", "OK");
+        });
+    }
+
+    [RelayCommand]
+    public async Task EseguiBackupAsync()
+    {
+        await EseguiConCaricamento(async () =>
+        {
+            var (successo, percorso, errore) = await _backupService.EseguiBackupAsync();
+
+            if (successo)
+            {
+                await CaricaImpostazioniAsync();
+                await Shell.Current.DisplayAlert("Fatto", $"Backup creato con successo:\n{percorso}", "OK");
+            }
+            else if (errore != null)
+            {
+                await Shell.Current.DisplayAlert("Errore Backup", errore, "OK");
+            }
+        });
+    }
+
+    [RelayCommand]
+    public async Task RipristinaBackupAsync()
+    {
+        var tipoFileDb = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
+    {
+        { DevicePlatform.WinUI, new[] { ".db" } },
+        { DevicePlatform.MacCatalyst, new[] { "db" } },
+    });
+
+        var file = await FilePicker.Default.PickAsync(new PickOptions
+        {
+            PickerTitle = "Seleziona il file di backup (.db) da ripristinare",
+            FileTypes = tipoFileDb
+        });
+
+        if (file == null) return;
+
+        bool conferma = await Shell.Current.DisplayAlert(
+            "⚠️ Attenzione",
+            $"Stai per sovrascrivere TUTTI i dati attuali di Pulse con il contenuto di:\n{file.FileName}\n\nQuesta operazione non si può annullare. Continuare?",
+            "Sì, Ripristina",
+            "Annulla");
+
+        if (!conferma) return;
+
+        await EseguiConCaricamento(async () =>
+        {
+            var (successo, errore) = await _backupService.RipristinaBackupAsync(file.FullPath);
+
+            if (successo)
+            {
+                await Shell.Current.DisplayAlert(
+                    "Ripristino completato",
+                    "Il database è stato ripristinato.\n\nChiudi completamente Pulse e riaprilo ora, altrimenti l'app continuerà a mostrare i vecchi dati rimasti in memoria.",
+                    "OK");
+            }
+            else
+            {
+                await Shell.Current.DisplayAlert("Errore Ripristino", errore ?? "Errore sconosciuto.", "OK");
+            }
+        });
+    }
+
+    [RelayCommand]
+    public async Task ResetApplicazioneAsync()
+    {
+        bool primaConferma = await Shell.Current.DisplayAlert(
+            "⚠️ Reset Applicazione",
+            "Questa operazione cancellerà TUTTI i dati di Pulse: allievi, corsi, lezioni, abbonamenti, iscrizioni, presenze, documenti privacy, chiusure calendario e tutte le impostazioni (logo, email, colori, ecc.).\n\nVuoi continuare?",
+            "Sì, Continua",
+            "Annulla");
+
+        if (!primaConferma) return;
+
+        bool secondaConferma = await Shell.Current.DisplayAlert(
+            "⚠️ Sei sicuro?",
+            "Questa azione NON si può annullare. Se ti servono i dati attuali, esci ora e fai prima un Backup dalla sezione qui sopra.\n\nVuoi procedere comunque con la cancellazione totale?",
+            "Sì, Procedi",
+            "Annulla");
+
+        if (!secondaConferma) return;
+
+        string? testoConferma = await Shell.Current.DisplayPromptAsync(
+            "Conferma finale",
+            "Per confermare in modo definitivo, scrivi la parola RESET (in maiuscolo) e premi OK.",
+            "OK",
+            "Annulla",
+            placeholder: "RESET");
+
+        if (!string.Equals(testoConferma?.Trim(), "RESET", StringComparison.Ordinal))
+        {
+            if (testoConferma != null)
+            {
+                await Shell.Current.DisplayAlert("Annullato", "Reset annullato: la parola scritta non corrisponde.", "OK");
+            }
+            return;
+        }
+
+        await EseguiConCaricamento(async () =>
+        {
+            var (successo, errore) = await _backupService.ResetApplicazioneAsync();
+
+            if (successo)
+            {
+                await Shell.Current.DisplayAlert(
+                    "Fatto",
+                    "Tutti i dati sono stati cancellati. Chiudi e riapri Pulse per ripartire da zero.",
+                    "OK");
+            }
+            else
+            {
+                await Shell.Current.DisplayAlert("Errore", $"Reset non riuscito:\n{errore}", "OK");
+            }
         });
     }
 }

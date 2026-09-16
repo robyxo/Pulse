@@ -216,7 +216,7 @@
                 </VerticalStackLayout>
             </Border>
 
-            <!--  SEZIONE: EMAIL SCUOLA  -->
+            <!--  SEZIONE: EMAIL  -->
             <Border
                 Padding="16"
                 BackgroundColor="White"
@@ -367,6 +367,79 @@
                         Text="{Binding EmailDestinatarioTest}" />
                 </Border>
             </VerticalStackLayout>
+
+            <!--  SEZIONE: BACKUP E RIPRISTINO  -->
+            <Border
+                Padding="16"
+                BackgroundColor="White"
+                Stroke="#E2E8F0"
+                StrokeShape="RoundRectangle 12">
+                <VerticalStackLayout Spacing="10">
+                    <Label
+                        FontAttributes="Bold"
+                        FontSize="16"
+                        Text="💾 Backup e Ripristino Database" />
+
+                    <Label
+                        FontSize="12"
+                        IsVisible="{Binding HaBackupPrecedente}"
+                        Text="{Binding UltimoBackupData, StringFormat='Ultimo backup: {0}'}"
+                        TextColor="Gray" />
+                    <Label
+                        FontSize="12"
+                        IsVisible="{Binding HaRipristinoPrecedente}"
+                        Text="{Binding UltimoRipristinoData, StringFormat='Ultimo ripristino: {0}'}"
+                        TextColor="Gray" />
+
+                    <Button
+                        BackgroundColor="#10B981"
+                        Command="{Binding EseguiBackupCommand}"
+                        CornerRadius="8"
+                        FontAttributes="Bold"
+                        Text="💾 Crea Backup"
+                        TextColor="White" />
+
+                    <Button
+                        BackgroundColor="#F59E0B"
+                        Command="{Binding RipristinaBackupCommand}"
+                        CornerRadius="8"
+                        FontAttributes="Bold"
+                        Text="♻️ Ripristina da Backup"
+                        TextColor="White" />
+
+                    <Label
+                        FontSize="11"
+                        Text="Il backup salva una copia completa del database in una cartella a tua scelta. Il ripristino sovrascrive tutti i dati attuali: dopo aver ripristinato, chiudi e riapri l'app."
+                        TextColor="Gray" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!--  SEZIONE: RESET APPLICAZIONE  -->
+            <Border
+                Padding="16"
+                BackgroundColor="#FEF2F2"
+                Stroke="#FCA5A5"
+                StrokeShape="RoundRectangle 12">
+                <VerticalStackLayout Spacing="10">
+                    <Label
+                        FontAttributes="Bold"
+                        FontSize="16"
+                        Text="🗑️ Reset Applicazione"
+                        TextColor="#991B1B" />
+                    <Label
+                        FontSize="12"
+                        Text="Cancella definitivamente tutti i dati di Pulse (allievi, corsi, lezioni, abbonamenti, impostazioni) e riporta l'app allo stato iniziale. Operazione irreversibile."
+                        TextColor="#7F1D1D" />
+
+                    <Button
+                        BackgroundColor="#DC2626"
+                        Command="{Binding ResetApplicazioneCommand}"
+                        CornerRadius="8"
+                        FontAttributes="Bold"
+                        Text="🗑️ Reset Totale (Ripristina Dati di Fabbrica)"
+                        TextColor="White" />
+                </VerticalStackLayout>
+            </Border>
 
             <!--  PULSANTE SALVA  -->
             <Button
