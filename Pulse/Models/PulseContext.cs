@@ -90,6 +90,12 @@ public partial class PulseContext : DbContext
             entity.Property(e => e.EmailUseSsl).HasDefaultValue(1);
             entity.Property(e => e.NumeroColoriCorsi).HasDefaultValue(6);
             entity.Property(e => e.OrarioScaglionato).HasDefaultValue(0);
+            entity.Property(e => e.RicevutaAltezzaMm).HasDefaultValue(90);
+            entity.Property(e => e.RicevutaLarghezzaMm).HasDefaultValue(90);
+            entity.Property(e => e.RicevutaMarginBottomMm).HasDefaultValue(3);
+            entity.Property(e => e.RicevutaMarginLeftMm).HasDefaultValue(5);
+            entity.Property(e => e.RicevutaMarginRightMm).HasDefaultValue(3);
+            entity.Property(e => e.RicevutaMarginTopMm).HasDefaultValue(10);
             entity.Property(e => e.StampaDocumentoPrivacy).HasDefaultValue(1);
             entity.Property(e => e.StampaRicevutaCortesia).HasDefaultValue(1);
         });

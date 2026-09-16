@@ -40,4 +40,16 @@ public partial class Impostazioni
     public string? UltimoBackupData { get; set; }
 
     public string? UltimoRipristinoData { get; set; }
+
+    public int? RicevutaLarghezzaMm { get; set; }
+
+    public int? RicevutaAltezzaMm { get; set; }
+
+    public int? RicevutaMarginTopMm { get; set; }
+
+    public int? RicevutaMarginRightMm { get; set; }
+
+    public int? RicevutaMarginBottomMm { get; set; }
+
+    public int? RicevutaMarginLeftMm { get; set; }
 }
