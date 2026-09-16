@@ -119,18 +119,18 @@ public class RicevutaService
 <title>Ricevuta di Cortesia</title>
 <style>
     @page {{
-        size: 90mm 90mm;
-        margin: 3mm;
-    }}
-    * {{ box-sizing: border-box; }}
-    body {{
-        font-family: Arial, sans-serif;
-        width: 84mm;
-        margin: 0;
-        padding: 0;
-        font-size: 9px;
-        color: #111;
-    }}
+    size: 90mm 90mm;
+    margin: 10mm 3mm 3mm 5mm; /* top right bottom left */
+}}
+* {{ box-sizing: border-box; }}
+body {{
+    font-family: Arial, sans-serif;
+    width: 82mm;
+    margin: 0;
+    padding: 0;
+    font-size: 9px;
+    color: #111;
+}}
     .logo {{
         display: block;
         max-width: 100%;
