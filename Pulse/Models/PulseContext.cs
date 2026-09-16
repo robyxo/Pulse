@@ -67,6 +67,8 @@ public partial class PulseContext : DbContext
 
             entity.Property(e => e.DataFine).HasColumnName("Data_Fine");
             entity.Property(e => e.DataInizio).HasColumnName("Data_Inizio");
+            entity.Property(e => e.EmailInviata).HasDefaultValue(0);
+            entity.Property(e => e.Tipo).HasDefaultValue("Chiusura");
         });
 
         modelBuilder.Entity<Corsi>(entity =>

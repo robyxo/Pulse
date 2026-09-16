@@ -14,4 +14,8 @@ public partial class CalendarioChiusure
     public int? Stato { get; set; }
 
     public string? Motivo { get; set; }
+
+    public string? Tipo { get; set; }
+
+    public int? EmailInviata { get; set; }
 }
