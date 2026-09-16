@@ -11,7 +11,7 @@ public partial class Impostazioni
 
     public string? IndirizzoScuola { get; set; }
 
-    public string? PivaScuola { get; set; }
+    public string? PartitaIva { get; set; }
 
     public string? LogoPath { get; set; }
 
