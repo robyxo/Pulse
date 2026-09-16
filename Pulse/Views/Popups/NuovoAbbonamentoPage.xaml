@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Pulse.Views.Popups.NuovoAbbonamentoPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="Nuovo Abbonamento"
+    BackgroundColor="#F8FAFC">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="14">
+
+            <Label
+                x:Name="LblCorso"
+                FontAttributes="Bold"
+                FontSize="18"
+                TextColor="#1E293B" />
+
+            <Label
+                FontAttributes="Bold"
+                Text="Tipo Abbonamento:"
+                TextColor="#1E293B" />
+            <Border Stroke="#CBD5E1" StrokeShape="RoundRectangle 8">
+                <Picker x:Name="PickerTipo" SelectedIndexChanged="OnTipoChanged" />
+            </Border>
+
+            <Label
+                x:Name="LblStandardInfo"
+                FontSize="13"
+                TextColor="Gray" />
+
+            <BoxView
+                Margin="0,6"
+                BackgroundColor="#E2E8F0"
+                HeightRequest="1" />
+
+            <!--  DATA DI INIZIO PERSONALIZZATA  -->
+            <Grid ColumnDefinitions="*,Auto">
+                <Label
+                    Grid.Column="0"
+                    FontAttributes="Bold"
+                    Text="Data di inizio personalizzata"
+                    TextColor="#1E293B"
+                    VerticalOptions="Center" />
+                <Switch
+                    x:Name="SwitchInizioPersonalizzato"
+                    Grid.Column="1"
+                    Toggled="OnSwitchInizioToggled" />
+            </Grid>
+            <DatePicker
+                x:Name="DatePickerInizio"
+                DateSelected="OnDataInizioChanged"
+                Format="dd/MM/yyyy"
+                IsEnabled="False" />
+
+            <!--  SCADENZA PERSONALIZZATA  -->
+            <Grid Margin="0,8,0,0" ColumnDefinitions="*,Auto">
+                <Label
+                    Grid.Column="0"
+                    FontAttributes="Bold"
+                    Text="Scadenza personalizzata"
+                    TextColor="#1E293B"
+                    VerticalOptions="Center" />
+                <Switch
+                    x:Name="SwitchScadenzaPersonalizzata"
+                    Grid.Column="1"
+                    Toggled="OnSwitchScadenzaToggled" />
+            </Grid>
+            <DatePicker
+                x:Name="DatePickerScadenza"
+                Format="dd/MM/yyyy"
+                IsEnabled="False" />
+
+            <!--  PREZZO PERSONALIZZATO  -->
+            <Grid Margin="0,8,0,0" ColumnDefinitions="*,Auto">
+                <Label
+                    Grid.Column="0"
+                    FontAttributes="Bold"
+                    Text="Prezzo personalizzato (sconto)"
+                    TextColor="#1E293B"
+                    VerticalOptions="Center" />
+                <Switch
+                    x:Name="SwitchPrezzoPersonalizzato"
+                    Grid.Column="1"
+                    Toggled="OnSwitchPrezzoToggled" />
+            </Grid>
+            <Border
+                Padding="10,0"
+                Stroke="#CBD5E1"
+                StrokeShape="RoundRectangle 8">
+                <Entry
+                    x:Name="EntryPrezzo"
+                    HeightRequest="42"
+                    IsEnabled="False"
+                    Keyboard="Numeric"
+                    Placeholder="Importo €" />
+            </Border>
+
+            <HorizontalStackLayout Margin="0,20,0,0" Spacing="10">
+                <Button
+                    BackgroundColor="#10B981"
+                    Clicked="OnSalvaClicked"
+                    CornerRadius="10"
+                    FontAttributes="Bold"
+                    HeightRequest="46"
+                    Text="💾 Salva Abbonamento"
+                    TextColor="White"
+                    WidthRequest="220" />
+                <Button
+                    BackgroundColor="#64748B"
+                    Clicked="OnAnnullaClicked"
+                    CornerRadius="10"
+                    FontAttributes="Bold"
+                    HeightRequest="46"
+                    Text="Annulla"
+                    TextColor="White"
+                    WidthRequest="110" />
+            </HorizontalStackLayout>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

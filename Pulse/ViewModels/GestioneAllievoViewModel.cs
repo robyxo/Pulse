@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using Pulse.Models;
 using Pulse.Services;
 using System.Collections.ObjectModel;
+using Pulse.Views.Popups;
 
 namespace Pulse.ViewModels;
 
@@ -264,59 +265,14 @@ public partial class GestioneAllievoViewModel : BaseViewModel
         var corsoScelto = corsiDisponibili.FirstOrDefault(c => c.Nome == corsoSelezionatoNome);
         if (corsoScelto == null) return;
 
-        var opzioniPrezzi = new List<string>();
-        if (corsoScelto.CostoSingolo.HasValue && corsoScelto.CostoSingolo.Value > 0)
-            opzioniPrezzi.Add($"Singolo (€ {corsoScelto.CostoSingolo.Value:N2})");
-        if (corsoScelto.CostoMensile.HasValue && corsoScelto.CostoMensile.Value > 0)
-            opzioniPrezzi.Add($"Mensile 4 Settimane (€ {corsoScelto.CostoMensile.Value:N2})");
-        if (corsoScelto.CostoAnnuale.HasValue && corsoScelto.CostoAnnuale.Value > 0)
-            opzioniPrezzi.Add($"Annuale (€ {corsoScelto.CostoAnnuale.Value:N2})");
+        var popup = new NuovoAbbonamentoPage(corsoScelto, CompletaCreazioneAbbonamentoAsync);
+        await Shell.Current.Navigation.PushModalAsync(popup);
+    }
 
-        if (opzioniPrezzi.Count == 0)
-        {
-            opzioniPrezzi.Add("Mensile 4 Settimane (€ 0,00)");
-        }
-
-        string tipoSelezionato = await Shell.Current.DisplayActionSheet(
-            $"Abbonamento per {corsoScelto.Nome}:",
-            "Annulla",
-            null,
-            opzioniPrezzi.ToArray());
-
-        if (string.IsNullOrEmpty(tipoSelezionato) || tipoSelezionato == "Annulla") return;
-
-        string tipo = "Mensile";
-        double importo = corsoScelto.CostoMensile ?? 0;
-        DateTime scadenza = DateTime.Now.AddDays(28);
-
-        if (tipoSelezionato.StartsWith("Singolo"))
-        {
-            tipo = "Singolo";
-            importo = corsoScelto.CostoSingolo ?? 0;
-            scadenza = DateTime.Now.AddDays(1);
-        }
-        else if (tipoSelezionato.StartsWith("Annuale"))
-        {
-            tipo = "Annuale";
-            importo = corsoScelto.CostoAnnuale ?? 0;
-            scadenza = DateTime.Now.AddYears(1);
-        }
-
-        var nuovo = new Abbonamenti
-        {
-            AllievoId = Allievo.Id,
-            Allievo = Allievo,
-            CorsoId = corsoScelto.Id,
-            Corso = corsoScelto,
-            TipoAbbonamento = tipo,
-            DataInizio = DateTime.Now,
-            DataScadenza = scadenza,
-            ImportoTotale = importo,
-            ImportoPagato = importo,
-            IsPagato = 1,
-            IsSospeso = 0,
-            Attivo = 1
-        };
+    private async Task CompletaCreazioneAbbonamentoAsync(Abbonamenti nuovo)
+    {
+        nuovo.AllievoId = Allievo.Id;
+        nuovo.Allievo = Allievo;
 
         if (Allievo.Id > 0)
         {
@@ -330,7 +286,7 @@ public partial class GestioneAllievoViewModel : BaseViewModel
         {
             bool vuoleStampare = await Shell.Current.DisplayAlert(
                 "Abbonamento Creato",
-                $"Abbonamento registrato con successo!\nScadenza: {scadenza:dd/MM/yyyy}.\n\nVuoi stampare la ricevuta di cortesia?",
+                $"Abbonamento registrato con successo!\nScadenza: {nuovo.DataScadenza:dd/MM/yyyy}.\n\nVuoi stampare la ricevuta di cortesia?",
                 "Sì, Stampa",
                 "No");
 
