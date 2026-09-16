@@ -8,4 +8,5 @@ public interface IEmailService
     /// configurato in appsettings.json (sezione "EmailSettings").
     /// </summary>
     Task<bool> InviaEmailAsync(IEnumerable<string> destinatari, string oggetto, string corpo);
+    Task<(bool Successo, string? Errore)> InviaEmailTestAsync(string indirizzoDestinatario);
 }

@@ -5,13 +5,12 @@ namespace Pulse.Services;
 
 public class EmailService : IEmailService
 {
-    // Chiavi Preferences che verranno popolate dalla futura pagina Impostazioni
-    private const string ChiaveSmtpHost = "Email_SmtpHost";
-    private const string ChiaveSmtpPort = "Email_SmtpPort";
-    private const string ChiaveSmtpUser = "Email_SmtpUser";
-    private const string ChiaveSmtpPassword = "Email_SmtpPassword";
-    private const string ChiaveMittenteNome = "Email_MittenteNome";
-    private const string ChiaveUseSsl = "Email_UseSsl";
+    private readonly IImpostazioniService _impostazioniService;
+
+    public EmailService(IImpostazioniService impostazioniService)
+    {
+        _impostazioniService = impostazioniService;
+    }
 
     public async Task<bool> InviaEmailAsync(IEnumerable<string> destinatari, string oggetto, string corpo)
     {
@@ -27,7 +26,6 @@ public class EmailService : IEmailService
         }
 
 #if DEBUG
-        // 🧪 MODALITÀ DEBUG/LOCALE: nessun invio reale, solo simulazione via log.
         System.Diagnostics.Debug.WriteLine("=================== EMAIL SIMULATA (DEBUG) ===================");
         System.Diagnostics.Debug.WriteLine($"Destinatari ({listaDestinatari.Count}): {string.Join(", ", listaDestinatari)}");
         System.Diagnostics.Debug.WriteLine($"Oggetto: {oggetto}");
@@ -37,9 +35,11 @@ public class EmailService : IEmailService
 #else
         try
         {
-            var smtpHost = Preferences.Get(ChiaveSmtpHost, string.Empty);
-            var smtpUser = Preferences.Get(ChiaveSmtpUser, string.Empty);
-            var smtpPassword = Preferences.Get(ChiaveSmtpPassword, string.Empty);
+            var impostazioni = await _impostazioniService.GetImpostazioniAsync();
+
+            var smtpHost = impostazioni.EmailSmtpHost ?? string.Empty;
+            var smtpUser = impostazioni.EmailSmtpUser ?? string.Empty;
+            var smtpPassword = impostazioni.EmailSmtpPassword ?? string.Empty;
 
             if (string.IsNullOrWhiteSpace(smtpHost) || string.IsNullOrWhiteSpace(smtpUser))
             {
@@ -47,9 +47,9 @@ public class EmailService : IEmailService
                 return false;
             }
 
-            var smtpPort = Preferences.Get(ChiaveSmtpPort, 587);
-            var usaSsl = Preferences.Get(ChiaveUseSsl, true);
-            var mittenteNome = Preferences.Get(ChiaveMittenteNome, "Pulse");
+            var smtpPort = impostazioni.EmailSmtpPort ?? 587;
+            var usaSsl = impostazioni.EmailUseSsl != 0;
+            var mittenteNome = string.IsNullOrWhiteSpace(impostazioni.EmailMittenteNome) ? "Pulse" : impostazioni.EmailMittenteNome;
 
             using var client = new SmtpClient(smtpHost, smtpPort)
             {
@@ -65,11 +65,9 @@ public class EmailService : IEmailService
                 IsBodyHtml = false
             };
 
-            // BCC così gli allievi non vedono gli indirizzi degli altri
             foreach (var destinatario in listaDestinatari)
                 messaggio.Bcc.Add(destinatario);
 
-            // Molti server SMTP richiedono almeno un "To" valido
             messaggio.To.Add(messaggio.From);
 
             await client.SendMailAsync(messaggio);
@@ -81,5 +79,49 @@ public class EmailService : IEmailService
             return false;
         }
 #endif
+    }
+
+    public async Task<(bool Successo, string? Errore)> InviaEmailTestAsync(string indirizzoDestinatario)
+    {
+        try
+        {
+            var impostazioni = await _impostazioniService.GetImpostazioniAsync();
+
+            var smtpHost = impostazioni.EmailSmtpHost ?? string.Empty;
+            var smtpUser = impostazioni.EmailSmtpUser ?? string.Empty;
+            var smtpPassword = impostazioni.EmailSmtpPassword ?? string.Empty;
+
+            if (string.IsNullOrWhiteSpace(smtpHost) || string.IsNullOrWhiteSpace(smtpUser))
+            {
+                return (false, "Host SMTP o email non configurati.");
+            }
+
+            var smtpPort = impostazioni.EmailSmtpPort ?? 587;
+            var usaSsl = impostazioni.EmailUseSsl != 0;
+            var mittenteNome = string.IsNullOrWhiteSpace(impostazioni.EmailMittenteNome) ? "Pulse" : impostazioni.EmailMittenteNome;
+
+            using var client = new SmtpClient(smtpHost, smtpPort)
+            {
+                Credentials = new NetworkCredential(smtpUser, smtpPassword),
+                EnableSsl = usaSsl
+            };
+
+            using var messaggio = new MailMessage
+            {
+                From = new MailAddress(smtpUser, mittenteNome),
+                Subject = "Test invio email - Pulse",
+                Body = "Questa è una email di prova inviata dalle Impostazioni di Pulse. Se la ricevi, la configurazione è corretta.",
+                IsBodyHtml = false
+            };
+
+            messaggio.To.Add(indirizzoDestinatario);
+
+            await client.SendMailAsync(messaggio);
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            return (false, ex.Message);
+        }
     }
 }

@@ -101,12 +101,12 @@ public partial class GestioneAllievoViewModel : BaseViewModel
 
     private bool _stampaRicevutaCortesiaAttiva = true;
 
-    public GestioneAllievoViewModel(INavigationService navigationService, IDatabaseService dbService, IImpostazioniService impostazioniService)
-     : base(navigationService)
+    public GestioneAllievoViewModel(INavigationService navigationService, IDatabaseService dbService, IImpostazioniService impostazioniService, RicevutaService ricevutaService)
+ : base(navigationService)
     {
         _dbService = dbService;
         _impostazioniService = impostazioniService;
-        _ricevutaService = new RicevutaService();
+        _ricevutaService = ricevutaService;
         _privacyDocumentService = new PrivacyDocumentService();
         Title = "Gestione Allievo";
 
@@ -511,13 +511,24 @@ public partial class GestioneAllievoViewModel : BaseViewModel
     {
         if (abbonamento == null) return;
 
+        if (Allievo.Id == 0)
+        {
+            SincronizzaAllievoDaCampi();
+
+            if (!string.IsNullOrWhiteSpace(Allievo.Nome) && !string.IsNullOrWhiteSpace(Allievo.Cognome))
+            {
+                await _dbService.SalvaAllievoAsync(Allievo);
+
+                if (abbonamento.AllievoId == 0)
+                {
+                    abbonamento.AllievoId = Allievo.Id;
+                }
+            }
+        }
+
         abbonamento.Allievo ??= Allievo;
 
-        string nomeScuola = Preferences.Get("Scuola_Nome", "ASD SCUOLA DI DANZA PULSE");
-        string indirizzoScuola = Preferences.Get("Scuola_Indirizzo", "Via Roma 123 - San Benedetto del Tronto (AP)");
-        string pivaScuola = Preferences.Get("Scuola_PIVA", "01234567890");
-
-        await _ricevutaService.StampaRicevutaCortesiaAsync(abbonamento, nomeScuola, indirizzoScuola, pivaScuola);
+        await _ricevutaService.StampaRicevutaCortesiaAsync(abbonamento);
     }
 
     private void SincronizzaAllievoDaCampi()

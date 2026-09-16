@@ -21,6 +21,7 @@ public interface IDatabaseService
     Task<bool> SalvaLezioneAsync(Lezioni lezione);
     Task<bool> SalvaLezione(Lezioni lezione); // Alias
     Task<bool> EliminaLezioneAsync(int id);
+    Task<List<Lezioni>> GetLezioniPerCorsoAsync(int corsoId);
 
     // ================================================
     // MAESTRI

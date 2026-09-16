@@ -20,9 +20,17 @@
             Spacing="20"
             VerticalOptions="Center">
 
+            <Image
+                Aspect="AspectFit"
+                HeightRequest="90"
+                HorizontalOptions="Center"
+                IsVisible="{Binding MostraLogo}"
+                Source="{Binding LogoScuola}" />
+
             <Label
                 FontSize="60"
                 HorizontalOptions="Center"
+                IsVisible="{Binding MostraEmojiDefault}"
                 Text="👋" />
 
             <Label

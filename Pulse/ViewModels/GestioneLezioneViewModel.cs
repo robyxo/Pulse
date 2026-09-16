@@ -12,6 +12,7 @@ namespace Pulse.ViewModels;
 public partial class GestioneLezioneViewModel : BaseViewModel
 {
     private readonly IDatabaseService _dbService;
+    private readonly RicevutaService _ricevutaService;
 
     private readonly IImpostazioniService _impostazioniService;
 
@@ -58,11 +59,12 @@ public partial class GestioneLezioneViewModel : BaseViewModel
         "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"
     };
 
-    public GestioneLezioneViewModel(INavigationService navigationService, IDatabaseService dbService, IImpostazioniService impostazioniService)
-        : base(navigationService)
+    public GestioneLezioneViewModel(INavigationService navigationService, IDatabaseService dbService, IImpostazioniService impostazioniService, RicevutaService ricevutaService)
+     : base(navigationService)
     {
         _dbService = dbService;
         _impostazioniService = impostazioniService;
+        _ricevutaService = ricevutaService;
         Title = "Gestione Lezione";
 
         _ = CaricaFlagImpostazioniAsync();
@@ -216,12 +218,7 @@ public partial class GestioneLezioneViewModel : BaseViewModel
 
             if (stampa)
             {
-                string nomeScuola = Preferences.Get("Scuola_Nome", "ASD SCUOLA DI DANZA PULSE");
-                string indirizzoScuola = Preferences.Get("Scuola_Indirizzo", "Via Roma 123 - San Benedetto del Tronto (AP)");
-                string pivaScuola = Preferences.Get("Scuola_PIVA", "01234567890");
-
-                var ricevutaService = new RicevutaService();
-                await ricevutaService.StampaRicevutaCortesiaAsync(nuovoAbbonamento, nomeScuola, indirizzoScuola, pivaScuola);
+                await _ricevutaService.StampaRicevutaCortesiaAsync(nuovoAbbonamento);
             }
         }
     }

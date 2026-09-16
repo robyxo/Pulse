@@ -16,6 +16,92 @@
                 FontSize="24"
                 Text="⚙️ Impostazioni" />
 
+            <!--  SEZIONE: INTESTAZIONE SCUOLA  -->
+            <Border
+                Padding="16"
+                BackgroundColor="White"
+                Stroke="#E2E8F0"
+                StrokeShape="RoundRectangle 12">
+                <VerticalStackLayout Spacing="12">
+                    <Label
+                        FontAttributes="Bold"
+                        FontSize="16"
+                        Text="🏫 Intestazione Scuola" />
+
+                    <VerticalStackLayout Spacing="4">
+                        <Label FontAttributes="Bold" Text="Nome Scuola" />
+                        <Border
+                            Padding="10,0"
+                            Stroke="#CBD5E1"
+                            StrokeShape="RoundRectangle 8">
+                            <Entry
+                                HeightRequest="42"
+                                Placeholder="Es. ASD Scuola di Danza Pulse"
+                                Text="{Binding NomeScuola}" />
+                        </Border>
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Spacing="4">
+                        <Label FontAttributes="Bold" Text="Indirizzo" />
+                        <Border
+                            Padding="10,0"
+                            Stroke="#CBD5E1"
+                            StrokeShape="RoundRectangle 8">
+                            <Entry
+                                HeightRequest="42"
+                                Placeholder="Es. Via Roma 123 - San Benedetto del Tronto (AP)"
+                                Text="{Binding IndirizzoScuola}" />
+                        </Border>
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Spacing="4">
+                        <Label FontAttributes="Bold" Text="Partita IVA / Codice Fiscale" />
+                        <Border
+                            Padding="10,0"
+                            Stroke="#CBD5E1"
+                            StrokeShape="RoundRectangle 8">
+                            <Entry
+                                HeightRequest="42"
+                                Placeholder="Es. 01234567890"
+                                Text="{Binding PartitaIva}" />
+                        </Border>
+                    </VerticalStackLayout>
+
+                    <BoxView BackgroundColor="#E2E8F0" HeightRequest="1" />
+
+                    <Label FontAttributes="Bold" Text="Logo" />
+
+                    <Image
+                        Aspect="AspectFit"
+                        HeightRequest="80"
+                        HorizontalOptions="Start"
+                        IsVisible="{Binding LogoPresente}"
+                        Source="{Binding LogoPreview}" />
+
+                    <Label
+                        FontSize="12"
+                        IsVisible="{Binding LogoAssente}"
+                        Text="Nessun logo caricato."
+                        TextColor="Gray" />
+
+                    <HorizontalStackLayout Spacing="10">
+                        <Button
+                            BackgroundColor="#4F46E5"
+                            Command="{Binding SceglieLogoCommand}"
+                            CornerRadius="8"
+                            Text="📁 Scegli Logo"
+                            TextColor="White" />
+                        <Button
+                            BackgroundColor="#EF4444"
+                            Command="{Binding RimuoviLogoCommand}"
+                            CornerRadius="8"
+                            IsVisible="{Binding LogoPresente}"
+                            Text="🗑️ Rimuovi Logo"
+                            TextColor="White" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
             <!--  SEZIONE: VISTA CALENDARIO  -->
             <Border
                 Padding="16"
@@ -127,6 +213,129 @@
                                 WidthRequest="80" />
                         </Border>
                     </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <!--  SEZIONE: EMAIL SCUOLA  -->
+            <Border
+                Padding="16"
+                BackgroundColor="White"
+                Stroke="#E2E8F0"
+                StrokeShape="RoundRectangle 12">
+                <VerticalStackLayout Spacing="12">
+                    <Grid ColumnDefinitions="*, Auto">
+                        <Label
+                            Grid.Column="0"
+                            FontAttributes="Bold"
+                            FontSize="16"
+                            Text="📧 Email Scuola" />
+                        <Button
+                            Grid.Column="1"
+                            Padding="10,0"
+                            BackgroundColor="#E2E8F0"
+                            Command="{Binding ToggleCampiAvanzatiEmailCommand}"
+                            CornerRadius="6"
+                            FontAttributes="Bold"
+                            HeightRequest="32"
+                            Text="+"
+                            TextColor="#1E293B" />
+                    </Grid>
+
+                    <VerticalStackLayout Spacing="4">
+                        <Label FontAttributes="Bold" Text="Email" />
+                        <Border
+                            Padding="10,0"
+                            Stroke="#CBD5E1"
+                            StrokeShape="RoundRectangle 8">
+                            <Entry
+                                HeightRequest="42"
+                                Keyboard="Email"
+                                Placeholder="scuola@gmail.com"
+                                Text="{Binding EmailSmtpUser}" />
+                        </Border>
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Spacing="4">
+                        <Label FontAttributes="Bold" Text="Password" />
+                        <Border
+                            Padding="10,0"
+                            Stroke="#CBD5E1"
+                            StrokeShape="RoundRectangle 8">
+                            <Entry
+                                HeightRequest="42"
+                                IsPassword="True"
+                                Placeholder="Password / password per app"
+                                Text="{Binding EmailSmtpPassword}" />
+                        </Border>
+                        <Label
+                            FontSize="11"
+                            Text="Per Gmail/Outlook potrebbe servire una 'password per le app' generata dal tuo account, non quella normale."
+                            TextColor="Gray" />
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Spacing="4">
+                        <Label FontAttributes="Bold" Text="Nome mittente" />
+                        <Border
+                            Padding="10,0"
+                            Stroke="#CBD5E1"
+                            StrokeShape="RoundRectangle 8">
+                            <Entry
+                                HeightRequest="42"
+                                Placeholder="Es. ASD Scuola di Danza Pulse"
+                                Text="{Binding EmailMittenteNome}" />
+                        </Border>
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout IsVisible="{Binding MostraCampiAvanzatiEmail}" Spacing="10">
+                        <BoxView BackgroundColor="#E2E8F0" HeightRequest="1" />
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="13"
+                            Text="Impostazioni avanzate server SMTP" />
+
+                        <Grid ColumnDefinitions="2*, *" ColumnSpacing="10">
+                            <VerticalStackLayout Grid.Column="0" Spacing="4">
+                                <Label FontAttributes="Bold" Text="Host SMTP" />
+                                <Border
+                                    Padding="10,0"
+                                    Stroke="#CBD5E1"
+                                    StrokeShape="RoundRectangle 8">
+                                    <Entry
+                                        HeightRequest="42"
+                                        Placeholder="Es. smtp.gmail.com"
+                                        Text="{Binding EmailSmtpHost}" />
+                                </Border>
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1" Spacing="4">
+                                <Label FontAttributes="Bold" Text="Porta" />
+                                <Border
+                                    Padding="10,0"
+                                    Stroke="#CBD5E1"
+                                    StrokeShape="RoundRectangle 8">
+                                    <Entry
+                                        HeightRequest="42"
+                                        Keyboard="Numeric"
+                                        Text="{Binding EmailSmtpPort}" />
+                                </Border>
+                            </VerticalStackLayout>
+                        </Grid>
+
+                        <Grid ColumnDefinitions="*, Auto">
+                            <Label
+                                Grid.Column="0"
+                                FontAttributes="Bold"
+                                Text="Usa SSL/TLS"
+                                VerticalOptions="Center" />
+                            <Switch Grid.Column="1" IsToggled="{Binding EmailUseSslAttiva}" />
+                        </Grid>
+                    </VerticalStackLayout>
+
+                    <Button
+                        BackgroundColor="#4F46E5"
+                        Command="{Binding TestEmailCommand}"
+                        CornerRadius="8"
+                        Text="✉️ Invia Email di Prova"
+                        TextColor="White" />
                 </VerticalStackLayout>
             </Border>
 

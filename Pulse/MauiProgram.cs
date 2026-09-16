@@ -94,6 +94,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
         builder.Services.AddSingleton<IEmailService, EmailService>();
         builder.Services.AddSingleton<IImpostazioniService, ImpostazioniService>();
+        builder.Services.AddSingleton<RicevutaService>();
 
         ConfigureWindowsSpecific(builder);
 

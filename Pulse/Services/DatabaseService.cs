@@ -98,6 +98,15 @@ public class DatabaseService : IDatabaseService
         return await _context.SaveChangesAsync() > 0;
     }
 
+    public async Task<List<Lezioni>> GetLezioniPerCorsoAsync(int corsoId)
+    {
+        return await _context.Lezionis
+            .Where(l => l.CorsoId == corsoId)
+            .OrderBy(l => l.GiornoSettimana)
+            .ThenBy(l => l.OraInizio)
+            .ToListAsync();
+    }
+
     // ================================================
     // MAESTRI
     // ================================================

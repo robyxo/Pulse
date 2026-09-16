@@ -4,11 +4,53 @@ namespace Pulse.Services;
 
 public class RicevutaService
 {
-    public async Task StampaRicevutaCortesiaAsync(Abbonamenti abbonamento, string nomeScuola, string indirizzoScuola, string pivaScuola)
+    private readonly IImpostazioniService _impostazioniService;
+    private readonly IDatabaseService _databaseService;
+
+    private static readonly string[] GiorniSettimana =
+    {
+        "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"
+    };
+
+    public RicevutaService(IImpostazioniService impostazioniService, IDatabaseService databaseService)
+    {
+        _impostazioniService = impostazioniService;
+        _databaseService = databaseService;
+    }
+
+    public async Task StampaRicevutaCortesiaAsync(Abbonamenti abbonamento)
     {
         try
         {
-            var html = GeneraHtmlRicevuta(abbonamento, nomeScuola, indirizzoScuola, pivaScuola);
+            var impostazioni = await _impostazioniService.GetImpostazioniAsync();
+
+            string nomeScuola = string.IsNullOrWhiteSpace(impostazioni.NomeScuola)
+                ? "ASD SCUOLA DI DANZA PULSE"
+                : impostazioni.NomeScuola;
+
+            string indirizzoScuola = impostazioni.IndirizzoScuola ?? string.Empty;
+            string pivaScuola = impostazioni.PartitaIva ?? string.Empty;
+
+            string logoBase64 = string.Empty;
+            if (!string.IsNullOrWhiteSpace(impostazioni.LogoPath) && File.Exists(impostazioni.LogoPath))
+            {
+                byte[] bytes = await File.ReadAllBytesAsync(impostazioni.LogoPath);
+                string estensione = Path.GetExtension(impostazioni.LogoPath).TrimStart('.').ToLowerInvariant();
+                string mime = estensione switch
+                {
+                    "png" => "image/png",
+                    "jpg" or "jpeg" => "image/jpeg",
+                    "gif" => "image/gif",
+                    "bmp" => "image/bmp",
+                    _ => "image/png"
+                };
+                logoBase64 = $"data:{mime};base64,{Convert.ToBase64String(bytes)}";
+            }
+
+            var lezioni = await _databaseService.GetLezioniPerCorsoAsync(abbonamento.CorsoId);
+            string orario = CalcolaOrario(lezioni);
+
+            var html = GeneraHtmlRicevuta(abbonamento, nomeScuola, indirizzoScuola, pivaScuola, logoBase64, orario);
             var tempFile = Path.Combine(FileSystem.CacheDirectory, $"Ricevuta_{abbonamento.Id}_{DateTime.Now:yyyyMMddHHmmss}.html");
 
             await File.WriteAllTextAsync(tempFile, html);
@@ -26,39 +68,170 @@ public class RicevutaService
         }
     }
 
-    private string GeneraHtmlRicevuta(Abbonamenti a, string nomeScuola, string indirizzoScuola, string pivaScuola)
+    private string CalcolaOrario(List<Lezioni> lezioni)
     {
+        if (lezioni == null || lezioni.Count == 0) return string.Empty;
+
+        var pezzi = lezioni
+            .OrderBy(l => l.GiornoSettimana)
+            .ThenBy(l => l.OraInizio)
+            .Select(l =>
+            {
+                string giorno = (l.GiornoSettimana >= 1 && l.GiornoSettimana <= 7)
+                    ? GiorniSettimana[l.GiornoSettimana - 1]
+                    : string.Empty;
+                return $"{giorno} {l.OraInizio}-{l.OraFine}".Trim();
+            });
+
+        return string.Join(", ", pezzi);
+    }
+
+    private string GeneraHtmlRicevuta(Abbonamenti a, string nomeScuola, string indirizzoScuola, string pivaScuola, string logoBase64, string orario)
+    {
+        string blocchettoLogo = string.IsNullOrWhiteSpace(logoBase64)
+            ? string.Empty
+            : $"<img src=\"{logoBase64}\" class=\"logo\" />";
+
+        string rigaIndirizzo = string.IsNullOrWhiteSpace(indirizzoScuola) ? string.Empty : indirizzoScuola;
+        string rigaPiva = string.IsNullOrWhiteSpace(pivaScuola) ? string.Empty : $"P.IVA/C.F.: {pivaScuola}";
+        string subIntestazione = string.Join(" · ", new[] { rigaIndirizzo, rigaPiva }.Where(s => !string.IsNullOrWhiteSpace(s)));
+
+        string titoloCortesia = a.Allievo?.Sesso switch
+        {
+            "F" => "Sig.ra",
+            "M" => "Sig.",
+            _ => ""
+        };
+        string nomeCompleto = a.Allievo?.NomeCompleto ?? $"{a.Allievo?.Nome} {a.Allievo?.Cognome}";
+        string frasePagamento = string.IsNullOrWhiteSpace(titoloCortesia)
+            ? $"{nomeCompleto} ha pagato € {a.ImportoPagato:N2}"
+            : $"{titoloCortesia} {nomeCompleto} ha pagato € {a.ImportoPagato:N2}";
+
+        string rigaOre = string.IsNullOrWhiteSpace(orario)
+            ? string.Empty
+            : $@"<div class=""riga""><span>Ore:</span><span>{orario}</span></div>";
+
         return $@"
-    
-    Ricevuta di Cortesia
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset=""utf-8"" />
+<title>Ricevuta di Cortesia</title>
+<style>
+    @page {{
+        size: 90mm 90mm;
+        margin: 3mm;
+    }}
+    * {{ box-sizing: border-box; }}
+    body {{
+        font-family: Arial, sans-serif;
+        width: 84mm;
+        margin: 0;
+        padding: 0;
+        font-size: 9px;
+        color: #111;
+    }}
+    .logo {{
+        display: block;
+        max-width: 100%;
+        max-height: 16mm;
+        margin: 0 auto 2mm auto;
+    }}
+    .intestazione {{
+        text-align: center;
+        font-weight: bold;
+        font-size: 11px;
+        margin-bottom: 1mm;
+    }}
+    .intestazione-sub {{
+        text-align: center;
+        font-size: 7px;
+        color: #444;
+        margin-bottom: 2mm;
+    }}
+    .titolo {{
+        text-align: center;
+        font-weight: bold;
+        font-size: 9px;
+        border-top: 1px dashed #999;
+        padding-top: 1.5mm;
+        margin-bottom: 0.5mm;
+    }}
+    .sottotitolo {{
+        text-align: center;
+        font-size: 6px;
+        color: #666;
+        font-style: italic;
+        border-bottom: 1px dashed #999;
+        padding-bottom: 1.5mm;
+        margin-bottom: 2mm;
+    }}
+    .pagamento {{
+        text-align: center;
+        font-weight: bold;
+        font-size: 10px;
+        margin-bottom: 2mm;
+    }}
+    .riga {{
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1mm;
+        gap: 2mm;
+    }}
+    .riga span:first-child {{
+        font-weight: bold;
+        white-space: nowrap;
+    }}
+    .riga span:last-child {{
+        text-align: right;
+    }}
+    .note {{
+        text-align: center;
+        font-size: 6px;
+        color: #666;
+        margin-top: 2mm;
+        border-top: 1px dashed #999;
+        padding-top: 2mm;
+    }}
+.stampa-btn {{
+    display: block;
+    width: 100%;
+    margin-top: 3mm;
+    padding: 6px 0;
+    font-size: 10px;
+    font-weight: bold;
+    background-color: #4F46E5;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}}
+@media print {{
+    .stampa-btn {{
+        display: none;
+    }}
+}}
+</style>
+</head>
+<body>
+    {blocchettoLogo}
+    <div class=""intestazione"">{nomeScuola}</div>
+    {(string.IsNullOrWhiteSpace(subIntestazione) ? "" : $@"<div class=""intestazione-sub"">{subIntestazione}</div>")}
 
-{nomeScuola}
+    <div class=""titolo"">RICEVUTA DI CORTESIA</div>
+    <div class=""sottotitolo"">Valido solo come attestazione di pagamento</div>
 
-{indirizzoScuola} | P.IVA/C.F.: {pivaScuola}
-RICEVUTA DI CORTESIA
+    <div class=""pagamento"">{frasePagamento}</div>
 
-Data Emissione: {DateTime.Now:dd/MM/yyyy HH:mm}
+    <div class=""riga""><span>Data:</span><span>{DateTime.Now:dd/MM/yyyy HH:mm}</span></div>
+    <div class=""riga""><span>Corso:</span><span>{a.Corso?.Nome ?? "-"}</span></div>
+    {rigaOre}
+    <div class=""riga""><span>Tipologia:</span><span>{a.TipoAbbonamento}</span></div>
+    <div class=""riga""><span>Periodo pagato:</span><span>{a.DataInizio:dd/MM/yyyy} - {a.DataScadenza:dd/MM/yyyy}</span></div>
 
-Allievo:
-{a.Allievo?.NomeCompleto ?? $"{a.Allievo?.Nome} {a.Allievo?.Cognome}"}
-
-Codice Fiscale:
-{a.Allievo?.CodiceFiscale ?? "-"}
-
-Corso / Attività:
-{a.Corso?.Nome ?? "-"}
-
-Tipologia:
-{a.TipoAbbonamento}
-
-Validità:
-dal {a.DataInizio:dd/MM/yyyy} al {a.DataScadenza:dd/MM/yyyy}
-
-IMPORTO SALDATO:
-€ {a.ImportoPagato:N2}
-
-Documento non fiscale emesso a titolo di quietanza di pagamento per l'attività svolta.
-
-";
+    <div class=""note"">Documento non fiscale emesso a titolo di quietanza di pagamento.</div>
+<button class=""stampa-btn"" onclick=""window.print()"">🖨️ Stampa</button>
+</body>
+</html>";
     }
 }
