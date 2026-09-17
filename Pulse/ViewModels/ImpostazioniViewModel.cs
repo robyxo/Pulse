@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using Pulse.Models;
 using Pulse.Services;
+using Microsoft.Maui.ApplicationModel;
 
 namespace Pulse.ViewModels;
 
@@ -165,6 +166,25 @@ public partial class ImpostazioniViewModel : BaseViewModel
     [ObservableProperty]
     private bool _stampaRicevutaCortesiaAttiva;
 
+    // --- FORMATO RICEVUTA ---
+    [ObservableProperty]
+    private int _ricevutaLarghezzaMm = 90;
+
+    [ObservableProperty]
+    private int _ricevutaAltezzaMm = 90;
+
+    [ObservableProperty]
+    private int _ricevutaMarginTopMm = 10;
+
+    [ObservableProperty]
+    private int _ricevutaMarginRightMm = 3;
+
+    [ObservableProperty]
+    private int _ricevutaMarginBottomMm = 3;
+
+    [ObservableProperty]
+    private int _ricevutaMarginLeftMm = 5;
+
     // --- DOCUMENTO PRIVACY ---
     [ObservableProperty]
     private bool _stampaDocumentoPrivacyAttiva;
@@ -199,6 +219,18 @@ public partial class ImpostazioniViewModel : BaseViewModel
 
     [ObservableProperty]
     private string? _emailDestinatarioTest;
+
+    // --- INFO APP ---
+    public string VersioneApp => $"Pulse v{AppInfo.Current.VersionString} ({AppInfo.Current.BuildString})";
+
+    // --- SUPPORTO ---
+    [ObservableProperty]
+    private string? _supportoTitolo;
+
+    [ObservableProperty]
+    private string? _supportoDescrizione;
+
+    private const string EmailSupporto = "supportorxo@gmail.com";
 
     public ImpostazioniViewModel(INavigationService navigationService, IImpostazioniService impostazioniService, IEmailService emailService, IBackupService backupService)
     : base(navigationService)
@@ -309,6 +341,13 @@ public partial class ImpostazioniViewModel : BaseViewModel
 
             UltimoBackupData = Impostazioni.UltimoBackupData;
             UltimoRipristinoData = Impostazioni.UltimoRipristinoData;
+
+            RicevutaLarghezzaMm = Impostazioni.RicevutaLarghezzaMm ?? 90;
+            RicevutaAltezzaMm = Impostazioni.RicevutaAltezzaMm ?? 90;
+            RicevutaMarginTopMm = Impostazioni.RicevutaMarginTopMm ?? 10;
+            RicevutaMarginRightMm = Impostazioni.RicevutaMarginRightMm ?? 3;
+            RicevutaMarginBottomMm = Impostazioni.RicevutaMarginBottomMm ?? 3;
+            RicevutaMarginLeftMm = Impostazioni.RicevutaMarginLeftMm ?? 5;
         });
     }
 
@@ -379,6 +418,13 @@ public partial class ImpostazioniViewModel : BaseViewModel
         Impostazioni.EmailSmtpHost = EmailSmtpHost?.Trim();
         Impostazioni.EmailSmtpPort = EmailSmtpPort;
         Impostazioni.EmailUseSsl = EmailUseSslAttiva ? 1 : 0;
+
+        Impostazioni.RicevutaLarghezzaMm = RicevutaLarghezzaMm;
+        Impostazioni.RicevutaAltezzaMm = RicevutaAltezzaMm;
+        Impostazioni.RicevutaMarginTopMm = RicevutaMarginTopMm;
+        Impostazioni.RicevutaMarginRightMm = RicevutaMarginRightMm;
+        Impostazioni.RicevutaMarginBottomMm = RicevutaMarginBottomMm;
+        Impostazioni.RicevutaMarginLeftMm = RicevutaMarginLeftMm;
 
         await _impostazioniService.SalvaImpostazioniAsync(Impostazioni);
     }
@@ -504,6 +550,60 @@ public partial class ImpostazioniViewModel : BaseViewModel
             else
             {
                 await Shell.Current.DisplayAlert("Errore", $"Reset non riuscito:\n{errore}", "OK");
+            }
+        });
+    }
+
+    [RelayCommand]
+    public async Task InviaSegnalazioneSupportoAsync()
+    {
+        if (string.IsNullOrWhiteSpace(SupportoTitolo) || string.IsNullOrWhiteSpace(SupportoDescrizione))
+        {
+            await Shell.Current.DisplayAlert("Attenzione", "Inserisci sia il titolo che la descrizione del problema.", "OK");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(EmailSmtpHost) || string.IsNullOrWhiteSpace(EmailSmtpUser))
+        {
+            await Shell.Current.DisplayAlert(
+                "Email non configurata",
+                "Per inviare una segnalazione al supporto devi prima configurare l'email della scuola nella sezione 'Email Scuola' qui sopra.",
+                "OK");
+            return;
+        }
+
+        bool conferma = await Shell.Current.DisplayAlert(
+            "Invia Segnalazione",
+            $"Vuoi inviare questa segnalazione al supporto?\n\nTitolo: {SupportoTitolo}",
+            "Sì, Invia",
+            "Annulla");
+
+        if (!conferma) return;
+
+        await EseguiConCaricamento(async () =>
+        {
+            string oggetto = $"[Pulse - Supporto] {SupportoTitolo!.Trim()}";
+            string messaggio =
+                $"Segnalazione inviata da: {(string.IsNullOrWhiteSpace(NomeScuola) ? "Scuola non configurata" : NomeScuola)}\n" +
+                $"Email mittente: {EmailSmtpUser}\n" +
+                $"Versione App: {VersioneApp}\n\n" +
+                $"Titolo: {SupportoTitolo.Trim()}\n\n" +
+                $"Descrizione:\n{SupportoDescrizione!.Trim()}";
+
+            bool esito = await _emailService.InviaEmailAsync(new List<string> { EmailSupporto }, oggetto, messaggio);
+
+            if (esito)
+            {
+                await Shell.Current.DisplayAlert(
+                    "Fatto",
+                    "Segnalazione inviata! Le eventuali risposte del supporto arriveranno nella tua casella di posta email, non in questa app.",
+                    "OK");
+                SupportoTitolo = string.Empty;
+                SupportoDescrizione = string.Empty;
+            }
+            else
+            {
+                await Shell.Current.DisplayAlert("Errore Invio", "Non è stato possibile inviare la segnalazione. Controlla la configurazione email.", "OK");
             }
         });
     }

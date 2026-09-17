@@ -50,7 +50,7 @@ public class RicevutaService
             var lezioni = await _databaseService.GetLezioniPerCorsoAsync(abbonamento.CorsoId);
             string orario = CalcolaOrario(lezioni);
 
-            var html = GeneraHtmlRicevuta(abbonamento, nomeScuola, indirizzoScuola, pivaScuola, logoBase64, orario);
+            var html = GeneraHtmlRicevuta(abbonamento, impostazioni, nomeScuola, indirizzoScuola, pivaScuola, logoBase64, orario);
             var tempFile = Path.Combine(FileSystem.CacheDirectory, $"Ricevuta_{abbonamento.Id}_{DateTime.Now:yyyyMMddHHmmss}.html");
 
             await File.WriteAllTextAsync(tempFile, html);
@@ -86,8 +86,15 @@ public class RicevutaService
         return string.Join(", ", pezzi);
     }
 
-    private string GeneraHtmlRicevuta(Abbonamenti a, string nomeScuola, string indirizzoScuola, string pivaScuola, string logoBase64, string orario)
+    private string GeneraHtmlRicevuta(Abbonamenti a, Impostazioni impostazioni, string nomeScuola, string indirizzoScuola, string pivaScuola, string logoBase64, string orario)
     {
+        int larghezza = impostazioni.RicevutaLarghezzaMm ?? 90;
+        int altezza = impostazioni.RicevutaAltezzaMm ?? 90;
+        int marginTop = impostazioni.RicevutaMarginTopMm ?? 10;
+        int marginRight = impostazioni.RicevutaMarginRightMm ?? 3;
+        int marginBottom = impostazioni.RicevutaMarginBottomMm ?? 3;
+        int marginLeft = impostazioni.RicevutaMarginLeftMm ?? 5;
+        int larghezzaContenuto = Math.Max(10, larghezza - marginLeft - marginRight);
         string blocchettoLogo = string.IsNullOrWhiteSpace(logoBase64)
             ? string.Empty
             : $"<img src=\"{logoBase64}\" class=\"logo\" />";
@@ -119,13 +126,13 @@ public class RicevutaService
 <title>Ricevuta di Cortesia</title>
 <style>
     @page {{
-    size: 90mm 90mm;
-    margin: 10mm 3mm 3mm 5mm; /* top right bottom left */
+    size: {larghezza}mm {altezza}mm;
+    margin: {marginTop}mm {marginRight}mm {marginBottom}mm {marginLeft}mm;
 }}
 * {{ box-sizing: border-box; }}
 body {{
     font-family: Arial, sans-serif;
-    width: 82mm;
+    width: {larghezzaContenuto}mm;
     margin: 0;
     padding: 0;
     font-size: 9px;
