@@ -232,6 +232,11 @@ public partial class ImpostazioniViewModel : BaseViewModel
 
     private const string EmailSupporto = "supportorxo@gmail.com";
 
+    // --- MAESTRO ---
+
+    [ObservableProperty]
+    private bool _funzioneMaestroAvanzataAttiva;
+
     public ImpostazioniViewModel(INavigationService navigationService, IImpostazioniService impostazioniService, IEmailService emailService, IBackupService backupService)
     : base(navigationService)
     {
@@ -348,6 +353,7 @@ public partial class ImpostazioniViewModel : BaseViewModel
             RicevutaMarginRightMm = Impostazioni.RicevutaMarginRightMm ?? 3;
             RicevutaMarginBottomMm = Impostazioni.RicevutaMarginBottomMm ?? 3;
             RicevutaMarginLeftMm = Impostazioni.RicevutaMarginLeftMm ?? 5;
+            FunzioneMaestroAvanzataAttiva = Impostazioni.FunzioneMaestroAvanzataAttiva == 1;
         });
     }
 
@@ -425,6 +431,8 @@ public partial class ImpostazioniViewModel : BaseViewModel
         Impostazioni.RicevutaMarginRightMm = RicevutaMarginRightMm;
         Impostazioni.RicevutaMarginBottomMm = RicevutaMarginBottomMm;
         Impostazioni.RicevutaMarginLeftMm = RicevutaMarginLeftMm;
+
+        Impostazioni.FunzioneMaestroAvanzataAttiva = FunzioneMaestroAvanzataAttiva ? 1 : 0;
 
         await _impostazioniService.SalvaImpostazioniAsync(Impostazioni);
     }

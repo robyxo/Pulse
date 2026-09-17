@@ -30,6 +30,7 @@ public interface IDatabaseService
     Task<List<Insegnanti>> GetInsegnantiAttivi(); // Alias
     Task<bool> SalvaInsegnanteAsync(Insegnanti insegnante);
     Task<bool> EliminaInsegnanteAsync(int id);
+    Task<List<Lezioni>> GetLezioniPerInsegnanteAsync(int insegnanteId);
 
     // ================================================
     // ALLIEVI

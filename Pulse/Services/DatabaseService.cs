@@ -147,6 +147,16 @@ public class DatabaseService : IDatabaseService
 
     public Task<List<Insegnanti>> GetInsegnantiAttivi() => GetInsegnantiAttiviAsync();
 
+    public async Task<List<Lezioni>> GetLezioniPerInsegnanteAsync(int insegnanteId)
+    {
+        return await _context.Lezionis
+            .Include(l => l.Corso)
+            .Where(l => l.InsegnanteId == insegnanteId)
+            .OrderBy(l => l.GiornoSettimana)
+            .ThenBy(l => l.OraInizio)
+            .ToListAsync();
+    }
+
     // ================================================
     // ALLIEVI
     // ================================================
