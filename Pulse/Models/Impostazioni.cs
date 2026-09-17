@@ -52,4 +52,6 @@ public partial class Impostazioni
     public int? RicevutaMarginBottomMm { get; set; }
 
     public int? RicevutaMarginLeftMm { get; set; }
+
+    public int? FunzioneMaestroAvanzataAttiva { get; set; }
 }

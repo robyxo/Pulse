@@ -88,6 +88,7 @@ public partial class PulseContext : DbContext
             entity.ToTable("Impostazioni");
 
             entity.Property(e => e.EmailUseSsl).HasDefaultValue(1);
+            entity.Property(e => e.FunzioneMaestroAvanzataAttiva).HasDefaultValue(0);
             entity.Property(e => e.NumeroColoriCorsi).HasDefaultValue(6);
             entity.Property(e => e.OrarioScaglionato).HasDefaultValue(0);
             entity.Property(e => e.RicevutaAltezzaMm).HasDefaultValue(90);
@@ -105,6 +106,7 @@ public partial class PulseContext : DbContext
             entity.ToTable("Insegnanti");
 
             entity.Property(e => e.Attivo).HasDefaultValue(1);
+            entity.Property(e => e.TariffaOraria).HasDefaultValue(0.0);
         });
 
         modelBuilder.Entity<Iscrizioni>(entity =>
