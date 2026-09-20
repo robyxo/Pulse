@@ -24,18 +24,12 @@ public partial class MainViewModel : BaseViewModel
     [ObservableProperty]
     private bool _mostraEmojiDefault = true;
 
-    private readonly INavigationService _navigationService;
-
-    public MainViewModel(INavigationService navigationService, IImpostazioniService impostazioniService) : base(navigationService)
+    public MainViewModel(IImpostazioniService impostazioniService)
     {
-        _navigationService = navigationService;
         _impostazioniService = impostazioniService;
         Title = "Home";
-
-        _ = CaricaIntestazioneAsync();
     }
 
-    [RelayCommand]
     public async Task CaricaIntestazioneAsync()
     {
         var impostazioni = await _impostazioniService.GetImpostazioniAsync();
@@ -59,35 +53,7 @@ public partial class MainViewModel : BaseViewModel
     }
 
     [RelayCommand]
-    private async Task VaiAlDettaglio() =>
-        await NavigaConCaricamento("dettaglio");
-
-    [RelayCommand]
-    private async Task CaricaDati()
-    {
+    private async Task VaiAlCalendario() =>
         await EseguiConCaricamento(async () =>
-        {
-            await Task.Delay(1000);
-            Title = "Dati caricati!";
-            await AlertPopup.Show("Dati caricati con successo!");
-        });
-    }
-
-    [RelayCommand]
-    private async Task VaiConParametri()
-    {
-        var parameters = new Dictionary<string, object>
-        {
-            { "id", 42 },
-            { "nome", "Esempio" }
-        };
-
-        await NavigaConCaricamento("dettaglio", parameters);
-    }
-
-    [RelayCommand]
-    private async Task VaiAlCalendario()
-    {
-        await _navigationService.GoToAsync("calendario");
-    }
+            await Shell.Current.GoToAsync(AppRoutes.Calendario.Pagina));
 }

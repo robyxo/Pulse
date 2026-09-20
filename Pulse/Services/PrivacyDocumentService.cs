@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using System.IO.Compression;
+﻿using System.IO.Compression;
 using System.Reflection;
 using System.Xml.Linq;
 using Pulse.Models;
@@ -13,6 +12,33 @@ public class PrivacyDocumentService
 
     private static readonly XNamespace W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
 
+    private readonly IImpostazioniService _impostazioniService;
+
+    public PrivacyDocumentService(IImpostazioniService impostazioniService)
+    {
+        _impostazioniService = impostazioniService;
+    }
+
+    // ================================================
+    // DISPONIBILITÀ DEI MODELLI
+    // ================================================
+    // I modelli .docx sono opzionali: ogni scuola mette i propri in Pulse/Privacy/
+    // prima di compilare (vedi LEGGIMI.txt). Se non ci sono, le funzioni privacy
+    // restano nascoste invece di dare errore.
+
+    private static readonly bool _modelloVuotoPresente = RisorsaPresente(NomeRisorsaModelloVuoto);
+    private static readonly bool _modelloAutoPresente = RisorsaPresente(NomeRisorsaModelloAuto);
+
+    public static bool ModelloVuotoDisponibile => _modelloVuotoPresente;
+    public static bool ModelloCompilatoDisponibile => _modelloAutoPresente;
+    public static bool AlmenoUnModelloDisponibile => _modelloVuotoPresente || _modelloAutoPresente;
+
+    private static bool RisorsaPresente(string nomeRisorsa)
+    {
+        using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(nomeRisorsa);
+        return stream != null;
+    }
+
     private static byte[] LeggiRisorsa(string nomeRisorsa)
     {
         var assembly = Assembly.GetExecutingAssembly();
@@ -24,8 +50,20 @@ public class PrivacyDocumentService
         return memoria.ToArray();
     }
 
+    private static Task AvvisaModelloMancanteAsync(string nomeFile) =>
+        Shell.Current.DisplayAlert(
+            "Modello non presente",
+            $"Nella cartella Privacy dell'applicazione non è stato inserito il file {nomeFile}.\n\nSegui le istruzioni del file LEGGIMI.txt per aggiungere il modulo della tua scuola.",
+            "OK");
+
     public async Task ApriModuloVuotoAsync()
     {
+        if (!ModelloVuotoDisponibile)
+        {
+            await AvvisaModelloMancanteAsync("ModelloPrivacy.docx");
+            return;
+        }
+
         try
         {
             byte[] bytes = LeggiRisorsa(NomeRisorsaModelloVuoto);
@@ -46,10 +84,20 @@ public class PrivacyDocumentService
 
     public async Task GeneraECondividiDocumentoCompilatoAsync(Allievi allievo)
     {
+        if (!ModelloCompilatoDisponibile)
+        {
+            await AvvisaModelloMancanteAsync("AutoModelloPrivacy.docx");
+            return;
+        }
+
         try
         {
             byte[] bytes = LeggiRisorsa(NomeRisorsaModelloAuto);
-            string nomeScuola = Preferences.Get("Scuola_Nome", "ASD SCUOLA DI DANZA PULSE");
+
+            var impostazioni = await _impostazioniService.GetImpostazioniAsync();
+            string nomeScuola = string.IsNullOrWhiteSpace(impostazioni.NomeScuola)
+                ? "ASD SCUOLA DI DANZA PULSE"
+                : impostazioni.NomeScuola;
 
             string dataNascitaTesto = allievo.DataNascita ?? string.Empty;
             if (DateTime.TryParse(allievo.DataNascita, out var dataNascitaParsata))

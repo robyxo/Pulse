@@ -1,4 +1,5 @@
-﻿using Pulse.Models;
+﻿using Pulse.Helpers;
+using Pulse.Models;
 
 namespace Pulse.Services;
 
@@ -6,11 +7,6 @@ public class RicevutaService
 {
     private readonly IImpostazioniService _impostazioniService;
     private readonly IDatabaseService _databaseService;
-
-    private static readonly string[] GiorniSettimana =
-    {
-        "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"
-    };
 
     public RicevutaService(IImpostazioniService impostazioniService, IDatabaseService databaseService)
     {
@@ -77,9 +73,7 @@ public class RicevutaService
             .ThenBy(l => l.OraInizio)
             .Select(l =>
             {
-                string giorno = (l.GiornoSettimana >= 1 && l.GiornoSettimana <= 7)
-                    ? GiorniSettimana[l.GiornoSettimana - 1]
-                    : string.Empty;
+                string giorno = DateHelper.GetNomeGiornoDaDb(l.GiornoSettimana);
                 return $"{giorno} {l.OraInizio}-{l.OraFine}".Trim();
             });
 

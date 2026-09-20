@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Pulse.DTO;
+using Pulse.Helpers;
 using Pulse.Models;
 using Pulse.Services;
 using System.Collections.ObjectModel;
@@ -54,13 +55,9 @@ public partial class GestioneLezioneViewModel : BaseViewModel
     [ObservableProperty]
     private ObservableCollection<AllievoPresenzaDTO> _listaAllievi = new();
 
-    public List<string> GiorniSettimana { get; } = new()
-    {
-        "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"
-    };
+    public List<string> GiorniSettimana { get; } = DateHelper.GiorniSettimana.ToList();
 
-    public GestioneLezioneViewModel(INavigationService navigationService, IDatabaseService dbService, IImpostazioniService impostazioniService, RicevutaService ricevutaService)
-     : base(navigationService)
+    public GestioneLezioneViewModel(IDatabaseService dbService, IImpostazioniService impostazioniService, RicevutaService ricevutaService)
     {
         _dbService = dbService;
         _impostazioniService = impostazioniService;
@@ -82,9 +79,16 @@ public partial class GestioneLezioneViewModel : BaseViewModel
         _ = InizializzaDatiAsync();
     }
 
-    partial void OnOraInizioChanged(TimeSpan value)
+    partial void OnOraInizioChanged(TimeSpan oldValue, TimeSpan newValue)
     {
-        OraFine = value.Add(TimeSpan.FromHours(1));
+        var durata = OraFine - oldValue;
+        if (durata <= TimeSpan.Zero)
+            durata = TimeSpan.FromHours(1);
+
+        var nuovaFine = newValue.Add(durata);
+        OraFine = nuovaFine < TimeSpan.FromDays(1)
+            ? nuovaFine
+            : new TimeSpan(23, 59, 0);
     }
 
     private async Task InizializzaDatiAsync()
@@ -133,20 +137,21 @@ public partial class GestioneLezioneViewModel : BaseViewModel
             return;
         }
 
+        // Due query invece di una per ogni allievo iscritto
         var allievi = await _dbService.GetAllieviPerCorsoAsync(CorsoSelezionato.Id);
-        var dtos = new List<AllievoPresenzaDTO>();
+        var abbonamenti = await _dbService.GetAbbonamentiAttiviPerCorsoAsync(CorsoSelezionato.Id);
 
-        foreach (var allievo in allievi)
-        {
-            var abb = (await _dbService.GetAbbonamentiAllievoAsync(allievo.Id))
-                      .FirstOrDefault(a => a.CorsoId == CorsoSelezionato.Id && a.Attivo == 1);
+        var abbonamentoPerAllievo = abbonamenti
+            .GroupBy(a => a.AllievoId)
+            .ToDictionary(g => g.Key, g => g.OrderByDescending(x => x.DataInizio).First());
 
-            dtos.Add(new AllievoPresenzaDTO
+        var dtos = allievi
+            .Select(allievo => new AllievoPresenzaDTO
             {
                 Allievo = allievo,
-                Abbonamento = abb
-            });
-        }
+                Abbonamento = abbonamentoPerAllievo.TryGetValue(allievo.Id, out var abb) ? abb : null
+            })
+            .ToList();
 
         ListaAllievi = new ObservableCollection<AllievoPresenzaDTO>(dtos);
         NessunAllievoPresente = ListaAllievi.Count == 0;

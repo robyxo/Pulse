@@ -1,4 +1,5 @@
-﻿using Pulse.Models;
+﻿using Pulse.Helpers;
+using Pulse.Models;
 
 namespace Pulse.DTO;
 
@@ -16,29 +17,37 @@ public class AllievoPresenzaDTO
         get
         {
             if (Abbonamento == null) return "Non Iscritto ❌";
-            if (Abbonamento.IsSospeso == 1) return "In Pausa ⏸️";
 
+            var stato = StatoAbbonamentoHelper.Calcola(Abbonamento);
+            if (stato == StatoAbbonamento.InPausa)
+                return StatoAbbonamentoHelper.GetEtichettaConIcona(stato);
+
+            // Se ha pagato oggi è attivo, altrimenti è da saldare per la lezione
             if (Abbonamento.TipoAbbonamento == "Singolo")
-            {
-                // Se ha pagato oggi è attivo, altrimenti è da saldare per la lezione
                 return Abbonamento.DataInizio.Date == DateTime.Today ? "Pagato Oggi ✅" : "Da Saldare 💶";
-            }
 
-            if (DateTime.Today > Abbonamento.DataScadenza.Date) return "Scaduto ❌";
-            if ((Abbonamento.DataScadenza.Date - DateTime.Today).TotalDays <= 5) return "In Scadenza ⏳";
-
-            return "Attivo ✅";
+            return StatoAbbonamentoHelper.GetEtichettaConIcona(stato);
         }
     }
 
-    public string ColoreStatoHex => StatoTesto switch
+    public string ColoreStatoHex
     {
-        "Pagato Oggi ✅" or "Attivo ✅" => "#10B981", // Verde
-        "In Scadenza ⏳" => "#F59E0B",                 // Giallo/Arancio
-        "Da Saldare 💶" => "#3B82F6",                  // Blu
-        "In Pausa ⏸️" => "#06B6D4",                   // Cyan
-        _ => "#EF4444"                                // Rosso
-    };
+        get
+        {
+            if (Abbonamento == null) return "#EF4444";   // non iscritto: rosso
+
+            var stato = StatoAbbonamentoHelper.Calcola(Abbonamento);
+
+            if (stato != StatoAbbonamento.InPausa && Abbonamento.TipoAbbonamento == "Singolo")
+            {
+                return Abbonamento.DataInizio.Date == DateTime.Today
+                    ? "#10B981"   // pagato oggi: verde
+                    : "#3B82F6";  // da saldare: blu
+            }
+
+            return StatoAbbonamentoHelper.GetColore(stato);
+        }
+    }
 
     // Visibilità Tasto Incasso
     public bool MostraPulsanteIncasso

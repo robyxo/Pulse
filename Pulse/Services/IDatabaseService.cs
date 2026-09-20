@@ -8,18 +8,14 @@ public interface IDatabaseService
     // GESTIONE CORSI
     // ================================================
     Task<List<Corsi>> GetCorsiAttiviAsync();
-    Task<List<Corsi>> GetCorsiAttivi(); // Alias per compatibilità
     Task<bool> SalvaCorsoAsync(Corsi corso);
     Task<bool> EliminaCorsoAsync(int id);
-    Task<bool> EliminaCorsoAsync(Corsi corso); // Alias con oggetto
 
     // ================================================
     // CALENDARIO E LEZIONI
     // ================================================
-    Task<List<Lezioni>> GetLezioniSettimanaAsync(DateTime dataRiferimento);
-    Task<List<Lezioni>> GetLezioniSettimana(DateTime dataRiferimento); // Alias
+    Task<List<Lezioni>> GetLezioniRicorrentiAsync();
     Task<bool> SalvaLezioneAsync(Lezioni lezione);
-    Task<bool> SalvaLezione(Lezioni lezione); // Alias
     Task<bool> EliminaLezioneAsync(int id);
     Task<List<Lezioni>> GetLezioniPerCorsoAsync(int corsoId);
 
@@ -27,7 +23,6 @@ public interface IDatabaseService
     // MAESTRI
     // ================================================
     Task<List<Insegnanti>> GetInsegnantiAttiviAsync();
-    Task<List<Insegnanti>> GetInsegnantiAttivi(); // Alias
     Task<bool> SalvaInsegnanteAsync(Insegnanti insegnante);
     Task<bool> EliminaInsegnanteAsync(int id);
     Task<List<Lezioni>> GetLezioniPerInsegnanteAsync(int insegnanteId);
@@ -37,8 +32,6 @@ public interface IDatabaseService
     // ================================================
     Task<List<Allievi>> GetAllieviAttiviAsync();
     Task<List<Allievi>> GetAllieviPerCorsoAsync(int corsoId);
-    Task<List<Allievi>> GetAllieviPerCorso(int corsoId); // Alias
-    Task<List<Allievi>> GetAllieviPerLezioneAsync(int lezioneId);
     Task<bool> SalvaAllievoAsync(Allievi allievo);
     Task<bool> EliminaAllievoAsync(int id);
 
@@ -48,6 +41,8 @@ public interface IDatabaseService
     Task<List<Abbonamenti>> GetAbbonamentiAllievoAsync(int allievoId);
     Task<bool> SalvaAbbonamentoAsync(Abbonamenti abbonamento);
     Task<bool> EliminaAbbonamentoAsync(int id);
+    Task<List<Abbonamenti>> GetAbbonamentiAttiviAsync();
+    Task<List<Abbonamenti>> GetAbbonamentiAttiviPerCorsoAsync(int corsoId);
 
     // ================================================
     // CALENDARIO CHIUSURE

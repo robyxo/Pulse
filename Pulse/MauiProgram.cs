@@ -1,12 +1,7 @@
-﻿using System.Reflection;
-using CommunityToolkit.Maui;
+﻿using CommunityToolkit.Maui;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Pulse.Models;
 using Pulse.Services;
-using Pulse.ViewModels;
-using Pulse.Views;
-using Pulse.Views.Popups;
 
 namespace Pulse;
 
@@ -25,42 +20,32 @@ public static class MauiProgram
               fonts.AddFont("MaterialSymbols.ttf", "MaterialSymbols");
           });
 
-        // 0. Caricamento configurazione da appsettings.json (embedded resource)
-        var assembly = Assembly.GetExecutingAssembly();
-        using (var stream = assembly.GetManifestResourceStream("Pulse.appsettings.json"))
-        {
-            var configBuilder = new ConfigurationBuilder();
-            if (stream != null)
-            {
-                configBuilder.AddJsonStream(stream);
-            }
-            else
-            {
-                System.Diagnostics.Debug.WriteLine("⚠️ appsettings.json non trovato come embedded resource.");
-            }
-
-            var configuration = configBuilder.Build();
-            builder.Services.AddSingleton<IConfiguration>(configuration);
-        }
-
         // 1. Percorso del Database SQLite in AppData
         var dbFileName = "Pulse.db";
         var dbPath = Path.Combine(FileSystem.AppDataDirectory, dbFileName);
 
+#if DEBUG
         // ⚠️ FLAG DI EMERGENZA:
         // Imposta a 'true' se modifichi lo schema/tabelle del DB e vuoi ricrearlo da zero in Debug.
         // Lascia a 'false' durante il lavoro normale per non perdere i dati salvati.
         bool resetDatabaseDiEmergenza = false;
 
-#if DEBUG
         if (resetDatabaseDiEmergenza && File.Exists(dbPath))
         {
-            try { File.Delete(dbPath); } catch { }
+            try
+            {
+                File.Delete(dbPath);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"⚠️ Impossibile eliminare il database: {ex.Message}");
+            }
         }
 #endif
 
-        builder.Services.AddDbContext<PulseContext>(options =>
-            options.UseSqlite($"Data Source={dbPath}"));
+        builder.Services.AddDbContextFactory<PulseContext>(options =>
+    options.UseSqlite($"Data Source={dbPath}"));
+
 
         // 2. Registrazione ViewModels
         builder.Services.AddTransient<MainViewModel>();
@@ -79,7 +64,6 @@ public static class MauiProgram
         // 3. Registrazione Views (Pagine)
         builder.Services.AddTransient<MainPage>();
         builder.Services.AddTransient<CalendarioPage>();
-        builder.Services.AddTransient<AllieviCorsoPage>();
         builder.Services.AddTransient<CorsiPage>();
         builder.Services.AddTransient<GestioneCorsoPage>();
         builder.Services.AddTransient<InsegnantiPage>();
@@ -92,13 +76,13 @@ public static class MauiProgram
         builder.Services.AddTransient<CalendarioEventiPage>();
 
         // 4. Registrazione Servizi
-        builder.Services.AddSingleton<INavigationService, NavigationService>();
         builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
         builder.Services.AddSingleton<IEmailService, EmailService>();
         builder.Services.AddSingleton<IImpostazioniService, ImpostazioniService>();
         builder.Services.AddSingleton<RicevutaService>();
         builder.Services.AddSingleton<IBackupService, BackupService>();
         builder.Services.AddSingleton<CompensiMaestriService>();
+        builder.Services.AddSingleton<PrivacyDocumentService>();
 
         ConfigureWindowsSpecific(builder);
 
@@ -110,9 +94,8 @@ public static class MauiProgram
         var app = builder.Build();
 
         // 5. Garantisce la creazione del DB se non esiste
-        using (var scope = app.Services.CreateScope())
+        using (var db = app.Services.GetRequiredService<IDbContextFactory<PulseContext>>().CreateDbContext())
         {
-            var db = scope.ServiceProvider.GetRequiredService<PulseContext>();
             db.Database.EnsureCreated();
         }
 

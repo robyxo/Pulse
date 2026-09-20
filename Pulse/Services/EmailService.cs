@@ -12,7 +12,7 @@ public class EmailService : IEmailService
         _impostazioniService = impostazioniService;
     }
 
-    public async Task<bool> InviaEmailAsync(IEnumerable<string> destinatari, string oggetto, string corpo)
+    public Task<bool> InviaEmailAsync(IEnumerable<string> destinatari, string oggetto, string corpo)
     {
         var listaDestinatari = destinatari?
             .Where(d => !string.IsNullOrWhiteSpace(d))
@@ -22,17 +22,26 @@ public class EmailService : IEmailService
         if (listaDestinatari.Count == 0)
         {
             System.Diagnostics.Debug.WriteLine("⚠️ EmailService: nessun destinatario valido, invio annullato.");
-            return false;
+            return Task.FromResult(false);
         }
 
 #if DEBUG
+        // In Debug non si invia davvero: serve a non scrivere agli allievi veri
+        // mentre si sviluppa. Il pulsante "Test Email" nelle Impostazioni invia
+        // comunque per davvero, perché è lì apposta per provare la configurazione.
         System.Diagnostics.Debug.WriteLine("=================== EMAIL SIMULATA (DEBUG) ===================");
         System.Diagnostics.Debug.WriteLine($"Destinatari ({listaDestinatari.Count}): {string.Join(", ", listaDestinatari)}");
         System.Diagnostics.Debug.WriteLine($"Oggetto: {oggetto}");
         System.Diagnostics.Debug.WriteLine($"Corpo: {corpo}");
         System.Diagnostics.Debug.WriteLine("================================================================");
-        return true;
+        return Task.FromResult(true);
 #else
+        return InviaConSmtpAsync(listaDestinatari, oggetto, corpo);
+#endif
+    }
+
+    private async Task<bool> InviaConSmtpAsync(List<string> destinatari, string oggetto, string corpo)
+    {
         try
         {
             var impostazioni = await _impostazioniService.GetImpostazioniAsync();
@@ -65,7 +74,7 @@ public class EmailService : IEmailService
                 IsBodyHtml = false
             };
 
-            foreach (var destinatario in listaDestinatari)
+            foreach (var destinatario in destinatari)
                 messaggio.Bcc.Add(destinatario);
 
             messaggio.To.Add(messaggio.From);
@@ -78,7 +87,6 @@ public class EmailService : IEmailService
             System.Diagnostics.Debug.WriteLine($"❌ EmailService: errore durante l'invio - {ex.Message}");
             return false;
         }
-#endif
     }
 
     public async Task<(bool Successo, string? Errore)> InviaEmailTestAsync(string indirizzoDestinatario)

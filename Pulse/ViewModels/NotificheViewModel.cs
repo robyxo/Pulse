@@ -16,8 +16,7 @@ public partial class NotificheViewModel : BaseViewModel
     [ObservableProperty]
     private string _messaggio = string.Empty;
 
-    public NotificheViewModel(INavigationService navigationService, IDatabaseService dbService, IEmailService emailService)
-        : base(navigationService)
+    public NotificheViewModel(IDatabaseService dbService, IEmailService emailService)
     {
         _dbService = dbService;
         _emailService = emailService;

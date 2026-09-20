@@ -41,8 +41,7 @@ public partial class AllieviViewModel : BaseViewModel
         "Nessuno"
     };
 
-    public AllieviViewModel(INavigationService navigationService, IDatabaseService dbService)
-        : base(navigationService)
+    public AllieviViewModel(IDatabaseService dbService)
     {
         _dbService = dbService;
         Title = "Gestione Allievi";
@@ -52,40 +51,40 @@ public partial class AllieviViewModel : BaseViewModel
     partial void OnCorsoSelezionatoFiltroChanged(Corsi? value) => ApplicaFiltri();
     partial void OnStatoSelezionatoFiltroChanged(string value) => ApplicaFiltri();
 
-    [RelayCommand]
     public async Task CaricaAllieviAsync()
     {
-        await EseguiConCaricamento(async () =>
-        {
-            // 1. Carica Corsi per il filtro
-            var corsi = await _dbService.GetCorsiAttiviAsync();
-            var corsiFiltro = new List<Corsi> { new Corsi { Id = 0, Nome = "Tutti i Corsi" } };
-            corsiFiltro.AddRange(corsi);
-            ListaFiltroCorsi = new ObservableCollection<Corsi>(corsiFiltro);
-            CorsoSelezionatoFiltro = ListaFiltroCorsi.FirstOrDefault(c => c.Id == 0);
+        await EseguiConCaricamento(CaricaAllieviInternoAsync);
+    }
 
-            // 2. Seleziona lo stato di default
-            StatoSelezionatoFiltro = "Tutti gli Stati";
+    private async Task CaricaAllieviInternoAsync()
+    {
+        // 1. Carica Corsi per il filtro
+        var corsi = await _dbService.GetCorsiAttiviAsync();
+        var corsiFiltro = new List<Corsi> { new Corsi { Id = 0, Nome = "Tutti i Corsi" } };
+        corsiFiltro.AddRange(corsi);
+        ListaFiltroCorsi = new ObservableCollection<Corsi>(corsiFiltro);
+        CorsoSelezionatoFiltro = ListaFiltroCorsi.FirstOrDefault(c => c.Id == 0);
 
-            // 3. Carica Allievi e i rispettivi Abbonamenti
-            var allievi = await _dbService.GetAllieviAttiviAsync();
-            var listaTemp = new List<AllievoTabellaDTO>();
+        // 2. Seleziona lo stato di default
+        StatoSelezionatoFiltro = "Tutti gli Stati";
 
-            foreach (var a in allievi)
+        // 3. Allievi e abbonamenti in due sole query, poi si incrociano in memoria
+        var allievi = await _dbService.GetAllieviAttiviAsync();
+        var abbonamenti = await _dbService.GetAbbonamentiAttiviAsync();
+
+        var ultimoPerAllievo = abbonamenti
+            .GroupBy(a => a.AllievoId)
+            .ToDictionary(g => g.Key, g => g.OrderByDescending(x => x.DataScadenza).First());
+
+        _listaCompletaDTO = allievi
+            .Select(a => new AllievoTabellaDTO
             {
-                var abbonamenti = await _dbService.GetAbbonamentiAllievoAsync(a.Id);
-                var ultimoAbb = abbonamenti.OrderByDescending(x => x.DataScadenza).FirstOrDefault();
+                Allievo = a,
+                UltimoAbbonamento = ultimoPerAllievo.TryGetValue(a.Id, out var abb) ? abb : null
+            })
+            .ToList();
 
-                listaTemp.Add(new AllievoTabellaDTO
-                {
-                    Allievo = a,
-                    UltimoAbbonamento = ultimoAbb
-                });
-            }
-
-            _listaCompletaDTO = listaTemp;
-            ApplicaFiltri();
-        });
+        ApplicaFiltri();
     }
 
     private void ApplicaFiltri()
@@ -153,7 +152,7 @@ public partial class AllieviViewModel : BaseViewModel
             await EseguiConCaricamento(async () =>
             {
                 await _dbService.EliminaAllievoAsync(item.Allievo.Id);
-                await CaricaAllieviAsync();
+                await CaricaAllieviInternoAsync();
             });
         }
     }

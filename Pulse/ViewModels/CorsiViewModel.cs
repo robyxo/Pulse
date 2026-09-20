@@ -1,5 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
+﻿using CommunityToolkit.Mvvm.Input;
 using Pulse.Models;
 using Pulse.Services;
 using Pulse.Utils;
@@ -18,8 +17,7 @@ public partial class CorsiViewModel : BaseViewModel
     [ObservableProperty]
     private string _testoRicerca = string.Empty;
 
-    public CorsiViewModel(INavigationService navigationService, IDatabaseService dbService)
-        : base(navigationService)
+    public CorsiViewModel(IDatabaseService dbService)
     {
         _dbService = dbService;
         Title = "Gestione Corsi";
@@ -30,14 +28,15 @@ public partial class CorsiViewModel : BaseViewModel
         ApplicaFiltro();
     }
 
-    [RelayCommand]
     public async Task CaricaCorsiAsync()
     {
-        await EseguiConCaricamento(async () =>
-        {
-            _listaCorsiCompleta = await _dbService.GetCorsiAttiviAsync();
-            ApplicaFiltro();
-        });
+        await EseguiConCaricamento(CaricaCorsiInternoAsync);
+    }
+
+    private async Task CaricaCorsiInternoAsync()
+    {
+        _listaCorsiCompleta = await _dbService.GetCorsiAttiviAsync();
+        ApplicaFiltro();
     }
 
     private void ApplicaFiltro()
@@ -90,8 +89,8 @@ public partial class CorsiViewModel : BaseViewModel
         {
             await EseguiConCaricamento(async () =>
             {
-                await _dbService.EliminaCorsoAsync(corso);
-                await CaricaCorsiAsync();
+                await _dbService.EliminaCorsoAsync(corso.Id);
+                await CaricaCorsiInternoAsync();
             });
         }
     }

@@ -74,8 +74,7 @@ public partial class GestioneInsegnanteViewModel : BaseViewModel
     [ObservableProperty]
     private double _compensoAnno;
 
-    public GestioneInsegnanteViewModel(INavigationService navigationService, IDatabaseService dbService, IImpostazioniService impostazioniService, CompensiMaestriService compensiService)
-        : base(navigationService)
+    public GestioneInsegnanteViewModel(IDatabaseService dbService, IImpostazioniService impostazioniService, CompensiMaestriService compensiService)
     {
         _dbService = dbService;
         _impostazioniService = impostazioniService;
@@ -113,7 +112,6 @@ public partial class GestioneInsegnanteViewModel : BaseViewModel
     partial void OnAnnoSelezionatoChanged(int value) => _ = RicalcolaRiepilogoAsync();
     partial void OnTariffaOrariaChanged(double value) => RicalcolaCompensi();
 
-    [RelayCommand]
     public async Task CaricaRiepilogoMaestroAsync()
     {
         if (Insegnante == null || Insegnante.Id == 0) return;

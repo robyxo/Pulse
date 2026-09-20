@@ -14,7 +14,7 @@ public class CompensiMaestriService
     public double CalcolaOreSettimanali(List<Lezioni> lezioni)
     {
         if (lezioni == null) return 0;
-        return lezioni.Sum(CalcolaDurataOre);
+        return lezioni.Sum(l => l.DurataOre);
     }
 
     public async Task<double> CalcolaOrePeriodoAsync(List<Lezioni> lezioni, DateTime dataInizio, DateTime dataFine)
@@ -41,7 +41,7 @@ public class CompensiMaestriService
 
             foreach (var lezione in lezioni.Where(l => l.GiornoSettimana == giornoDb))
             {
-                totaleOre += CalcolaDurataOre(lezione);
+                totaleOre += lezione.DurataOre;
             }
         }
 
@@ -60,16 +60,6 @@ public class CompensiMaestriService
         var dataInizio = new DateTime(anno, 1, 1);
         var dataFine = new DateTime(anno, 12, 31);
         return CalcolaOrePeriodoAsync(lezioni, dataInizio, dataFine);
-    }
-
-    private double CalcolaDurataOre(Lezioni lezione)
-    {
-        if (TimeSpan.TryParse(lezione.OraInizio, out var inizio) && TimeSpan.TryParse(lezione.OraFine, out var fine))
-        {
-            var durata = fine - inizio;
-            return durata.TotalHours > 0 ? durata.TotalHours : 0;
-        }
-        return 0;
     }
 
     private DateTime? ParseData(string? data) =>

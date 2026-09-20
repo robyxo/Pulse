@@ -35,28 +35,28 @@ public partial class CalendarioEventiViewModel : BaseViewModel
     [ObservableProperty]
     private string _motivoForm = string.Empty;
 
-    public CalendarioEventiViewModel(INavigationService navigationService, IDatabaseService dbService, IEmailService emailService)
-        : base(navigationService)
+    public CalendarioEventiViewModel(IDatabaseService dbService, IEmailService emailService)
     {
         _dbService = dbService;
         _emailService = emailService;
         Title = "Calendario Eventi";
     }
 
-    [RelayCommand]
     public async Task CaricaDatiAsync()
     {
-        await EseguiConCaricamento(async () =>
-        {
-            var chiusure = await _dbService.GetChiusureAsync();
+        await EseguiConCaricamento(CaricaDatiInternoAsync);
+    }
 
-            var lista = chiusure
-                .OrderByDescending(c => c.DataInizio)
-                .Select(c => new ChiusuraEventoDTO(c))
-                .ToList();
+    private async Task CaricaDatiInternoAsync()
+    {
+        var chiusure = await _dbService.GetChiusureAsync();
 
-            ListaChiusureEventi = new ObservableCollection<ChiusuraEventoDTO>(lista);
-        });
+        var lista = chiusure
+            .OrderByDescending(c => c.DataInizio)
+            .Select(c => new ChiusuraEventoDTO(c))
+            .ToList();
+
+        ListaChiusureEventi = new ObservableCollection<ChiusuraEventoDTO>(lista);
     }
 
     [RelayCommand]
@@ -107,7 +107,7 @@ public partial class CalendarioEventiViewModel : BaseViewModel
             if (_chiusuraInModifica?.Id == item.Id)
                 ResetForm();
 
-            await CaricaDatiAsync();
+            await CaricaDatiInternoAsync();
         });
     }
 
@@ -136,6 +136,8 @@ public partial class CalendarioEventiViewModel : BaseViewModel
         chiusura.Motivo = MotivoForm.Trim();
         chiusura.Stato = 1;
 
+        bool salvataggioRiuscito = false;
+
         await EseguiConCaricamento(async () =>
         {
             var (successo, abbonamentiEstesi) = await _dbService.SalvaChiusuraAsync(chiusura);
@@ -145,6 +147,8 @@ public partial class CalendarioEventiViewModel : BaseViewModel
                 await AlertPopup.ShowError("Non è stato possibile salvare.");
                 return;
             }
+
+            salvataggioRiuscito = true;
 
             if (!eraEvento && eraNuova)
             {
@@ -160,13 +164,15 @@ public partial class CalendarioEventiViewModel : BaseViewModel
             }
 
             ResetForm();
-            await CaricaDatiAsync();
-
-            if (eraNuova && eraEvento)
-            {
-                await ProponiInvioEmailAsync(chiusura);
-            }
+            await CaricaDatiInternoAsync();
         });
+
+        // Fuori dal blocco di caricamento: lo spinner è già spento
+        // mentre l'utente decide se inviare l'email agli allievi.
+        if (salvataggioRiuscito && eraNuova && eraEvento)
+        {
+            await ProponiInvioEmailAsync(chiusura);
+        }
     }
 
     private async Task ProponiInvioEmailAsync(CalendarioChiusure chiusura)
@@ -209,7 +215,7 @@ public partial class CalendarioEventiViewModel : BaseViewModel
                 chiusura.EmailInviata = 1;
                 await _dbService.SalvaChiusuraAsync(chiusura);
                 await AlertPopup.Show("Fatto", $"Email inviata a {destinatari.Count} allievi.");
-                await CaricaDatiAsync();
+                await CaricaDatiInternoAsync();
             }
             else
             {

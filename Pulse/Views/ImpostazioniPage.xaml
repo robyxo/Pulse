@@ -287,6 +287,7 @@
                 <Border
                     Padding="16"
                     BackgroundColor="White"
+                    IsVisible="{Binding ModelliPrivacyDisponibili}"
                     Stroke="#E2E8F0"
                     StrokeShape="RoundRectangle 12">
                     <VerticalStackLayout Spacing="10">
@@ -312,15 +313,28 @@
                 </Border>
 
                 <!--  SEZIONE: FUNZIONE MAESTRO AVANZATA  -->
-                <Border Padding="16" BackgroundColor="White" Stroke="#E2E8F0" StrokeShape="RoundRectangle 12">
+                <Border
+                    Padding="16"
+                    BackgroundColor="White"
+                    Stroke="#E2E8F0"
+                    StrokeShape="RoundRectangle 12">
                     <VerticalStackLayout Spacing="10">
-                        <Label FontAttributes="Bold" FontSize="16" Text="👨‍🏫 Funzione Maestro Avanzata" />
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="16"
+                            Text="👨‍🏫 Funzione Maestro Avanzata" />
                         <Grid ColumnDefinitions="*, Auto">
                             <VerticalStackLayout Grid.Column="0" Spacing="2">
                                 <Label FontAttributes="Bold" Text="Attiva Riepilogo Ore e Compensi" />
-                                <Label FontSize="12" Text="Se attivo, nella scheda di ogni insegnante compare l'elenco dei corsi assegnati con il riepilogo di ore e compenso a settimana, mese e anno." TextColor="Gray" />
+                                <Label
+                                    FontSize="12"
+                                    Text="Se attivo, nella scheda di ogni insegnante compare l'elenco dei corsi assegnati con il riepilogo di ore e compenso a settimana, mese e anno."
+                                    TextColor="Gray" />
                             </VerticalStackLayout>
-                            <Switch Grid.Column="1" IsToggled="{Binding FunzioneMaestroAvanzataAttiva}" VerticalOptions="Center" />
+                            <Switch
+                                Grid.Column="1"
+                                IsToggled="{Binding FunzioneMaestroAvanzataAttiva}"
+                                VerticalOptions="Center" />
                         </Grid>
                     </VerticalStackLayout>
                 </Border>

@@ -1,5 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
+﻿using CommunityToolkit.Mvvm.Input;
 using Pulse.Models;
 using Pulse.Services;
 using Pulse.Utils;
@@ -18,8 +17,7 @@ public partial class InsegnantiViewModel : BaseViewModel
     [ObservableProperty]
     private string _testoRicerca = string.Empty;
 
-    public InsegnantiViewModel(INavigationService navigationService, IDatabaseService dbService)
-        : base(navigationService)
+    public InsegnantiViewModel(IDatabaseService dbService)
     {
         _dbService = dbService;
         Title = "Gestione Insegnanti";
@@ -30,14 +28,15 @@ public partial class InsegnantiViewModel : BaseViewModel
         ApplicaFiltro();
     }
 
-    [RelayCommand]
     public async Task CaricaInsegnantiAsync()
     {
-        await EseguiConCaricamento(async () =>
-        {
-            _listaInsegnantiCompleta = await _dbService.GetInsegnantiAttiviAsync();
-            ApplicaFiltro();
-        });
+        await EseguiConCaricamento(CaricaInsegnantiInternoAsync);
+    }
+
+    private async Task CaricaInsegnantiInternoAsync()
+    {
+        _listaInsegnantiCompleta = await _dbService.GetInsegnantiAttiviAsync();
+        ApplicaFiltro();
     }
 
     private void ApplicaFiltro()
@@ -93,7 +92,7 @@ public partial class InsegnantiViewModel : BaseViewModel
             await EseguiConCaricamento(async () =>
             {
                 await _dbService.EliminaInsegnanteAsync(insegnante.Id);
-                await CaricaInsegnantiAsync();
+                await CaricaInsegnantiInternoAsync();
             });
         }
     }

@@ -189,6 +189,8 @@ public partial class ImpostazioniViewModel : BaseViewModel
     [ObservableProperty]
     private bool _stampaDocumentoPrivacyAttiva;
 
+    public bool ModelliPrivacyDisponibili => PrivacyDocumentService.AlmenoUnModelloDisponibile;
+
     // --- COLORI CORSI ---
     [ObservableProperty]
     private int _numeroColoriCorsi = 6;
@@ -237,8 +239,7 @@ public partial class ImpostazioniViewModel : BaseViewModel
     [ObservableProperty]
     private bool _funzioneMaestroAvanzataAttiva;
 
-    public ImpostazioniViewModel(INavigationService navigationService, IImpostazioniService impostazioniService, IEmailService emailService, IBackupService backupService)
-    : base(navigationService)
+    public ImpostazioniViewModel(IImpostazioniService impostazioniService, IEmailService emailService, IBackupService backupService)
     {
         _impostazioniService = impostazioniService;
         _emailService = emailService;
@@ -320,41 +321,42 @@ public partial class ImpostazioniViewModel : BaseViewModel
 
     public bool HaRipristinoPrecedente => !string.IsNullOrWhiteSpace(UltimoRipristinoData);
 
-    [RelayCommand]
     public async Task CaricaImpostazioniAsync()
     {
-        await EseguiConCaricamento(async () =>
-        {
-            Impostazioni = await _impostazioniService.GetImpostazioniAsync();
+        await EseguiConCaricamento(CaricaImpostazioniInternoAsync);
+    }
 
-            NomeScuola = Impostazioni.NomeScuola;
-            IndirizzoScuola = Impostazioni.IndirizzoScuola;
-            PartitaIva = Impostazioni.PartitaIva;
-            LogoPath = Impostazioni.LogoPath;
+    private async Task CaricaImpostazioniInternoAsync()
+    {
+        Impostazioni = await _impostazioniService.GetImpostazioniAsync();
 
-            OrarioScaglionatoAttivo = Impostazioni.OrarioScaglionato == 1;
-            StampaRicevutaCortesiaAttiva = Impostazioni.StampaRicevutaCortesia == 1;
-            StampaDocumentoPrivacyAttiva = Impostazioni.StampaDocumentoPrivacy == 1;
-            NumeroColoriCorsi = Impostazioni.NumeroColoriCorsi ?? 6;
+        NomeScuola = Impostazioni.NomeScuola;
+        IndirizzoScuola = Impostazioni.IndirizzoScuola;
+        PartitaIva = Impostazioni.PartitaIva;
+        LogoPath = Impostazioni.LogoPath;
 
-            EmailSmtpUser = Impostazioni.EmailSmtpUser;
-            EmailSmtpPassword = Impostazioni.EmailSmtpPassword;
-            EmailMittenteNome = Impostazioni.EmailMittenteNome;
-            EmailSmtpHost = Impostazioni.EmailSmtpHost;
-            EmailSmtpPort = Impostazioni.EmailSmtpPort ?? 587;
-            EmailUseSslAttiva = Impostazioni.EmailUseSsl != 0;
+        OrarioScaglionatoAttivo = Impostazioni.OrarioScaglionato == 1;
+        StampaRicevutaCortesiaAttiva = Impostazioni.StampaRicevutaCortesia == 1;
+        StampaDocumentoPrivacyAttiva = Impostazioni.StampaDocumentoPrivacy == 1;
+        NumeroColoriCorsi = Impostazioni.NumeroColoriCorsi ?? 6;
 
-            UltimoBackupData = Impostazioni.UltimoBackupData;
-            UltimoRipristinoData = Impostazioni.UltimoRipristinoData;
+        EmailSmtpUser = Impostazioni.EmailSmtpUser;
+        EmailSmtpPassword = Impostazioni.EmailSmtpPassword;
+        EmailMittenteNome = Impostazioni.EmailMittenteNome;
+        EmailSmtpHost = Impostazioni.EmailSmtpHost;
+        EmailSmtpPort = Impostazioni.EmailSmtpPort ?? 587;
+        EmailUseSslAttiva = Impostazioni.EmailUseSsl != 0;
 
-            RicevutaLarghezzaMm = Impostazioni.RicevutaLarghezzaMm ?? 90;
-            RicevutaAltezzaMm = Impostazioni.RicevutaAltezzaMm ?? 90;
-            RicevutaMarginTopMm = Impostazioni.RicevutaMarginTopMm ?? 10;
-            RicevutaMarginRightMm = Impostazioni.RicevutaMarginRightMm ?? 3;
-            RicevutaMarginBottomMm = Impostazioni.RicevutaMarginBottomMm ?? 3;
-            RicevutaMarginLeftMm = Impostazioni.RicevutaMarginLeftMm ?? 5;
-            FunzioneMaestroAvanzataAttiva = Impostazioni.FunzioneMaestroAvanzataAttiva == 1;
-        });
+        UltimoBackupData = Impostazioni.UltimoBackupData;
+        UltimoRipristinoData = Impostazioni.UltimoRipristinoData;
+
+        RicevutaLarghezzaMm = Impostazioni.RicevutaLarghezzaMm ?? 90;
+        RicevutaAltezzaMm = Impostazioni.RicevutaAltezzaMm ?? 90;
+        RicevutaMarginTopMm = Impostazioni.RicevutaMarginTopMm ?? 10;
+        RicevutaMarginRightMm = Impostazioni.RicevutaMarginRightMm ?? 3;
+        RicevutaMarginBottomMm = Impostazioni.RicevutaMarginBottomMm ?? 3;
+        RicevutaMarginLeftMm = Impostazioni.RicevutaMarginLeftMm ?? 5;
+        FunzioneMaestroAvanzataAttiva = Impostazioni.FunzioneMaestroAvanzataAttiva == 1;
     }
 
     [RelayCommand]
@@ -456,7 +458,7 @@ public partial class ImpostazioniViewModel : BaseViewModel
 
             if (successo)
             {
-                await CaricaImpostazioniAsync();
+                await CaricaImpostazioniInternoAsync();
                 await Shell.Current.DisplayAlert("Fatto", $"Backup creato con successo:\n{percorso}", "OK");
             }
             else if (errore != null)

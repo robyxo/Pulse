@@ -5,7 +5,6 @@ using Pulse.Models;
 using Pulse.DTO;
 using Pulse.Services;
 using Pulse.Utils;
-using Pulse.Views.Popups;
 
 namespace Pulse.ViewModels;
 
@@ -22,8 +21,7 @@ public partial class CalendarioViewModel : BaseViewModel
     [ObservableProperty] private TimeSpan _oraInizio = new(8, 0, 0);
     [ObservableProperty] private TimeSpan _oraFine = new(24, 0, 0);
     [ObservableProperty] private int _intervalloMinuti = 30;
-    [ObservableProperty] private List<FasciaOraria> _fasceOrarie = new();
-    [ObservableProperty] private bool _mostraSoloAttive = false;
+    [ObservableProperty] private List<TimeSpan> _slotOrari = new();
     [ObservableProperty] private bool _orarioScaglionatoAttivo;
     [ObservableProperty] private OpzioneIntervallo? _intervalloSelezionato;
 
@@ -46,8 +44,7 @@ public partial class CalendarioViewModel : BaseViewModel
         DayOfWeek.Sunday
     };
 
-    public CalendarioViewModel(INavigationService navigationService, IDatabaseService databaseService, IImpostazioniService impostazioniService)
-     : base(navigationService)
+    public CalendarioViewModel(IDatabaseService databaseService, IImpostazioniService impostazioniService)
     {
         _databaseService = databaseService;
         _impostazioniService = impostazioniService;
@@ -64,7 +61,7 @@ public partial class CalendarioViewModel : BaseViewModel
 
         IntervalloSelezionato = OpzioniIntervallo.FirstOrDefault(o => o.Minuti == IntervalloMinuti) ?? OpzioniIntervallo.First();
 
-        GeneraFasceOrarie();
+        GeneraSlotOrari();
     }
 
     // Quando cambiano i filtri, aggiorniamo e inviamo il messaggio
@@ -74,9 +71,6 @@ public partial class CalendarioViewModel : BaseViewModel
         Preferences.Set("Calendario_IntervalloMinuti", value);
         AggiornaVista();
     }
-
-    partial void OnMostraSoloAttiveChanged(bool value) =>
-        AggiornaVista();
 
     partial void OnOraInizioChanged(TimeSpan value)
     {
@@ -98,67 +92,40 @@ public partial class CalendarioViewModel : BaseViewModel
 
     private void AggiornaVista()
     {
-        GeneraFasceOrarie();
+        GeneraSlotOrari();
         WeakReferenceMessenger.Default.Send(new RefreshGridMessage());
     }
 
-    private void GeneraFasceOrarie()
+    private void GeneraSlotOrari()
     {
-        var lista = new List<FasciaOraria>();
+        var lista = new List<TimeSpan>();
         var ora = OraInizio;
         while (ora < OraFine)
         {
-            bool attiva = !(ora >= new TimeSpan(13, 0, 0) && ora < new TimeSpan(14, 0, 0));
-            lista.Add(new FasciaOraria { Orario = ora, IsAttiva = attiva });
+            lista.Add(ora);
             ora = ora.Add(TimeSpan.FromMinutes(IntervalloMinuti));
         }
-        FasceOrarie = MostraSoloAttive ? lista.Where(f => f.IsAttiva).ToList() : lista;
+        SlotOrari = lista;
     }
 
-    public async Task LoadData()
+    public async Task CaricaDatiAsync()
     {
         await EseguiConCaricamento(async () =>
         {
             var impostazioni = await _impostazioniService.GetImpostazioniAsync();
             OrarioScaglionatoAttivo = impostazioni.OrarioScaglionato == 1;
 
-            LezioniSettimana = await _databaseService.GetLezioniSettimana(SettimanaCorrente);
+            LezioniSettimana = await _databaseService.GetLezioniRicorrentiAsync();
             WeakReferenceMessenger.Default.Send(new RefreshGridMessage());
         });
     }
 
-    [RelayCommand] private async Task SettimanaPrecedente() { SettimanaCorrente = SettimanaCorrente.AddDays(-7); await LoadData(); }
-    [RelayCommand] private async Task SettimanaSuccessiva() { SettimanaCorrente = SettimanaCorrente.AddDays(7); await LoadData(); }
-    [RelayCommand] private async Task VaiOggi() { SettimanaCorrente = DateTime.Now; await LoadData(); }
+    [RelayCommand] private async Task SettimanaPrecedente() { SettimanaCorrente = SettimanaCorrente.AddDays(-7); await CaricaDatiAsync(); }
+    [RelayCommand] private async Task SettimanaSuccessiva() { SettimanaCorrente = SettimanaCorrente.AddDays(7); await CaricaDatiAsync(); }
+    [RelayCommand] private async Task VaiOggi() { SettimanaCorrente = DateTime.Now; await CaricaDatiAsync(); }
 
-    [RelayCommand]
-    public async Task MostraAllieviCorso(Lezioni lezione)
-    {
-        if (lezione == null) return;
-
-        await EseguiConCaricamento(async () => 
-            await Shell.Current.Navigation.PushAsync(new AllieviCorsoPage(lezione))); // PUSH NORMALE
-    }
-
-    public TimeSpan StringToTimeSpan(string timeString) => 
-        TimeSpan.TryParse(timeString, out var t) ? t : TimeSpan.Zero;
     public Color StringToColor(string colorString) => 
         Color.TryParse(colorString, out var c) ? c : Colors.Purple;
-
-    public List<Lezioni> GetLezioniPerGiorno(DayOfWeek giorno) =>
-        LezioniSettimana.Where(l => (DayOfWeek)l.GiornoSettimana == giorno).ToList();
-
-    public Lezioni? GetLezionePerOrario(DayOfWeek giorno, TimeSpan orario)
-    {
-        // Convertiamo il DayOfWeek in intero (0-6) e poi lo adattiamo al formato DB (1-7)
-        // Se la Domenica è 0, la portiamo a 7 per il confronto col DB
-        int giornoDb = (int)giorno == 0 ? 7 : (int)giorno;
-
-        return LezioniSettimana.FirstOrDefault(l =>
-            l.GiornoSettimana == giornoDb && // Confrontiamo direttamente gli interi
-            StringToTimeSpan(l.OraInizio) <= orario &&
-            StringToTimeSpan(l.OraFine) > orario);
-    }
 
     public string GetNomeGiorno(DayOfWeek giorno) => 
         DateHelper.GetNomeGiornoCompletoIT(giorno, SettimanaCorrente);

@@ -20,9 +20,7 @@
 		<ApplicationVersion>1</ApplicationVersion>
 		<WindowsPackageType>None</WindowsPackageType>
 
-		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
-		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">26.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
 	</PropertyGroup>
@@ -41,10 +39,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<EmbeddedResource Include="DataBase\Pulse.db">
-			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
-		</EmbeddedResource>
-		<EmbeddedResource Include="appsettings.json" />
 		<EmbeddedResource Include="Privacy\AutoModelloPrivacy.docx" />
 		<EmbeddedResource Include="Privacy\LEGGIMI.txt" />
 		<EmbeddedResource Include="Privacy\ModelloPrivacy.docx" />
@@ -54,9 +48,8 @@
 		<PackageReference Include="CommunityToolkit.Maui" Version="9.0.3" />
 		<PackageReference Include="CommunityToolkit.Maui.Core" Version="9.0.3" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-		<PackageReference Include="DocumentFormat.OpenXml" Version="3.5.1" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.15" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.12">
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.15">
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
@@ -64,19 +57,10 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.15" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
-		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.1" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<Folder Include="Component\" />
-		<Folder Include="Models\" />
-		<Folder Include="Converter\" />
-	</ItemGroup>
-
-	<!-- QUESTI 2 BLOCCO ERANO MANCANTI -->
 	<ItemGroup>
 		<Compile Update="Views\CalendarioEventiPage.xaml.cs">
 		  <DependentUpon>CalendarioEventiPage.xaml</DependentUpon>
@@ -89,12 +73,6 @@
 		</Compile>
 		<Compile Update="Views\GestioneLezionePage.xaml.cs">
 		  <DependentUpon>GestioneLezionePage.xaml</DependentUpon>
-		</Compile>
-		<Compile Update="Views\Popups\AllieviCorsoPopup.xaml.cs">
-			<DependentUpon>AllieviCorsoPopup.xaml</DependentUpon>
-		</Compile>
-		<Compile Update="Views\Popups\AllieviCorsoPage.xaml.cs">
-		  <DependentUpon>AllieviCorsoPage.xaml</DependentUpon>
 		</Compile>
 	</ItemGroup>
 
@@ -128,9 +106,6 @@
 		</MauiXaml>
 		<MauiXaml Update="Views\NotifichePage.xaml">
 		  <Generator>MSBuild:Compile</Generator>
-		</MauiXaml>
-		<MauiXaml Update="Views\Popups\AllieviCorsoPage.xaml">
-			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Views\Popups\NuovoAbbonamentoPage.xaml">
 		  <Generator>MSBuild:Compile</Generator>

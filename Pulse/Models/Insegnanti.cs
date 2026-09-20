@@ -21,7 +21,4 @@ public partial class Insegnanti
     public double? TariffaOraria { get; set; }
 
     public virtual ICollection<Lezioni> Lezionis { get; set; } = new List<Lezioni>();
-
-    [NotMapped]
-    public string NomeCompleto => $"{Nome} {Cognome}".Trim();
 }

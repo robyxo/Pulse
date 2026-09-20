@@ -2,33 +2,30 @@
 
 public static class AlertPopup
 {
+    // Application.Current.MainPage è deprecato in .NET 9: si usa la Shell
+    // corrente, con la finestra attiva come riserva nei casi in cui la Shell
+    // non sia ancora stata creata (avvio dell'app).
+    private static Page? PaginaCorrente =>
+        Shell.Current ?? Application.Current?.Windows.FirstOrDefault()?.Page;
+
     // =========================================
-    //  METODI PRINCIPALI
+    //  POPUP INFORMATIVO
     // =========================================
 
     public static async Task Show(string title, string message, string cancel = "OK")
     {
         try
         {
-            if (Application.Current?.MainPage != null)
+            var pagina = PaginaCorrente;
+            if (pagina != null)
             {
-                await Application.Current.MainPage.DisplayAlert(title, message, cancel);
+                await pagina.DisplayAlert(title, message, cancel);
             }
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Errore AlertPopup: {ex.Message}");
         }
-    }
-
-    public static async Task Show(string title, string message)
-    {
-        await Show(title, message, "OK");
-    }
-
-    public static async Task Show(string title)
-    {
-        await Show(title, "Funzionalità in sviluppo", "OK");
     }
 
     // =========================================
@@ -43,9 +40,10 @@ public static class AlertPopup
     {
         try
         {
-            if (Application.Current?.MainPage != null)
+            var pagina = PaginaCorrente;
+            if (pagina != null)
             {
-                return await Application.Current.MainPage.DisplayAlert(title, message, confirmText, cancelText);
+                return await pagina.DisplayAlert(title, message, confirmText, cancelText);
             }
             return false;
         }
@@ -56,37 +54,12 @@ public static class AlertPopup
     }
 
     // =========================================
-    //  POPUP ERRORE
+    //  POPUP ERRORE / ATTENZIONE
     // =========================================
 
-    public static async Task ShowError(string message)
-    {
-        await Show("Errore", message, "OK");
-    }
+    public static Task ShowError(string message) =>
+        Show("Errore", message, "OK");
 
-    // =========================================
-    //  POPUP ATTENZIONE
-    // =========================================
-
-    public static async Task ShowWarning(string message)
-    {
-        await Show("Attenzione", message, "OK");
-    }
-
-    // =========================================
-    //  POPUP ELIMINAZIONE
-    // =========================================
-
-    public static async Task<bool> ShowDeleteConfirmation(string itemName = "")
-    {
-        string message = string.IsNullOrEmpty(itemName)
-            ? "Sei sicuro di voler procedere con l'eliminazione?"
-            : $"Sei sicuro di voler eliminare {itemName}?";
-
-        return await ShowConfirmation(
-            "Conferma Eliminazione",
-            message,
-            "Elimina",
-            "Annulla");
-    }
+    public static Task ShowWarning(string message) =>
+        Show("Attenzione", message, "OK");
 }

@@ -8,11 +8,12 @@ namespace Pulse.Services;
 public class BackupService : IBackupService
 {
     private readonly PulseContext _context;
+    private readonly IDbContextFactory<PulseContext> _contextFactory;
     private readonly IImpostazioniService _impostazioniService;
 
-    public BackupService(PulseContext context, IImpostazioniService impostazioniService)
+    public BackupService(IDbContextFactory<PulseContext> contextFactory, IImpostazioniService impostazioniService)
     {
-        _context = context;
+        _contextFactory = contextFactory;
         _impostazioniService = impostazioniService;
     }
 
@@ -41,7 +42,7 @@ public class BackupService : IBackupService
             await _impostazioniService.SalvaImpostazioniAsync(impostazioni);
 
             // Chiude la connessione per rilasciare il file prima di copiarlo
-            await _context.Database.CloseConnectionAsync();
+            SqliteConnection.ClearAllPools();
 
             File.Copy(PercorsoDatabaseCorrente, percorsoDestinazione, overwrite: true);
 
@@ -63,7 +64,7 @@ public class BackupService : IBackupService
             }
 
             // Chiude la connessione corrente per rilasciare Pulse.db prima di sovrascriverlo
-            await _context.Database.CloseConnectionAsync();
+            SqliteConnection.ClearAllPools();
 
             File.Copy(percorsoFileBackup, PercorsoDatabaseCorrente, overwrite: true);
 
@@ -96,18 +97,27 @@ public class BackupService : IBackupService
     {
         try
         {
-            _context.Presenzes.RemoveRange(_context.Presenzes);
-            _context.Abbonamentis.RemoveRange(_context.Abbonamentis);
-            _context.Iscrizionis.RemoveRange(_context.Iscrizionis);
-            _context.Privacies.RemoveRange(_context.Privacies);
-            _context.Lezionis.RemoveRange(_context.Lezionis);
-            _context.CalendarioChiusures.RemoveRange(_context.CalendarioChiusures);
-            _context.Corsis.RemoveRange(_context.Corsis);
-            _context.Allievis.RemoveRange(_context.Allievis);
-            _context.Insegnantis.RemoveRange(_context.Insegnantis);
-            _context.Impostazionis.RemoveRange(_context.Impostazionis);
+            await using var context = await _contextFactory.CreateDbContextAsync();
 
-            await _context.SaveChangesAsync();
+            // Una transazione sola: se qualcosa va storto a metà, non resta
+            // un database svuotato per metà.
+            await using var transazione = await context.Database.BeginTransactionAsync();
+
+            // ExecuteDeleteAsync cancella con una singola istruzione SQL per tabella,
+            // senza caricare le righe in memoria.
+            // L'ordine rispetta le foreign key: prima le tabelle figlie, poi le padre.
+            await context.Presenzes.ExecuteDeleteAsync();
+            await context.Abbonamentis.ExecuteDeleteAsync();
+            await context.Iscrizionis.ExecuteDeleteAsync();
+            await context.Privacies.ExecuteDeleteAsync();
+            await context.Lezionis.ExecuteDeleteAsync();
+            await context.CalendarioChiusures.ExecuteDeleteAsync();
+            await context.Corsis.ExecuteDeleteAsync();
+            await context.Allievis.ExecuteDeleteAsync();
+            await context.Insegnantis.ExecuteDeleteAsync();
+            await context.Impostazionis.ExecuteDeleteAsync();
+
+            await transazione.CommitAsync();
 
             // Ripulisce anche il file del logo eventualmente caricato
             string cartellaLoghi = Path.Combine(FileSystem.AppDataDirectory, "Logo");

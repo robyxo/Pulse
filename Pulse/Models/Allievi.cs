@@ -37,9 +37,6 @@ public partial class Allievi
 
     public int? Attivo { get; set; }
 
-    // Proprietà calcolata comoda per la visualizzazione nelle liste
-    public string NomeCompleto => $"{Nome} {Cognome}";
-
     public virtual ICollection<Abbonamenti> Abbonamentis { get; set; } = new List<Abbonamenti>();
 
     public virtual ICollection<Iscrizioni> Iscrizionis { get; set; } = new List<Iscrizioni>();

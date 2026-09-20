@@ -5,11 +5,28 @@ namespace Pulse.Services;
 
 public class DatabaseService : IDatabaseService
 {
-    private readonly PulseContext _context;
+    private readonly IDbContextFactory<PulseContext> _contextFactory;
 
-    public DatabaseService(PulseContext context)
+    public DatabaseService(IDbContextFactory<PulseContext> contextFactory)
     {
-        _context = context;
+        _contextFactory = contextFactory;
+    }
+
+    // ================================================
+    // AGGANCIO ENTITÀ AL CONTEXT
+    // ================================================
+
+    /// <summary>
+    /// Aggancia l'entità al context senza trascinarsi dietro le proprietà di
+    /// navigazione già valorizzate: le entità collegate che hanno già un Id
+    /// restano "Unchanged", così EF non prova a reinserirle come righe nuove.
+    /// Serve perché ogni chiamata usa un context nuovo, che non conosce le
+    /// entità caricate in precedenza.
+    /// </summary>
+    private static void AgganciaPerSalvataggio<T>(PulseContext context, T entita, bool nuova) where T : class
+    {
+        context.Attach(entita);
+        context.Entry(entita).State = nuova ? EntityState.Added : EntityState.Modified;
     }
 
     // ================================================
@@ -18,50 +35,48 @@ public class DatabaseService : IDatabaseService
 
     public async Task<List<Corsi>> GetCorsiAttiviAsync()
     {
-        return await _context.Corsis
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
+        return await context.Corsis
             .Where(c => c.Attivo == 1)
             .OrderBy(c => c.Nome)
             .ToListAsync();
     }
 
-    public Task<List<Corsi>> GetCorsiAttivi() => GetCorsiAttiviAsync();
-
     public async Task<bool> SalvaCorsoAsync(Corsi corso)
     {
-        if (corso.Id == 0)
-        {
-            corso.Attivo = 1;
-            _context.Corsis.Add(corso);
-        }
-        else
-        {
-            _context.Corsis.Update(corso);
-        }
+        await using var context = await _contextFactory.CreateDbContextAsync();
 
-        return await _context.SaveChangesAsync() > 0;
+        bool nuovo = corso.Id == 0;
+        if (nuovo) corso.Attivo = 1;
+
+        AgganciaPerSalvataggio(context, corso, nuovo);
+        return await context.SaveChangesAsync() > 0;
     }
 
     public async Task<bool> EliminaCorsoAsync(int id)
     {
-        var corso = await _context.Corsis.FindAsync(id);
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
+        var corso = await context.Corsis.FindAsync(id);
         if (corso == null) return false;
 
-        corso.Attivo = 0;
-        _context.Corsis.Update(corso);
-        return await _context.SaveChangesAsync() > 0;
+        corso.Attivo = 0; // Soft delete
+        return await context.SaveChangesAsync() > 0;
     }
-
-    public Task<bool> EliminaCorsoAsync(Corsi corso) => EliminaCorsoAsync(corso.Id);
 
     // ================================================
     // CALENDARIO E LEZIONI
     // ================================================
 
-    public async Task<List<Lezioni>> GetLezioniSettimanaAsync(DateTime dataRiferimento)
+    // Le lezioni sono ricorrenti settimanali (GiornoSettimana 1-7): sono le stesse
+    // per qualunque settimana, quindi non c'è nessuna data da cui filtrare.
+    public async Task<List<Lezioni>> GetLezioniRicorrentiAsync()
     {
-        return await _context.Lezionis
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
+        return await context.Lezionis
             .Include(l => l.Corso)
-                .ThenInclude(c => c.Iscrizionis)
             .Include(l => l.Insegnante)
             .Where(l => l.GiornoSettimana >= 1 && l.GiornoSettimana <= 7)
             .OrderBy(l => l.GiornoSettimana)
@@ -69,38 +84,32 @@ public class DatabaseService : IDatabaseService
             .ToListAsync();
     }
 
-    public Task<List<Lezioni>> GetLezioniSettimana(DateTime dataRiferimento) =>
-        GetLezioniSettimanaAsync(dataRiferimento);
-
     public async Task<bool> SalvaLezioneAsync(Lezioni lezione)
     {
-        if (lezione.Id == 0)
-        {
-            _context.Lezionis.Add(lezione);
-        }
-        else
-        {
-            _context.Lezionis.Update(lezione);
-        }
+        await using var context = await _contextFactory.CreateDbContextAsync();
 
-        return await _context.SaveChangesAsync() > 0;
+        bool nuova = lezione.Id == 0;
+
+        AgganciaPerSalvataggio(context, lezione, nuova);
+        return await context.SaveChangesAsync() > 0;
     }
-
-    public Task<bool> SalvaLezione(Lezioni lezione) =>
-        SalvaLezioneAsync(lezione);
 
     public async Task<bool> EliminaLezioneAsync(int id)
     {
-        var lezione = await _context.Lezionis.FindAsync(id);
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
+        var lezione = await context.Lezionis.FindAsync(id);
         if (lezione == null) return false;
 
-        _context.Lezionis.Remove(lezione);
-        return await _context.SaveChangesAsync() > 0;
+        context.Lezionis.Remove(lezione);
+        return await context.SaveChangesAsync() > 0;
     }
 
     public async Task<List<Lezioni>> GetLezioniPerCorsoAsync(int corsoId)
     {
-        return await _context.Lezionis
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
+        return await context.Lezionis
             .Where(l => l.CorsoId == corsoId)
             .OrderBy(l => l.GiornoSettimana)
             .ThenBy(l => l.OraInizio)
@@ -113,7 +122,9 @@ public class DatabaseService : IDatabaseService
 
     public async Task<List<Insegnanti>> GetInsegnantiAttiviAsync()
     {
-        return await _context.Insegnantis
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
+        return await context.Insegnantis
             .Where(i => i.Attivo == 1)
             .OrderBy(i => i.Cognome)
             .ThenBy(i => i.Nome)
@@ -122,34 +133,31 @@ public class DatabaseService : IDatabaseService
 
     public async Task<bool> SalvaInsegnanteAsync(Insegnanti insegnante)
     {
-        if (insegnante.Id == 0)
-        {
-            insegnante.Attivo = 1;
-            _context.Insegnantis.Add(insegnante);
-        }
-        else
-        {
-            _context.Insegnantis.Update(insegnante);
-        }
+        await using var context = await _contextFactory.CreateDbContextAsync();
 
-        return await _context.SaveChangesAsync() > 0;
+        bool nuovo = insegnante.Id == 0;
+        if (nuovo) insegnante.Attivo = 1;
+
+        AgganciaPerSalvataggio(context, insegnante, nuovo);
+        return await context.SaveChangesAsync() > 0;
     }
 
     public async Task<bool> EliminaInsegnanteAsync(int id)
     {
-        var insegnante = await _context.Insegnantis.FindAsync(id);
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
+        var insegnante = await context.Insegnantis.FindAsync(id);
         if (insegnante == null) return false;
 
         insegnante.Attivo = 0; // Soft delete
-        _context.Insegnantis.Update(insegnante);
-        return await _context.SaveChangesAsync() > 0;
+        return await context.SaveChangesAsync() > 0;
     }
-
-    public Task<List<Insegnanti>> GetInsegnantiAttivi() => GetInsegnantiAttiviAsync();
 
     public async Task<List<Lezioni>> GetLezioniPerInsegnanteAsync(int insegnanteId)
     {
-        return await _context.Lezionis
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
+        return await context.Lezionis
             .Include(l => l.Corso)
             .Where(l => l.InsegnanteId == insegnanteId)
             .OrderBy(l => l.GiornoSettimana)
@@ -163,7 +171,9 @@ public class DatabaseService : IDatabaseService
 
     public async Task<List<Allievi>> GetAllieviAttiviAsync()
     {
-        return await _context.Allievis
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
+        return await context.Allievis
             .Where(a => a.Attivo == 1)
             .OrderBy(a => a.Cognome)
             .ThenBy(a => a.Nome)
@@ -172,9 +182,11 @@ public class DatabaseService : IDatabaseService
 
     public async Task<List<Allievi>> GetAllieviPerCorsoAsync(int corsoId)
     {
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
         // Mostra allievi che frequentano questo corso (anche con mese scaduto per permettere rinnovo)
         // Esclude chi è sospeso/in pausa o chi ha abbonamento cancellato (Attivo == 0)
-        return await _context.Abbonamentis
+        return await context.Abbonamentis
             .Where(a => a.CorsoId == corsoId
                      && a.Attivo == 1
                      && a.IsSospeso == 0)
@@ -187,77 +199,86 @@ public class DatabaseService : IDatabaseService
             .ToListAsync();
     }
 
-    public Task<List<Allievi>> GetAllieviPerCorso(int corsoId) => GetAllieviPerCorsoAsync(corsoId);
-
-    public async Task<List<Allievi>> GetAllieviPerLezioneAsync(int lezioneId)
-    {
-        var lezione = await _context.Lezionis.FindAsync(lezioneId);
-        if (lezione == null) return new List<Allievi>();
-
-        return await GetAllieviPerCorsoAsync(lezione.CorsoId);
-    }
-
     public async Task<bool> SalvaAllievoAsync(Allievi allievo)
     {
-        if (allievo.Id == 0)
-        {
-            allievo.Attivo = 1;
-            _context.Allievis.Add(allievo);
-        }
-        else
-        {
-            _context.Allievis.Update(allievo);
-        }
+        await using var context = await _contextFactory.CreateDbContextAsync();
 
-        return await _context.SaveChangesAsync() > 0;
+        bool nuovo = allievo.Id == 0;
+        if (nuovo) allievo.Attivo = 1;
+
+        AgganciaPerSalvataggio(context, allievo, nuovo);
+        return await context.SaveChangesAsync() > 0;
     }
 
     public async Task<bool> EliminaAllievoAsync(int id)
     {
-        var allievo = await _context.Allievis.FindAsync(id);
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
+        var allievo = await context.Allievis.FindAsync(id);
         if (allievo == null) return false;
 
         allievo.Attivo = 0; // Soft delete
-        _context.Allievis.Update(allievo);
-        return await _context.SaveChangesAsync() > 0;
+        return await context.SaveChangesAsync() > 0;
     }
 
     // ================================================
     // ABBONAMENTI
     // ================================================
 
+    // Tutti gli abbonamenti attivi in una sola query: serve a costruire la lista
+    // allievi senza interrogare il database una volta per ogni riga.
+    public async Task<List<Abbonamenti>> GetAbbonamentiAttiviAsync()
+    {
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
+        return await context.Abbonamentis
+            .Include(a => a.Corso)
+            .Where(a => a.Attivo == 1)
+            .OrderByDescending(a => a.DataScadenza)
+            .ToListAsync();
+    }
+
     public async Task<List<Abbonamenti>> GetAbbonamentiAllievoAsync(int allievoId)
     {
-        return await _context.Abbonamentis
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
+        return await context.Abbonamentis
             .Include(a => a.Corso)
             .Where(a => a.AllievoId == allievoId && a.Attivo == 1)
             .OrderByDescending(a => a.DataInizio)
             .ToListAsync();
     }
 
+    public async Task<List<Abbonamenti>> GetAbbonamentiAttiviPerCorsoAsync(int corsoId)
+    {
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
+        return await context.Abbonamentis
+            .Include(a => a.Corso)
+            .Where(a => a.CorsoId == corsoId && a.Attivo == 1)
+            .OrderByDescending(a => a.DataInizio)
+            .ToListAsync();
+    }
     public async Task<bool> SalvaAbbonamentoAsync(Abbonamenti abbonamento)
     {
-        if (abbonamento.Id == 0)
-        {
-            abbonamento.Attivo = 1;
-            _context.Abbonamentis.Add(abbonamento);
-        }
-        else
-        {
-            _context.Abbonamentis.Update(abbonamento);
-        }
+        await using var context = await _contextFactory.CreateDbContextAsync();
 
-        return await _context.SaveChangesAsync() > 0;
+        bool nuovo = abbonamento.Id == 0;
+        if (nuovo) abbonamento.Attivo = 1;
+
+        AgganciaPerSalvataggio(context, abbonamento, nuovo);
+        return await context.SaveChangesAsync() > 0;
     }
 
     public async Task<bool> EliminaAbbonamentoAsync(int id)
     {
-        var abb = await _context.Abbonamentis.FindAsync(id);
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
+        var abb = await context.Abbonamentis.FindAsync(id);
         if (abb == null) return false;
 
         abb.Attivo = 0; // Soft delete
-        _context.Abbonamentis.Update(abb);
-        return await _context.SaveChangesAsync() > 0;
+        return await context.SaveChangesAsync() > 0;
     }
 
     // ================================================
@@ -266,25 +287,22 @@ public class DatabaseService : IDatabaseService
 
     public async Task<List<CalendarioChiusure>> GetChiusureAsync()
     {
-        return await _context.CalendarioChiusures
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
+        return await context.CalendarioChiusures
             .OrderBy(c => c.DataInizio)
             .ToListAsync();
     }
 
     public async Task<(bool Successo, int AbbonamentiEstesi)> SalvaChiusuraAsync(CalendarioChiusure chiusura)
     {
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
         bool eraNuova = chiusura.Id == 0;
 
-        if (chiusura.Id == 0)
-        {
-            _context.CalendarioChiusures.Add(chiusura);
-        }
-        else
-        {
-            _context.CalendarioChiusures.Update(chiusura);
-        }
+        AgganciaPerSalvataggio(context, chiusura, eraNuova);
 
-        bool salvataggioOk = await _context.SaveChangesAsync() > 0;
+        bool salvataggioOk = await context.SaveChangesAsync() > 0;
         int abbonamentiEstesi = 0;
 
         // Estensione automatica: solo per NUOVE "Chiusure" (mai per gli "Eventi",
@@ -302,7 +320,7 @@ public class DatabaseService : IDatabaseService
             {
                 // Solo gli abbonamenti ATTUALMENTE ATTIVI il cui periodo si sovrappone
                 // alla chiusura (già esistenti a DB in questo momento).
-                var abbonamentiSovrapposti = await _context.Abbonamentis
+                var abbonamentiSovrapposti = await context.Abbonamentis
                     .Where(a => a.Attivo == 1
                         && a.DataInizio.Date <= dataFineChiusura.Date
                         && a.DataScadenza.Date >= dataInizioChiusura.Date)
@@ -311,12 +329,11 @@ public class DatabaseService : IDatabaseService
                 foreach (var abbonamento in abbonamentiSovrapposti)
                 {
                     abbonamento.DataScadenza = abbonamento.DataScadenza.AddDays(giorniChiusura);
-                    _context.Abbonamentis.Update(abbonamento);
                 }
 
                 if (abbonamentiSovrapposti.Count > 0)
                 {
-                    await _context.SaveChangesAsync();
+                    await context.SaveChangesAsync();
                     abbonamentiEstesi = abbonamentiSovrapposti.Count;
                 }
             }
@@ -327,11 +344,13 @@ public class DatabaseService : IDatabaseService
 
     public async Task<bool> EliminaChiusuraAsync(int id)
     {
-        var chiusura = await _context.CalendarioChiusures.FindAsync(id);
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
+        var chiusura = await context.CalendarioChiusures.FindAsync(id);
         if (chiusura == null) return false;
 
-        _context.CalendarioChiusures.Remove(chiusura);
-        return await _context.SaveChangesAsync() > 0;
+        context.CalendarioChiusures.Remove(chiusura);
+        return await context.SaveChangesAsync() > 0;
     }
 
     // ================================================
@@ -340,7 +359,9 @@ public class DatabaseService : IDatabaseService
 
     public async Task<List<Privacy>> GetPrivacyAllievoAsync(int allievoId)
     {
-        return await _context.Privacies
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
+        return await context.Privacies
             .Where(p => p.IdAllievo == allievoId)
             .OrderByDescending(p => p.Data)
             .ToListAsync();
@@ -348,15 +369,11 @@ public class DatabaseService : IDatabaseService
 
     public async Task<bool> SalvaPrivacyAsync(Privacy privacy)
     {
-        if (privacy.Id == 0)
-        {
-            _context.Privacies.Add(privacy);
-        }
-        else
-        {
-            _context.Privacies.Update(privacy);
-        }
+        await using var context = await _contextFactory.CreateDbContextAsync();
 
-        return await _context.SaveChangesAsync() > 0;
+        bool nuova = privacy.Id == 0;
+
+        AgganciaPerSalvataggio(context, privacy, nuova);
+        return await context.SaveChangesAsync() > 0;
     }
 }

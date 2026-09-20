@@ -10,9 +10,9 @@ public partial class CorsiPage : ContentPage
         BindingContext = _viewModel = viewModel;
     }
 
-    protected override async void OnAppearing()
+    protected override void OnAppearing()
     {
         base.OnAppearing();
-        await _viewModel.CaricaCorsiCommand.ExecuteAsync(null);
+        _ = _viewModel.CaricaCorsiAsync();
     }
 }

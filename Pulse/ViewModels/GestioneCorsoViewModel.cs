@@ -54,8 +54,7 @@ public partial class GestioneCorsoViewModel : BaseViewModel
     [ObservableProperty]
     private bool _isEdizione = false;
 
-    public GestioneCorsoViewModel(INavigationService navigationService, IDatabaseService dbService, IImpostazioniService impostazioniService)
-        : base(navigationService)
+    public GestioneCorsoViewModel(IDatabaseService dbService, IImpostazioniService impostazioniService)
     {
         _dbService = dbService;
         _impostazioniService = impostazioniService;

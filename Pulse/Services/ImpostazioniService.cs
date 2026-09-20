@@ -5,16 +5,18 @@ namespace Pulse.Services;
 
 public class ImpostazioniService : IImpostazioniService
 {
-    private readonly PulseContext _context;
+    private readonly IDbContextFactory<PulseContext> _contextFactory;
 
-    public ImpostazioniService(PulseContext context)
+    public ImpostazioniService(IDbContextFactory<PulseContext> contextFactory)
     {
-        _context = context;
+        _contextFactory = contextFactory;
     }
 
     public async Task<Impostazioni> GetImpostazioniAsync()
     {
-        var impostazioni = await _context.Impostazionis.FirstOrDefaultAsync();
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
+        var impostazioni = await context.Impostazionis.FirstOrDefaultAsync();
 
         if (impostazioni == null)
         {
@@ -27,8 +29,8 @@ public class ImpostazioniService : IImpostazioniService
                 EmailUseSsl = 1
             };
 
-            _context.Impostazionis.Add(impostazioni);
-            await _context.SaveChangesAsync();
+            context.Impostazionis.Add(impostazioni);
+            await context.SaveChangesAsync();
         }
 
         return impostazioni;
@@ -36,7 +38,9 @@ public class ImpostazioniService : IImpostazioniService
 
     public async Task<bool> SalvaImpostazioniAsync(Impostazioni impostazioni)
     {
-        _context.Impostazionis.Update(impostazioni);
-        return await _context.SaveChangesAsync() > 0;
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
+        context.Impostazionis.Update(impostazioni);
+        return await context.SaveChangesAsync() > 0;
     }
 }

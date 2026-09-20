@@ -21,6 +21,8 @@ public partial class CalendarioPage : ContentPage
         InitializeComponent();
         _viewModel = viewModel;
         BindingContext = viewModel;
+
+        CaricaFasceSalvate();
     }
 
     protected override void OnAppearing()
@@ -31,7 +33,7 @@ public partial class CalendarioPage : ContentPage
             MainThread.BeginInvokeOnMainThread(GeneraGriglia);
         });
 
-        _ = _viewModel.LoadData();
+        _ = _viewModel.CaricaDatiAsync();
     }
 
     protected override void OnDisappearing()
@@ -57,9 +59,12 @@ public partial class CalendarioPage : ContentPage
     }
 
     // ================================================
-    // GRIGLIA "A BANDE" (Mattina / Pomeriggio / Sera) — comportamento classico
+    // INTESTAZIONE CONDIVISA
+    // Prepara colonne, riga di testata e celle dei giorni.
+    // Usata da entrambe le griglie: cambia solo il titolo della prima colonna.
+    // Restituisce l'elenco dei giorni, che serve poi a chi costruisce le righe.
     // ================================================
-    private void GeneraGrigliaABande()
+    private List<DayOfWeek> PreparaGrigliaEIntestazione(string titoloPrimaColonna)
     {
         var grid = CalendarioGrid;
         grid.Children.Clear();
@@ -76,51 +81,47 @@ public partial class CalendarioPage : ContentPage
 
         grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
-        grid.Add(new Border
-        {
-            BackgroundColor = Color.FromArgb("#F8FAFC"),
-            Padding = 10,
-            HorizontalOptions = LayoutOptions.Fill,
-            VerticalOptions = LayoutOptions.Fill,
-            StrokeThickness = 0.5,
-            Stroke = Color.FromArgb("#E2E8F0"),
-            Content = new Label
-            {
-                Text = "Fascia / Orario",
-                FontAttributes = FontAttributes.Bold,
-                FontSize = 12,
-                TextColor = Color.FromArgb("#1E293B"),
-                HorizontalOptions = LayoutOptions.Center,
-                VerticalOptions = LayoutOptions.Center
-            }
-        }, 0, 0);
+        grid.Add(CreaCellaIntestazione(titoloPrimaColonna, isOggi: false), 0, 0);
 
         for (int i = 0; i < giorni.Count; i++)
         {
-            var nome = _viewModel.GetNomeGiorno(giorni[i]);
             var isOggi = DateTime.Today.DayOfWeek == giorni[i] &&
                          DateTime.Today >= _viewModel.SettimanaCorrente.Date &&
                          DateTime.Today < _viewModel.SettimanaCorrente.Date.AddDays(7);
 
-            grid.Add(new Border
-            {
-                BackgroundColor = isOggi ? Color.FromArgb("#DBEAFE") : Color.FromArgb("#F8FAFC"),
-                Padding = 10,
-                HorizontalOptions = LayoutOptions.Fill,
-                VerticalOptions = LayoutOptions.Fill,
-                StrokeThickness = 0.5,
-                Stroke = Color.FromArgb("#E2E8F0"),
-                Content = new Label
-                {
-                    Text = nome,
-                    FontAttributes = FontAttributes.Bold,
-                    FontSize = 12,
-                    HorizontalOptions = LayoutOptions.Center,
-                    VerticalOptions = LayoutOptions.Center,
-                    TextColor = isOggi ? Color.FromArgb("#2563EB") : Color.FromArgb("#1E293B")
-                }
-            }, i + 1, 0);
+            grid.Add(CreaCellaIntestazione(_viewModel.GetNomeGiorno(giorni[i]), isOggi), i + 1, 0);
         }
+
+        return giorni;
+    }
+    private static Border CreaCellaIntestazione(string testo, bool isOggi) => new Border
+    {
+        BackgroundColor = isOggi ? Color.FromArgb("#DBEAFE") : Color.FromArgb("#F8FAFC"),
+        Padding = 10,
+        HorizontalOptions = LayoutOptions.Fill,
+        VerticalOptions = LayoutOptions.Fill,
+        StrokeThickness = 0.5,
+        Stroke = Color.FromArgb("#E2E8F0"),
+        Content = new Label
+        {
+            Text = testo,
+            FontAttributes = FontAttributes.Bold,
+            FontSize = 12,
+            HorizontalOptions = LayoutOptions.Center,
+            VerticalOptions = LayoutOptions.Center,
+            TextColor = isOggi ? Color.FromArgb("#2563EB") : Color.FromArgb("#1E293B")
+        }
+    };
+
+    // ================================================
+    // GRIGLIA "A BANDE" (Mattina / Pomeriggio / Sera) — comportamento classico
+    // ================================================
+
+
+    private void GeneraGrigliaABande()
+    {
+        var grid = CalendarioGrid;
+        var giorni = PreparaGrigliaEIntestazione("Fascia / Orario");
 
         var lezioni = _viewModel.LezioniSettimana;
         int rigaIndex = 1;
@@ -200,77 +201,18 @@ public partial class CalendarioPage : ContentPage
     private void GeneraGrigliaAOrario()
     {
         var grid = CalendarioGrid;
-        grid.Children.Clear();
-        grid.RowDefinitions.Clear();
-        grid.ColumnDefinitions.Clear();
-
-        var giorni = _viewModel.GiorniSettimana;
-
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(140, GridUnitType.Absolute) });
-        for (int i = 0; i < giorni.Count; i++)
-        {
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-        }
-
-        grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-
-        grid.Add(new Border
-        {
-            BackgroundColor = Color.FromArgb("#F8FAFC"),
-            Padding = 10,
-            HorizontalOptions = LayoutOptions.Fill,
-            VerticalOptions = LayoutOptions.Fill,
-            StrokeThickness = 0.5,
-            Stroke = Color.FromArgb("#E2E8F0"),
-            Content = new Label
-            {
-                Text = "Orario",
-                FontAttributes = FontAttributes.Bold,
-                FontSize = 12,
-                TextColor = Color.FromArgb("#1E293B"),
-                HorizontalOptions = LayoutOptions.Center,
-                VerticalOptions = LayoutOptions.Center
-            }
-        }, 0, 0);
-
-        for (int i = 0; i < giorni.Count; i++)
-        {
-            var nome = _viewModel.GetNomeGiorno(giorni[i]);
-            var isOggi = DateTime.Today.DayOfWeek == giorni[i] &&
-                         DateTime.Today >= _viewModel.SettimanaCorrente.Date &&
-                         DateTime.Today < _viewModel.SettimanaCorrente.Date.AddDays(7);
-
-            grid.Add(new Border
-            {
-                BackgroundColor = isOggi ? Color.FromArgb("#DBEAFE") : Color.FromArgb("#F8FAFC"),
-                Padding = 10,
-                HorizontalOptions = LayoutOptions.Fill,
-                VerticalOptions = LayoutOptions.Fill,
-                StrokeThickness = 0.5,
-                Stroke = Color.FromArgb("#E2E8F0"),
-                Content = new Label
-                {
-                    Text = nome,
-                    FontAttributes = FontAttributes.Bold,
-                    FontSize = 12,
-                    HorizontalOptions = LayoutOptions.Center,
-                    VerticalOptions = LayoutOptions.Center,
-                    TextColor = isOggi ? Color.FromArgb("#2563EB") : Color.FromArgb("#1E293B")
-                }
-            }, i + 1, 0);
-        }
+        var giorni = PreparaGrigliaEIntestazione("Orario");
 
         var lezioni = _viewModel.LezioniSettimana;
-        var fasceOrarie = _viewModel.FasceOrarie;
+        var slotOrari = _viewModel.SlotOrari;
         int intervalloMinuti = _viewModel.IntervalloMinuti;
         int rigaIndex = 1;
 
-        foreach (var fascia in fasceOrarie)
+        foreach (var oraInizioSlot in slotOrari)
         {
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
-            var oraInizioSlot = fascia.Orario;
-            var oraFineSlot = fascia.Orario.Add(TimeSpan.FromMinutes(intervalloMinuti));
+            var oraFineSlot = oraInizioSlot.Add(TimeSpan.FromMinutes(intervalloMinuti));
 
             var cellaOrario = new Border
             {
@@ -395,6 +337,20 @@ public partial class CalendarioPage : ContentPage
         return cellaGiorno;
     }
 
+    // Le bande personalizzate vengono ricordate tra un'apertura e l'altra,
+    // come già succede per i filtri Dalle / Alle / Intervallo del ViewModel.
+    private void CaricaFasceSalvate()
+    {
+        foreach (var fascia in _fasceOrarie)
+        {
+            if (TimeSpan.TryParse(Preferences.Get($"Fascia_{fascia.Nome}_Inizio", string.Empty), out var inizio))
+                fascia.OraInizio = inizio;
+
+            if (TimeSpan.TryParse(Preferences.Get($"Fascia_{fascia.Nome}_Fine", string.Empty), out var fine))
+                fascia.OraFine = fine;
+        }
+    }
+
     private async Task PersonalizzaFasciaOraria(FasciaOraria fascia)
     {
         string resInizio = await DisplayPromptAsync(
@@ -422,6 +378,9 @@ public partial class CalendarioPage : ContentPage
 
         fascia.OraInizio = nuovaOraInizio;
         fascia.OraFine = nuovaOraFine;
+
+        Preferences.Set($"Fascia_{fascia.Nome}_Inizio", nuovaOraInizio.ToString());
+        Preferences.Set($"Fascia_{fascia.Nome}_Fine", nuovaOraFine.ToString());
 
         GeneraGriglia();
     }

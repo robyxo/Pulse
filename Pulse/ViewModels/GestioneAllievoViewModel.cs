@@ -102,13 +102,12 @@ public partial class GestioneAllievoViewModel : BaseViewModel
 
     private bool _stampaRicevutaCortesiaAttiva = true;
 
-    public GestioneAllievoViewModel(INavigationService navigationService, IDatabaseService dbService, IImpostazioniService impostazioniService, RicevutaService ricevutaService)
- : base(navigationService)
+    public GestioneAllievoViewModel(IDatabaseService dbService, IImpostazioniService impostazioniService, RicevutaService ricevutaService, PrivacyDocumentService privacyDocumentService)
     {
         _dbService = dbService;
         _impostazioniService = impostazioniService;
         _ricevutaService = ricevutaService;
-        _privacyDocumentService = new PrivacyDocumentService();
+        _privacyDocumentService = privacyDocumentService;
         Title = "Gestione Allievo";
 
         _ = CaricaFlagImpostazioniAsync();
@@ -118,7 +117,8 @@ public partial class GestioneAllievoViewModel : BaseViewModel
     {
         var impostazioni = await _impostazioniService.GetImpostazioniAsync();
         _stampaRicevutaCortesiaAttiva = impostazioni.StampaRicevutaCortesia == 1;
-        MostraBottonePrivacy = impostazioni.StampaDocumentoPrivacy == 1;
+        MostraBottonePrivacy = impostazioni.StampaDocumentoPrivacy == 1
+                               && PrivacyDocumentService.AlmenoUnModelloDisponibile;
     }
 
     partial void OnAllievoChanged(Allievi value)
@@ -345,6 +345,9 @@ public partial class GestioneAllievoViewModel : BaseViewModel
     }
 
     // 🔄 RINNOVA ABBONAMENTO
+    // Ogni rinnovo è un NUOVO record: l'incasso resta registrato e lo storico
+    // dei pagamenti rimane consultabile. Stessa regola del pagamento rapido
+    // dal calendario.
     [RelayCommand]
     public async Task RinnovaAbbonamentoAsync(Abbonamenti abbonamento)
     {
@@ -357,60 +360,98 @@ public partial class GestioneAllievoViewModel : BaseViewModel
             _ => 28
         };
 
-        bool isGiaAttivo = abbonamento.DataScadenza >= DateTime.Now.Date;
-        DateTime baseData = isGiaAttivo ? abbonamento.DataScadenza : DateTime.Now;
-        DateTime nuovaScadenzaCalcolata = baseData.AddDays(giorniAggiunti);
+        // Se l'abbonamento è ancora valido il rinnovo parte dalla sua scadenza,
+        // altrimenti da oggi.
+        bool isGiaAttivo = abbonamento.DataScadenza.Date >= DateTime.Today;
+        DateTime dataInizio = isGiaAttivo ? abbonamento.DataScadenza : DateTime.Now;
+        DateTime nuovaScadenza = dataInizio.AddDays(giorniAggiunti);
+
+        double importo = abbonamento.TipoAbbonamento switch
+        {
+            "Singolo" => abbonamento.Corso?.CostoSingolo ?? 0,
+            "Annuale" => abbonamento.Corso?.CostoAnnuale ?? 0,
+            _ => abbonamento.Corso?.CostoMensile ?? 0
+        };
+
+        // Se il corso non ha più un prezzo impostato, si riusa quello dell'ultimo pagamento
+        if (importo <= 0) importo = abbonamento.ImportoTotale;
 
         bool conferma = await Shell.Current.DisplayAlert(
             "Conferma Rinnovo",
-            $"Vuoi rinnovare l'abbonamento fino al {nuovaScadenzaCalcolata:dd/MM/yyyy}?",
+            $"Vuoi registrare un nuovo pagamento di € {importo:N2} per '{abbonamento.Corso?.Nome ?? abbonamento.TipoAbbonamento}'?\n\nValidità: dal {dataInizio:dd/MM/yyyy} al {nuovaScadenza:dd/MM/yyyy}.",
             "Sì, Rinnova",
             "Annulla");
 
         if (!conferma) return;
 
-        abbonamento.DataScadenza = nuovaScadenzaCalcolata;
-        abbonamento.IsSospeso = 0;
-        abbonamento.DataSospensione = null;
-        abbonamento.GiorniRimanentiCongelati = 0;
-
-        if (abbonamento.Id > 0)
+        var rinnovo = new Abbonamenti
         {
-            await _dbService.SalvaAbbonamentoAsync(abbonamento);
-        }
+            AllievoId = abbonamento.AllievoId,
+            Allievo = this.Allievo,
+            CorsoId = abbonamento.CorsoId,
+            Corso = abbonamento.Corso,
+            TipoAbbonamento = abbonamento.TipoAbbonamento,
+            DataInizio = dataInizio,
+            DataScadenza = nuovaScadenza,
+            ImportoTotale = importo,
+            ImportoPagato = importo,
+            IsPagato = 1,
+            IsSospeso = 0,
+            Attivo = 1
+        };
 
-        ApplicaFiltroEPaginazione();
+        await EseguiConCaricamento(async () =>
+        {
+            await _dbService.SalvaAbbonamentoAsync(rinnovo);
+
+            _listaAbbonamentiMaster.Insert(0, rinnovo);
+            PaginaCorrente = 1;
+            ApplicaFiltroEPaginazione();
+        });
 
         if (_stampaRicevutaCortesiaAttiva)
         {
             bool vuoleStampare = await Shell.Current.DisplayAlert(
                 "Rinnovato",
-                $"Abbonamento rinnovato fino al {abbonamento.DataScadenza:dd/MM/yyyy}!\n\nVuoi stampare la ricevuta di cortesia?",
+                $"Pagamento di € {importo:N2} registrato.\nNuova scadenza: {nuovaScadenza:dd/MM/yyyy}.\n\nVuoi stampare la ricevuta di cortesia?",
                 "Sì, Stampa",
                 "No");
 
             if (vuoleStampare)
             {
-                await StampaRicevutaAsync(abbonamento);
+                await StampaRicevutaAsync(rinnovo);
             }
         }
     }
 
+    // ➕ AGGIUNGI 1 SETTIMANA (recupero lezione persa)
+    [RelayCommand]
+    public Task AumentaSettimanaAbbonamentoAsync(Abbonamenti abbonamento) =>
+        SpostaScadenzaAsync(abbonamento, 7);
+
     // ➖ TOGLI 1 SETTIMANA (correzione manuale della scadenza)
     [RelayCommand]
-    public async Task DiminuisciSettimanaAbbonamentoAsync(Abbonamenti abbonamento)
+    public Task DiminuisciSettimanaAbbonamentoAsync(Abbonamenti abbonamento) =>
+        SpostaScadenzaAsync(abbonamento, -7);
+
+    private async Task SpostaScadenzaAsync(Abbonamenti abbonamento, int giorni)
     {
         if (abbonamento == null) return;
 
-        DateTime nuovaScadenza = abbonamento.DataScadenza.AddDays(-7);
+        DateTime nuovaScadenza = abbonamento.DataScadenza.AddDays(giorni);
 
-        bool conferma = await Shell.Current.DisplayAlert(
-            "Togli 1 Settimana",
-            $"Vuoi anticipare la scadenza di 7 giorni?\nNuova scadenza: {nuovaScadenza:dd/MM/yyyy}",
-            "Sì, Togli",
-            "Annulla");
+        // Togliere giorni è un'operazione distruttiva: si chiede conferma prima.
+        // Aggiungerli no: si avvisa dopo, a cose fatte.
+        if (giorni < 0)
+        {
+            bool conferma = await Shell.Current.DisplayAlert(
+                "Togli 1 Settimana",
+                $"Vuoi anticipare la scadenza di {Math.Abs(giorni)} giorni?\nNuova scadenza: {nuovaScadenza:dd/MM/yyyy}",
+                "Sì, Togli",
+                "Annulla");
 
-        if (!conferma) return;
+            if (!conferma) return;
+        }
 
         abbonamento.DataScadenza = nuovaScadenza;
 
@@ -420,27 +461,14 @@ public partial class GestioneAllievoViewModel : BaseViewModel
         }
 
         ApplicaFiltroEPaginazione();
-    }
 
-    // ➕ AGGIUNGI 1 SETTIMANA (recupero lezione persa)
-    [RelayCommand]
-    public async Task AumentaSettimanaAbbonamentoAsync(Abbonamenti abbonamento)
-    {
-        if (abbonamento == null) return;
-
-        abbonamento.DataScadenza = abbonamento.DataScadenza.AddDays(7);
-
-        if (abbonamento.Id > 0)
+        if (giorni > 0)
         {
-            await _dbService.SalvaAbbonamentoAsync(abbonamento);
+            await Shell.Current.DisplayAlert(
+                "Settimana di Recupero Aggiunta",
+                $"Nuova scadenza: {abbonamento.DataScadenza:dd/MM/yyyy}.",
+                "OK");
         }
-
-        ApplicaFiltroEPaginazione();
-
-        await Shell.Current.DisplayAlert(
-            "Settimana di Recupero Aggiunta",
-            $"Nuova scadenza: {abbonamento.DataScadenza:dd/MM/yyyy}.",
-            "OK");
     }
 
     // 🗑️ ELIMINA ABBONAMENTO
@@ -523,9 +551,11 @@ public partial class GestioneAllievoViewModel : BaseViewModel
 
             await _dbService.SalvaAllievoAsync(Allievo);
 
-            foreach (var abb in _listaAbbonamentiMaster)
+            // Solo gli abbonamenti creati prima che l'allievo avesse un Id
+            // hanno bisogno di essere salvati adesso, con il collegamento corretto.
+            foreach (var abb in _listaAbbonamentiMaster.Where(a => a.AllievoId == 0))
             {
-                if (abb.AllievoId == 0) abb.AllievoId = Allievo.Id;
+                abb.AllievoId = Allievo.Id;
                 await _dbService.SalvaAbbonamentoAsync(abb);
             }
         });
@@ -545,12 +575,24 @@ public partial class GestioneAllievoViewModel : BaseViewModel
 
         SincronizzaAllievoDaCampi();
 
-        string scelta = await Shell.Current.DisplayActionSheet(
-            "Documento Privacy - Come lo vuoi?",
-            "Annulla",
-            null,
-            "Documento Compilato",
-            "Modulo Vuoto");
+        // Propone solo i modelli effettivamente presenti nella cartella Privacy
+        var opzioni = new List<string>();
+        if (PrivacyDocumentService.ModelloCompilatoDisponibile) opzioni.Add("Documento Compilato");
+        if (PrivacyDocumentService.ModelloVuotoDisponibile) opzioni.Add("Modulo Vuoto");
+
+        if (opzioni.Count == 0)
+        {
+            await Shell.Current.DisplayAlert(
+                "Modelli non presenti",
+                "Non è stato inserito nessun modello privacy nella cartella Privacy dell'applicazione. Vedi il file LEGGIMI.txt.",
+                "OK");
+            return;
+        }
+
+        // Con un solo modello disponibile è inutile far scegliere
+        string scelta = opzioni.Count == 1
+            ? opzioni[0]
+            : await Shell.Current.DisplayActionSheet("Documento Privacy - Come lo vuoi?", "Annulla", null, opzioni.ToArray());
 
         if (scelta == "Documento Compilato")
         {
