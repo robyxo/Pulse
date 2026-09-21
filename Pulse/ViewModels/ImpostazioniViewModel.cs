@@ -11,6 +11,7 @@ public partial class ImpostazioniViewModel : BaseViewModel
     private readonly IImpostazioniService _impostazioniService;
     private readonly IEmailService _emailService;
     private readonly IBackupService _backupService;
+    private readonly IAggiornamentoService _aggiornamentoService;
 
     private static readonly Dictionary<string, (string Host, int Porta, bool Ssl)> ProviderNoti =
         new(StringComparer.OrdinalIgnoreCase)
@@ -239,11 +240,12 @@ public partial class ImpostazioniViewModel : BaseViewModel
     [ObservableProperty]
     private bool _funzioneMaestroAvanzataAttiva;
 
-    public ImpostazioniViewModel(IImpostazioniService impostazioniService, IEmailService emailService, IBackupService backupService)
+    public ImpostazioniViewModel(IImpostazioniService impostazioniService, IEmailService emailService, IBackupService backupService, IAggiornamentoService aggiornamentoService)
     {
         _impostazioniService = impostazioniService;
         _emailService = emailService;
         _backupService = backupService;
+        _aggiornamentoService = aggiornamentoService;
         Title = "Impostazioni";
     }
 
@@ -307,6 +309,13 @@ public partial class ImpostazioniViewModel : BaseViewModel
                 await Shell.Current.DisplayAlert("Errore Invio", $"Invio non riuscito:\n{errore}", "OK");
         });
     }
+
+    // --- AGGIORNAMENTI ---
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(MostraStatoAggiornamento))]
+    private string _statoAggiornamento = string.Empty;
+
+    public bool MostraStatoAggiornamento => !string.IsNullOrWhiteSpace(StatoAggiornamento);
 
     // --- BACKUP E RIPRISTINO ---
     [ObservableProperty]
@@ -560,6 +569,53 @@ public partial class ImpostazioniViewModel : BaseViewModel
             else
             {
                 await Shell.Current.DisplayAlert("Errore", $"Reset non riuscito:\n{errore}", "OK");
+            }
+        });
+    }
+
+    [RelayCommand]
+    public async Task ControllaAggiornamentiAsync()
+    {
+        await EseguiConCaricamento(async () =>
+        {
+            StatoAggiornamento = "Controllo in corso...";
+
+            var (ceUnAggiornamento, nuovaVersione, errore) = await _aggiornamentoService.ControllaAggiornamentiAsync();
+
+            if (errore != null)
+            {
+                StatoAggiornamento = errore;
+                await Shell.Current.DisplayAlert("Aggiornamenti", errore, "OK");
+                return;
+            }
+
+            if (!ceUnAggiornamento)
+            {
+                StatoAggiornamento = "Pulse è già aggiornato all'ultima versione.";
+                await Shell.Current.DisplayAlert("Aggiornamenti", StatoAggiornamento, "OK");
+                return;
+            }
+
+            bool vuoleAggiornare = await Shell.Current.DisplayAlert(
+                "Aggiornamento disponibile",
+                $"È disponibile la versione {nuovaVersione}.\n\nVuoi scaricarla e installarla adesso?\nPulse si chiuderà e si riaprirà da solo al termine.",
+                "Sì, aggiorna",
+                "Più tardi");
+
+            if (!vuoleAggiornare)
+            {
+                StatoAggiornamento = $"Versione {nuovaVersione} disponibile: puoi installarla quando vuoi.";
+                return;
+            }
+
+            var progresso = new Progress<int>(p => StatoAggiornamento = $"Scaricamento in corso... {p}%");
+
+            var (successo, erroreDownload) = await _aggiornamentoService.ScaricaEInstallaAsync(progresso);
+
+            if (!successo)
+            {
+                StatoAggiornamento = "Aggiornamento non riuscito.";
+                await Shell.Current.DisplayAlert("Errore", $"Non è stato possibile aggiornare Pulse:\n{erroreDownload}", "OK");
             }
         });
     }

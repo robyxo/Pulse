@@ -83,6 +83,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IBackupService, BackupService>();
         builder.Services.AddSingleton<CompensiMaestriService>();
         builder.Services.AddSingleton<PrivacyDocumentService>();
+        builder.Services.AddSingleton<IAggiornamentoService, AggiornamentoService>();
 
         ConfigureWindowsSpecific(builder);
 

@@ -7,7 +7,6 @@ namespace Pulse.Services;
 
 public class BackupService : IBackupService
 {
-    private readonly PulseContext _context;
     private readonly IDbContextFactory<PulseContext> _contextFactory;
     private readonly IImpostazioniService _impostazioniService;
 

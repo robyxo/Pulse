@@ -644,6 +644,39 @@
                     </VerticalStackLayout>
                 </Border>
 
+                <!--  SEZIONE: AGGIORNAMENTI  -->
+                <Border
+                    Padding="16"
+                    BackgroundColor="White"
+                    Stroke="#E2E8F0"
+                    StrokeShape="RoundRectangle 12">
+                    <VerticalStackLayout Spacing="10">
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="16"
+                            Text="🔄 Aggiornamenti" />
+
+                        <Label
+                            FontSize="12"
+                            Text="Pulse controlla da solo se ci sono aggiornamenti all'avvio. Da qui puoi forzare il controllo in qualsiasi momento."
+                            TextColor="Gray" />
+
+                        <Label
+                            FontSize="12"
+                            IsVisible="{Binding MostraStatoAggiornamento}"
+                            Text="{Binding StatoAggiornamento}"
+                            TextColor="#1E293B" />
+
+                        <Button
+                            BackgroundColor="#4F46E5"
+                            Command="{Binding ControllaAggiornamentiCommand}"
+                            CornerRadius="8"
+                            HeightRequest="42"
+                            Text="Controlla aggiornamenti"
+                            TextColor="White" />
+                    </VerticalStackLayout>
+                </Border>
+
                 <!--  PULSANTE SALVA  -->
                 <Button
                     BackgroundColor="#10B981"
