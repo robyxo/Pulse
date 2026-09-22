@@ -167,21 +167,35 @@ public partial class GestioneAllievoViewModel : BaseViewModel
             var abbonamenti = await _dbService.GetAbbonamentiAllievoAsync(Allievo.Id);
             _listaAbbonamentiMaster = abbonamenti.OrderByDescending(a => a.DataInizio).ToList();
 
-            var anni = _listaAbbonamentiMaster
-                .Select(a => a.DataInizio.Year.ToString())
-                .Distinct()
-                .OrderByDescending(y => y)
-                .ToList();
-
-            anni.Insert(0, "Tutti gli anni");
-            AnniDisponibili = new ObservableCollection<string>(anni);
-
-            // Seleziona esplicitamente il primo valore per far apparire la scritta
-            AnnoSelezionato = AnniDisponibili.FirstOrDefault() ?? "Tutti gli anni";
+            AggiornaAnniDisponibili();
 
             PaginaCorrente = 1;
             ApplicaFiltroEPaginazione();
         }
+    }
+
+    /// <summary>
+    /// Ricostruisce l'elenco degli anni del filtro a partire dagli abbonamenti in memoria.
+    /// Va richiamato ogni volta che la lista cambia (nuovo abbonamento, rinnovo, eliminazione),
+    /// altrimenti un abbonamento di un anno non ancora presente resterebbe invisibile nel filtro.
+    /// </summary>
+    private void AggiornaAnniDisponibili()
+    {
+        string selezionePrecedente = AnnoSelezionato;
+
+        var anni = _listaAbbonamentiMaster
+            .Select(a => a.DataInizio.Year.ToString())
+            .Distinct()
+            .OrderByDescending(y => y)
+            .ToList();
+
+        anni.Insert(0, "Tutti gli anni");
+        AnniDisponibili = new ObservableCollection<string>(anni);
+
+        // Mantiene la selezione se l'anno esiste ancora, altrimenti torna a "Tutti gli anni"
+        AnnoSelezionato = anni.Contains(selezionePrecedente)
+            ? selezionePrecedente
+            : anni[0];
     }
 
     private void ApplicaFiltroEPaginazione()
@@ -202,7 +216,18 @@ public partial class GestioneAllievoViewModel : BaseViewModel
                 a.TipoAbbonamento.Contains(TestoRicercaAbbonamento, StringComparison.OrdinalIgnoreCase));
         }
 
-        var listaFiltrata = filtrati.ToList();
+        // 3. In tabella compare SOLO l'ultimo abbonamento di ogni corso.
+        //    Lo storico completo di quel corso si apre con l'icona 📋 sulla riga.
+        var listaFiltrata = filtrati
+            .GroupBy(a => a.CorsoId)
+            .Select(g => g
+                .OrderByDescending(a => a.DataInizio)
+                // A parita' di data vince l'inserimento piu' recente:
+                // un abbonamento non ancora salvato (Id 0) e' sempre l'ultimo aggiunto.
+                .ThenByDescending(a => a.Id == 0 ? int.MaxValue : a.Id)
+                .First())
+            .OrderByDescending(a => a.DataInizio)
+            .ToList();
 
         // Calcolo Pagine
         int totaleElementi = listaFiltrata.Count;
@@ -274,19 +299,29 @@ public partial class GestioneAllievoViewModel : BaseViewModel
         nuovo.AllievoId = Allievo.Id;
         nuovo.Allievo = Allievo;
 
+        // Se l'allievo è già a database, l'abbonamento si salva subito.
+        // Se invece è una scheda nuova (Id ancora 0), l'abbonamento resta in
+        // elenco e viene salvato insieme all'anagrafica quando si preme Salva.
         if (Allievo.Id > 0)
         {
             await _dbService.SalvaAbbonamentoAsync(nuovo);
-            _listaAbbonamentiMaster.Insert(0, nuovo);
-            PaginaCorrente = 1;
-            ApplicaFiltroEPaginazione();
         }
+
+        // In entrambi i casi deve comparire subito nella tabella.
+        _listaAbbonamentiMaster.Insert(0, nuovo);
+        AggiornaAnniDisponibili();
+        PaginaCorrente = 1;
+        ApplicaFiltroEPaginazione();
 
         if (_stampaRicevutaCortesiaAttiva)
         {
+            string messaggio = Allievo.Id > 0
+                ? $"Abbonamento registrato con successo!\nScadenza: {nuovo.DataScadenza:dd/MM/yyyy}."
+                : $"Abbonamento aggiunto.\nScadenza: {nuovo.DataScadenza:dd/MM/yyyy}.\n\n⚠️ Verrà salvato insieme all'allievo quando premi «Salva».";
+
             bool vuoleStampare = await Shell.Current.DisplayAlert(
                 "Abbonamento Creato",
-                $"Abbonamento registrato con successo!\nScadenza: {nuovo.DataScadenza:dd/MM/yyyy}.\n\nVuoi stampare la ricevuta di cortesia?",
+                $"{messaggio}\n\nVuoi stampare la ricevuta di cortesia?",
                 "Sì, Stampa",
                 "No");
 
@@ -366,11 +401,14 @@ public partial class GestioneAllievoViewModel : BaseViewModel
         DateTime dataInizio = isGiaAttivo ? abbonamento.DataScadenza : DateTime.Now;
         DateTime nuovaScadenza = dataInizio.AddDays(giorniAggiunti);
 
+        // Il corso è sempre valorizzato: GetAbbonamentiAllievoAsync fa Include(a => a.Corso).
+        var corso = abbonamento.Corso;
+
         double importo = abbonamento.TipoAbbonamento switch
         {
-            "Singolo" => abbonamento.Corso?.CostoSingolo ?? 0,
-            "Annuale" => abbonamento.Corso?.CostoAnnuale ?? 0,
-            _ => abbonamento.Corso?.CostoMensile ?? 0
+            "Singolo" => corso?.CostoSingolo ?? 0,
+            "Annuale" => corso?.CostoAnnuale ?? 0,
+            _ => corso?.CostoMensile ?? 0
         };
 
         // Se il corso non ha più un prezzo impostato, si riusa quello dell'ultimo pagamento
@@ -378,7 +416,7 @@ public partial class GestioneAllievoViewModel : BaseViewModel
 
         bool conferma = await Shell.Current.DisplayAlert(
             "Conferma Rinnovo",
-            $"Vuoi registrare un nuovo pagamento di € {importo:N2} per '{abbonamento.Corso?.Nome ?? abbonamento.TipoAbbonamento}'?\n\nValidità: dal {dataInizio:dd/MM/yyyy} al {nuovaScadenza:dd/MM/yyyy}.",
+            $"Vuoi registrare un nuovo pagamento di € {importo:N2} per '{corso?.Nome ?? abbonamento.TipoAbbonamento}'?\n\nValidità: dal {dataInizio:dd/MM/yyyy} al {nuovaScadenza:dd/MM/yyyy}.",
             "Sì, Rinnova",
             "Annulla");
 
@@ -389,7 +427,7 @@ public partial class GestioneAllievoViewModel : BaseViewModel
             AllievoId = abbonamento.AllievoId,
             Allievo = this.Allievo,
             CorsoId = abbonamento.CorsoId,
-            Corso = abbonamento.Corso,
+            Corso = corso!,
             TipoAbbonamento = abbonamento.TipoAbbonamento,
             DataInizio = dataInizio,
             DataScadenza = nuovaScadenza,
@@ -405,6 +443,7 @@ public partial class GestioneAllievoViewModel : BaseViewModel
             await _dbService.SalvaAbbonamentoAsync(rinnovo);
 
             _listaAbbonamentiMaster.Insert(0, rinnovo);
+            AggiornaAnniDisponibili();
             PaginaCorrente = 1;
             ApplicaFiltroEPaginazione();
         });
@@ -485,8 +524,30 @@ public partial class GestioneAllievoViewModel : BaseViewModel
                 await _dbService.EliminaAbbonamentoAsync(abbonamento.Id);
             }
             _listaAbbonamentiMaster.Remove(abbonamento);
+            AggiornaAnniDisponibili();
             ApplicaFiltroEPaginazione();
         }
+    }
+
+    // 📋 STORICO ABBONAMENTI DEL CORSO
+    // In tabella si vede solo l'ultimo abbonamento di ogni corso: da qui si apre
+    // l'elenco completo dei pagamenti di quell'allievo per quel corso.
+    [RelayCommand]
+    public async Task ApriStoricoAbbonamentiAsync(Abbonamenti abbonamento)
+    {
+        if (abbonamento == null) return;
+
+        var storico = _listaAbbonamentiMaster
+            .Where(a => a.CorsoId == abbonamento.CorsoId)
+            .ToList();
+
+        string nomeCorso = abbonamento.Corso?.Nome ?? abbonamento.TipoAbbonamento;
+        string nomeAllievo = string.IsNullOrWhiteSpace(Allievo.NomeCompleto)
+            ? $"{Nome} {Cognome}".Trim()
+            : Allievo.NomeCompleto;
+
+        var popup = new StoricoAbbonamentiPage(nomeCorso, nomeAllievo, storico);
+        await Shell.Current.Navigation.PushModalAsync(popup);
     }
 
     // 🖨️ STAMPA RICEVUTA
@@ -511,6 +572,13 @@ public partial class GestioneAllievoViewModel : BaseViewModel
         }
 
         abbonamento.Allievo ??= Allievo;
+
+        // Si sta stampando una ricevuta, quindi l'abbonamento è stato pagato:
+        // se non è ancora a database va salvato adesso, non alla chiusura scheda.
+        if (abbonamento.Id == 0 && Allievo.Id > 0)
+        {
+            await _dbService.SalvaAbbonamentoAsync(abbonamento);
+        }
 
         await _ricevutaService.StampaRicevutaCortesiaAsync(abbonamento);
     }
@@ -551,9 +619,11 @@ public partial class GestioneAllievoViewModel : BaseViewModel
 
             await _dbService.SalvaAllievoAsync(Allievo);
 
-            // Solo gli abbonamenti creati prima che l'allievo avesse un Id
-            // hanno bisogno di essere salvati adesso, con il collegamento corretto.
-            foreach (var abb in _listaAbbonamentiMaster.Where(a => a.AllievoId == 0))
+            // Salva gli abbonamenti non ancora presenti a database (Id == 0),
+            // cioè quelli aggiunti su una scheda allievo nuova.
+            // Il criterio è Id e non AllievoId: la stampa ricevuta può aver già
+            // valorizzato AllievoId senza però salvare l'abbonamento.
+            foreach (var abb in _listaAbbonamentiMaster.Where(a => a.Id == 0))
             {
                 abb.AllievoId = Allievo.Id;
                 await _dbService.SalvaAbbonamentoAsync(abb);

@@ -454,6 +454,18 @@
                                             Spacing="6"
                                             VerticalOptions="Center">
 
+                                            <!--  Storico completo degli abbonamenti di questo corso  -->
+                                            <Button
+                                                Padding="0"
+                                                BackgroundColor="#EDE9FE"
+                                                Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.ApriStoricoAbbonamentiCommand}"
+                                                CommandParameter="{Binding .}"
+                                                CornerRadius="16"
+                                                FontSize="13"
+                                                HeightRequest="32"
+                                                Text="📋"
+                                                WidthRequest="32" />
+
                                             <Button
                                                 Padding="0"
                                                 BackgroundColor="#F1F5F9"

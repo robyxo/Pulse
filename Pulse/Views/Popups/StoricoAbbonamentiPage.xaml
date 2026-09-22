@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Pulse.Views.Popups.StoricoAbbonamentiPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:popups="clr-namespace:Pulse.Views.Popups"
+    Title="Storico Abbonamenti"
+    BackgroundColor="#F8FAFC">
+
+    <Grid Padding="20" RowDefinitions="Auto,Auto,*,Auto" RowSpacing="12">
+
+        <!--  INTESTAZIONE  -->
+        <VerticalStackLayout Grid.Row="0" Spacing="2">
+            <Label
+                x:Name="LblCorso"
+                FontAttributes="Bold"
+                FontSize="18"
+                TextColor="#1E293B" />
+            <Label
+                x:Name="LblAllievo"
+                FontSize="13"
+                TextColor="#64748B" />
+            <Label
+                x:Name="LblConteggio"
+                FontSize="12"
+                TextColor="#94A3B8" />
+        </VerticalStackLayout>
+
+        <BoxView
+            Grid.Row="1"
+            BackgroundColor="#E2E8F0"
+            HeightRequest="1" />
+
+        <!--  ELENCO  -->
+        <CollectionView
+            x:Name="ListaStorico"
+            Grid.Row="2"
+            SelectionMode="None">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="popups:RigaStorico">
+                    <Border
+                        Margin="0,0,0,8"
+                        Padding="12"
+                        BackgroundColor="White"
+                        Stroke="#E2E8F0"
+                        StrokeShape="RoundRectangle 10"
+                        StrokeThickness="1">
+                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                            <Label
+                                Grid.Row="0"
+                                Grid.Column="0"
+                                FontAttributes="Bold"
+                                FontSize="14"
+                                Text="{Binding Periodo}"
+                                TextColor="#1E293B" />
+                            <Label
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                FontAttributes="Bold"
+                                FontSize="14"
+                                HorizontalTextAlignment="End"
+                                Text="{Binding Importo}"
+                                TextColor="#0F766E" />
+                            <Label
+                                Grid.Row="1"
+                                Grid.Column="0"
+                                FontSize="12"
+                                Text="{Binding Tipo}"
+                                TextColor="#64748B" />
+                            <Label
+                                Grid.Row="1"
+                                Grid.Column="1"
+                                FontAttributes="Bold"
+                                FontSize="12"
+                                HorizontalTextAlignment="End"
+                                Text="{Binding Stato}"
+                                TextColor="{Binding ColoreStato}" />
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+
+            <CollectionView.EmptyView>
+                <Label
+                    FontSize="14"
+                    HorizontalTextAlignment="Center"
+                    Text="Nessun abbonamento registrato per questo corso."
+                    TextColor="#94A3B8" />
+            </CollectionView.EmptyView>
+        </CollectionView>
+
+        <!--  RIEPILOGO + CHIUSURA  -->
+        <Grid Grid.Row="3" ColumnDefinitions="*,Auto">
+            <Label
+                x:Name="LblTotale"
+                Grid.Column="0"
+                FontAttributes="Bold"
+                FontSize="14"
+                TextColor="#0F766E"
+                VerticalOptions="Center" />
+            <Button
+                Grid.Column="1"
+                BackgroundColor="#64748B"
+                Clicked="OnChiudiClicked"
+                CornerRadius="10"
+                FontAttributes="Bold"
+                HeightRequest="46"
+                Text="Chiudi"
+                TextColor="White"
+                WidthRequest="110" />
+        </Grid>
+
+    </Grid>
+</ContentPage>

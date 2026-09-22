@@ -240,14 +240,25 @@ public partial class CalendarioPage : ContentPage
                 var giornoCorrente = giorni[giornoIdx];
                 int giornoDb = (int)giornoCorrente == 0 ? 7 : (int)giornoCorrente;
 
+                // Una lezione occupa lo slot se il suo intervallo si SOVRAPPONE allo slot,
+                // non solo se inizia dentro lo slot: cosi' una lezione 09:00-10:00 con
+                // intervallo da 30 minuti copre sia la riga delle 09:00 sia quella delle 09:30.
                 var lezioniSlot = lezioni
                     .Where(l => l.GiornoSettimana == giornoDb &&
                                 TimeSpan.TryParse(l.OraInizio, out var inizio) &&
-                                inizio >= oraInizioSlot && inizio < oraFineSlot)
+                                TimeSpan.TryParse(l.OraFine, out var fine) &&
+                                inizio < oraFineSlot && fine > oraInizioSlot)
                     .OrderBy(l => TimeSpan.Parse(l.OraInizio))
                     .ToList();
 
-                var cellaGiorno = CreaCellaGiornoConLezioni(lezioniSlot, giornoCorrente, oraInizioSlot);
+                // Le lezioni gia' iniziate in uno slot precedente vengono disegnate
+                // come "proseguimento" (badge piu' tenue, senza ripetere l'orario).
+                var idProseguimento = lezioniSlot
+                    .Where(l => TimeSpan.TryParse(l.OraInizio, out var inizio) && inizio < oraInizioSlot)
+                    .Select(l => l.Id)
+                    .ToHashSet();
+
+                var cellaGiorno = CreaCellaGiornoConLezioni(lezioniSlot, giornoCorrente, oraInizioSlot, idProseguimento);
                 grid.Add(cellaGiorno, giornoIdx + 1, rigaIndex);
             }
 
@@ -259,7 +270,7 @@ public partial class CalendarioPage : ContentPage
     // HELPER CONDIVISO: costruisce la cella di un giorno con i badge delle lezioni
     // (usato sia dalla griglia a bande che da quella a orario)
     // ================================================
-    private Border CreaCellaGiornoConLezioni(List<Lezioni> lezioniCella, DayOfWeek giornoCorrente, TimeSpan oraCreazione)
+    private Border CreaCellaGiornoConLezioni(List<Lezioni> lezioniCella, DayOfWeek giornoCorrente, TimeSpan oraCreazione, HashSet<int>? idProseguimento = null)
     {
         var cellaGiorno = new Border
         {
@@ -283,6 +294,7 @@ public partial class CalendarioPage : ContentPage
         {
             var badgeColor = _viewModel.StringToColor(lezione.Corso?.Colore ?? "#4F46E5");
             var testoColor = _viewModel.StringToColor(lezione.Corso?.ColoreTesto ?? "#FFFFFF");
+            bool proseguimento = idProseguimento?.Contains(lezione.Id) == true;
 
             var badgeLayout = new VerticalStackLayout
             {
@@ -291,7 +303,9 @@ public partial class CalendarioPage : ContentPage
                 {
                     new Label
                     {
-                        Text = $"🕒 {lezione.OraInizio} - {lezione.OraFine}",
+                        Text = proseguimento
+                            ? $"↳ fino alle {lezione.OraFine}"
+                            : $"🕒 {lezione.OraInizio} - {lezione.OraFine}",
                         TextColor = testoColor,
                         FontSize = 10,
                         FontAttributes = FontAttributes.Bold
@@ -312,6 +326,7 @@ public partial class CalendarioPage : ContentPage
                 BackgroundColor = badgeColor,
                 Padding = 6,
                 StrokeThickness = 0,
+                Opacity = proseguimento ? 0.55 : 1,
                 Content = badgeLayout
             };
 

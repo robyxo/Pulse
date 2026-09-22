@@ -82,13 +82,19 @@ public class RicevutaService
 
     private string GeneraHtmlRicevuta(Abbonamenti a, Impostazioni impostazioni, string nomeScuola, string indirizzoScuola, string pivaScuola, string logoBase64, string orario)
     {
+        // Il foglietto viene stampato su un foglio A4 (la stampante lo tratta come tale)
+        // e posizionato nell'angolo in ALTO A DESTRA, dove la scuola appoggia i foglietti
+        // nel vassoio di alimentazione.
+        //   RicevutaMarginTopMm   -> distanza dal bordo superiore del foglio
+        //   RicevutaMarginRightMm -> distanza dal bordo destro del foglio
+        //   RicevutaMarginLeftMm  -> margine interno del foglietto
+        //   RicevutaMarginBottomMm non viene piu' usato per il posizionamento
         int larghezza = impostazioni.RicevutaLarghezzaMm ?? 90;
         int altezza = impostazioni.RicevutaAltezzaMm ?? 90;
-        int marginTop = impostazioni.RicevutaMarginTopMm ?? 10;
-        int marginRight = impostazioni.RicevutaMarginRightMm ?? 3;
-        int marginBottom = impostazioni.RicevutaMarginBottomMm ?? 3;
-        int marginLeft = impostazioni.RicevutaMarginLeftMm ?? 5;
-        int larghezzaContenuto = Math.Max(10, larghezza - marginLeft - marginRight);
+        int distanzaAlto = impostazioni.RicevutaMarginTopMm ?? 10;
+        int distanzaDestra = impostazioni.RicevutaMarginRightMm ?? 10;
+        int marginInterno = impostazioni.RicevutaMarginLeftMm ?? 5;
+
         string blocchettoLogo = string.IsNullOrWhiteSpace(logoBase64)
             ? string.Empty
             : $"<img src=\"{logoBase64}\" class=\"logo\" />";
@@ -119,87 +125,103 @@ public class RicevutaService
 <meta charset=""utf-8"" />
 <title>Ricevuta di Cortesia</title>
 <style>
-    @page {{
-    size: {larghezza}mm {altezza}mm;
-    margin: {marginTop}mm {marginRight}mm {marginBottom}mm {marginLeft}mm;
+@page {{
+    size: A4 portrait;
+    margin: 0;
 }}
 * {{ box-sizing: border-box; }}
-body {{
-    font-family: Arial, sans-serif;
-    width: {larghezzaContenuto}mm;
+html, body {{
     margin: 0;
     padding: 0;
-    font-size: 9px;
+}}
+body {{
+    width: 210mm;
+    height: 297mm;
+    position: relative;
+    font-family: Arial, Helvetica, sans-serif;
     color: #111;
 }}
-    .logo {{
-        display: block;
-        max-width: 100%;
-        max-height: 16mm;
-        margin: 0 auto 2mm auto;
-    }}
-    .intestazione {{
-        text-align: center;
-        font-weight: bold;
-        font-size: 11px;
-        margin-bottom: 1mm;
-    }}
-    .intestazione-sub {{
-        text-align: center;
-        font-size: 7px;
-        color: #444;
-        margin-bottom: 2mm;
-    }}
-    .titolo {{
-        text-align: center;
-        font-weight: bold;
-        font-size: 9px;
-        border-top: 1px dashed #999;
-        padding-top: 1.5mm;
-        margin-bottom: 0.5mm;
-    }}
-    .sottotitolo {{
-        text-align: center;
-        font-size: 6px;
-        color: #666;
-        font-style: italic;
-        border-bottom: 1px dashed #999;
-        padding-bottom: 1.5mm;
-        margin-bottom: 2mm;
-    }}
-    .pagamento {{
-        text-align: center;
-        font-weight: bold;
-        font-size: 10px;
-        margin-bottom: 2mm;
-    }}
-    .riga {{
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 1mm;
-        gap: 2mm;
-    }}
-    .riga span:first-child {{
-        font-weight: bold;
-        white-space: nowrap;
-    }}
-    .riga span:last-child {{
-        text-align: right;
-    }}
-    .note {{
-        text-align: center;
-        font-size: 6px;
-        color: #666;
-        margin-top: 2mm;
-        border-top: 1px dashed #999;
-        padding-top: 2mm;
-    }}
-.stampa-btn {{
+.foglietto {{
+    position: absolute;
+    top: {distanzaAlto}mm;
+    right: {distanzaDestra}mm;
+    width: {larghezza}mm;
+    height: {altezza}mm;
+    padding: {marginInterno}mm;
+    overflow: hidden;
+    font-size: 12px;
+    line-height: 1.35;
+}}
+.logo {{
     display: block;
-    width: 100%;
-    margin-top: 3mm;
-    padding: 6px 0;
-    font-size: 10px;
+    max-width: 100%;
+    max-height: 14mm;
+    margin: 0 auto 2.5mm auto;
+}}
+.intestazione {{
+    text-align: center;
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 1.5mm;
+}}
+.intestazione-sub {{
+    text-align: center;
+    font-size: 9px;
+    color: #444;
+    margin-bottom: 3mm;
+}}
+.titolo {{
+    text-align: center;
+    font-weight: bold;
+    font-size: 12px;
+    letter-spacing: 0.3px;
+    border-top: 1px dashed #999;
+    padding-top: 2.5mm;
+    margin-bottom: 1mm;
+}}
+.sottotitolo {{
+    text-align: center;
+    font-size: 8px;
+    color: #666;
+    font-style: italic;
+    border-bottom: 1px dashed #999;
+    padding-bottom: 2.5mm;
+    margin-bottom: 3.5mm;
+}}
+.pagamento {{
+    text-align: center;
+    font-weight: bold;
+    font-size: 13px;
+    margin-bottom: 4mm;
+}}
+.riga {{
+    display: flex;
+    justify-content: space-between;
+    gap: 3mm;
+    margin-bottom: 2.5mm;
+    font-size: 12px;
+}}
+.riga span:first-child {{
+    font-weight: bold;
+    white-space: nowrap;
+}}
+.riga span:last-child {{
+    text-align: right;
+}}
+.note {{
+    text-align: center;
+    font-size: 8px;
+    color: #666;
+    margin-top: 3.5mm;
+    border-top: 1px dashed #999;
+    padding-top: 2.5mm;
+}}
+.stampa-btn {{
+    position: absolute;
+    left: 15mm;
+    bottom: 15mm;
+    padding: 10px 24px;
+    font-size: 13px;
     font-weight: bold;
     background-color: #4F46E5;
     color: white;
@@ -208,30 +230,31 @@ body {{
     cursor: pointer;
 }}
 @media print {{
-    .stampa-btn {{
-        display: none;
-    }}
+    .stampa-btn {{ display: none; }}
 }}
 </style>
 </head>
 <body>
-    {blocchettoLogo}
-    <div class=""intestazione"">{nomeScuola}</div>
-    {(string.IsNullOrWhiteSpace(subIntestazione) ? "" : $@"<div class=""intestazione-sub"">{subIntestazione}</div>")}
+    <div class=""foglietto"">
+        {blocchettoLogo}
+        <div class=""intestazione"">{nomeScuola}</div>
+        {(string.IsNullOrWhiteSpace(subIntestazione) ? "" : $@"<div class=""intestazione-sub"">{subIntestazione}</div>")}
 
-    <div class=""titolo"">RICEVUTA DI CORTESIA</div>
-    <div class=""sottotitolo"">Valido solo come attestazione di pagamento</div>
+        <div class=""titolo"">RICEVUTA DI CORTESIA</div>
+        <div class=""sottotitolo"">Valido solo come attestazione di pagamento</div>
 
-    <div class=""pagamento"">{frasePagamento}</div>
+        <div class=""pagamento"">{frasePagamento}</div>
 
-    <div class=""riga""><span>Data:</span><span>{DateTime.Now:dd/MM/yyyy HH:mm}</span></div>
-    <div class=""riga""><span>Corso:</span><span>{a.Corso?.Nome ?? "-"}</span></div>
-    {rigaOre}
-    <div class=""riga""><span>Tipologia:</span><span>{a.TipoAbbonamento}</span></div>
-    <div class=""riga""><span>Periodo pagato:</span><span>{a.DataInizio:dd/MM/yyyy} - {a.DataScadenza:dd/MM/yyyy}</span></div>
+        <div class=""riga""><span>Data:</span><span>{DateTime.Now:dd/MM/yyyy HH:mm}</span></div>
+        <div class=""riga""><span>Corso:</span><span>{a.Corso?.Nome ?? "-"}</span></div>
+        {rigaOre}
+        <div class=""riga""><span>Tipologia:</span><span>{a.TipoAbbonamento}</span></div>
+        <div class=""riga""><span>Periodo pagato:</span><span>{a.DataInizio:dd/MM/yyyy} - {a.DataScadenza:dd/MM/yyyy}</span></div>
 
-    <div class=""note"">Documento non fiscale emesso a titolo di quietanza di pagamento.</div>
-<button class=""stampa-btn"" onclick=""window.print()"">🖨️ Stampa</button>
+        <div class=""note"">Documento non fiscale emesso a titolo di quietanza di pagamento.</div>
+    </div>
+
+    <button class=""stampa-btn"" onclick=""window.print()"">\U0001F5A8️ Stampa</button>
 </body>
 </html>";
     }
