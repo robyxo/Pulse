@@ -7,18 +7,39 @@ public class RicevutaService
 {
     private readonly IImpostazioniService _impostazioniService;
     private readonly IDatabaseService _databaseService;
+    private readonly IStampaService _stampaService;
 
-    public RicevutaService(IImpostazioniService impostazioniService, IDatabaseService databaseService)
+    public RicevutaService(IImpostazioniService impostazioniService, IDatabaseService databaseService, IStampaService stampaService)
     {
         _impostazioniService = impostazioniService;
         _databaseService = databaseService;
+        _stampaService = stampaService;
     }
 
-    public async Task StampaRicevutaCortesiaAsync(Abbonamenti abbonamento)
+    /// <param name="stampaSilenziosa">
+    /// Lasciato a null segue il flag «Stampa diretta» delle impostazioni.
+    /// True: la ricevuta esce dalla stampante predefinita senza aprire il browser;
+    /// se la stampa diretta non riesce si ricade sull'anteprima, cosi' non va persa.
+    /// </param>
+    /// <param name="cartellaArchivioPdf">
+    /// Lasciata a null segue le impostazioni. Se valorizzata, una copia PDF
+    /// viene archiviata in cartella\anno\.
+    /// </param>
+    public async Task StampaRicevutaCortesiaAsync(Abbonamenti abbonamento, bool? stampaSilenziosa = null, string? cartellaArchivioPdf = null)
     {
         try
         {
             var impostazioni = await _impostazioniService.GetImpostazioniAsync();
+
+            // I parametri servono solo per forzare un comportamento diverso da
+            // quello configurato (per esempio da una stampa di prova).
+            bool silenziosa = stampaSilenziosa ?? impostazioni.StampaSilenziosa == 1;
+
+            string? cartellaPdf = cartellaArchivioPdf;
+            if (string.IsNullOrWhiteSpace(cartellaPdf) && impostazioni.ArchiviaRicevutePdf == 1)
+            {
+                cartellaPdf = impostazioni.CartellaRicevutePdf;
+            }
 
             string nomeScuola = string.IsNullOrWhiteSpace(impostazioni.NomeScuola)
                 ? "ASD SCUOLA DI DANZA PULSE"
@@ -47,6 +68,23 @@ public class RicevutaService
             string orario = CalcolaOrario(lezioni);
 
             var html = GeneraHtmlRicevuta(abbonamento, impostazioni, nomeScuola, indirizzoScuola, pivaScuola, logoBase64, orario);
+
+            // 📄 COPIA PDF NELL'ARCHIVIO (cartella\anno\)
+            if (!string.IsNullOrWhiteSpace(cartellaPdf) && _stampaService.SupportaStampaSilenziosa)
+            {
+                string percorsoPdf = CostruisciPercorsoPdf(cartellaPdf, abbonamento);
+                await _stampaService.SalvaHtmlComePdfAsync(html, percorsoPdf);
+            }
+
+            // 🖨️ STAMPA DIRETTA SULLA STAMPANTE PREDEFINITA
+            if (silenziosa && _stampaService.SupportaStampaSilenziosa)
+            {
+                bool stampata = await _stampaService.StampaHtmlAsync(html);
+                if (stampata) return;
+
+                // Stampa diretta non riuscita: si prosegue con l'anteprima.
+            }
+
             var tempFile = Path.Combine(FileSystem.CacheDirectory, $"Ricevuta_{abbonamento.Id}_{DateTime.Now:yyyyMMddHHmmss}.html");
 
             await File.WriteAllTextAsync(tempFile, html);
@@ -62,6 +100,32 @@ public class RicevutaService
         {
             await Shell.Current.DisplayAlert("Errore Stampa", $"Impossibile aprire la ricevuta: {ex.Message}", "OK");
         }
+    }
+
+    /// <summary>
+    /// Archivio richiesto dalla scuola: una cartella per anno, dentro il percorso
+    /// scelto nelle impostazioni. Es. ...\Ricevute\2026\Ricevuta_Rossi_Mario_20260922_181500.pdf
+    /// </summary>
+    private static string CostruisciPercorsoPdf(string cartellaBase, Abbonamenti abbonamento)
+    {
+        string anno = DateTime.Now.Year.ToString();
+
+        string nomeAllievo = $"{abbonamento.Allievo?.Cognome}_{abbonamento.Allievo?.Nome}".Trim('_');
+        if (string.IsNullOrWhiteSpace(nomeAllievo)) nomeAllievo = "Allievo";
+
+        string nomeFile = $"Ricevuta_{PulisciNomeFile(nomeAllievo)}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+
+        return Path.Combine(cartellaBase, anno, nomeFile);
+    }
+
+    private static string PulisciNomeFile(string testo)
+    {
+        foreach (char carattereNonValido in Path.GetInvalidFileNameChars())
+        {
+            testo = testo.Replace(carattereNonValido, '_');
+        }
+
+        return testo.Replace(' ', '_');
     }
 
     private string CalcolaOrario(List<Lezioni> lezioni)
@@ -254,7 +318,7 @@ body {{
         <div class=""note"">Documento non fiscale emesso a titolo di quietanza di pagamento.</div>
     </div>
 
-    <button class=""stampa-btn"" onclick=""window.print()"">\U0001F5A8️ Stampa</button>
+    <button class=""stampa-btn"" onclick=""window.print()"">&#128424;&#65039; Stampa</button>
 </body>
 </html>";
     }

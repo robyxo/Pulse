@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Pulse.Views.SalePage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:Pulse.ViewModels"
+    x:Name="PageRoot"
+    Title="Gestione Sale"
+    x:DataType="vm:SaleViewModel"
+    BackgroundColor="#F8FAFC">
+
+    <Grid RowDefinitions="Auto, Auto, *">
+        <!--  BARRA DI RICERCA  -->
+        <Border
+            Grid.Row="0"
+            Margin="15,15,15,5"
+            Padding="10,0"
+            BackgroundColor="White"
+            Stroke="#CBD5E1"
+            StrokeShape="RoundRectangle 8">
+            <SearchBar
+                HeightRequest="40"
+                Placeholder="🔍 Cerca sala per nome..."
+                Text="{Binding TestoRicerca}" />
+        </Border>
+
+        <!--  PULSANTE NUOVA SALA  -->
+        <Border
+            Grid.Row="1"
+            Margin="15,15,15,10"
+            BackgroundColor="Transparent"
+            StrokeShape="RoundRectangle 8">
+            <Button
+                BackgroundColor="#10B981"
+                Command="{Binding NuovaSalaCommand}"
+                FontAttributes="Bold"
+                HeightRequest="48"
+                Text="+ Nuova Sala"
+                TextColor="White" />
+        </Border>
+
+        <!--  LISTA SALE  -->
+        <CollectionView
+            Grid.Row="2"
+            Margin="15,0,15,15"
+            ItemsSource="{Binding ListaSale}"
+            SelectionMode="None">
+
+            <CollectionView.EmptyView>
+                <VerticalStackLayout
+                    Margin="0,50,0,0"
+                    HorizontalOptions="Center"
+                    Spacing="10"
+                    VerticalOptions="Center">
+                    <Label
+                        FontSize="40"
+                        HorizontalOptions="Center"
+                        Text="🚪" />
+                    <Label
+                        FontSize="14"
+                        HorizontalOptions="Center"
+                        Text="Nessuna sala presente."
+                        TextColor="#64748B" />
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="x:Object">
+                    <Border
+                        Margin="0,0,0,10"
+                        Padding="12"
+                        BackgroundColor="White"
+                        Stroke="#E2E8F0"
+                        StrokeShape="RoundRectangle 10">
+                        <Grid
+                            ColumnDefinitions="Auto, *, Auto, Auto"
+                            ColumnSpacing="12"
+                            VerticalOptions="Center">
+
+                            <!--  Badge colore sala  -->
+                            <Border
+                                Grid.Column="0"
+                                BackgroundColor="{Binding Colore}"
+                                HeightRequest="32"
+                                StrokeShape="RoundRectangle 16"
+                                VerticalOptions="Center"
+                                WidthRequest="32" />
+
+                            <!--  Dettagli sala  -->
+                            <VerticalStackLayout
+                                Grid.Column="1"
+                                Spacing="2"
+                                VerticalOptions="Center">
+
+                                <Label
+                                    FontAttributes="Bold"
+                                    FontSize="15"
+                                    Text="{Binding Nome}"
+                                    TextColor="#1E293B" />
+
+                                <Label
+                                    FontSize="12"
+                                    LineBreakMode="TailTruncation"
+                                    Text="{Binding Descrizione}"
+                                    TextColor="#64748B" />
+
+                                <Label
+                                    Margin="0,2,0,0"
+                                    FontAttributes="Bold"
+                                    FontSize="11"
+                                    TextColor="#0EA5E9">
+                                    <Label.FormattedText>
+                                        <FormattedString>
+                                            <Span Text="Capienza: " />
+                                            <Span Text="{Binding Capienza}" />
+                                            <Span Text=" persone" />
+                                        </FormattedString>
+                                    </Label.FormattedText>
+                                </Label>
+                            </VerticalStackLayout>
+
+                            <!--  PULSANTE MODIFICA  -->
+                            <Button
+                                Grid.Column="2"
+                                Padding="0"
+                                BackgroundColor="#F1F5F9"
+                                Command="{Binding BindingContext.ModificaSalaCommand, Source={x:Reference PageRoot}}"
+                                CommandParameter="{Binding .}"
+                                CornerRadius="18"
+                                FontSize="16"
+                                HeightRequest="36"
+                                Text="✏️"
+                                WidthRequest="36" />
+
+                            <!--  PULSANTE ELIMINA  -->
+                            <Button
+                                Grid.Column="3"
+                                Padding="0"
+                                BackgroundColor="#FEE2E2"
+                                Command="{Binding BindingContext.EliminaSalaCommand, Source={x:Reference PageRoot}}"
+                                CommandParameter="{Binding .}"
+                                CornerRadius="18"
+                                FontSize="16"
+                                HeightRequest="36"
+                                Text="🗑️"
+                                WidthRequest="36" />
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <ActivityIndicator
+            Grid.RowSpan="2"
+            HorizontalOptions="Center"
+            IsRunning="{Binding IsBusy}"
+            IsVisible="{Binding IsBusy}"
+            VerticalOptions="Center" />
+    </Grid>
+</ContentPage>

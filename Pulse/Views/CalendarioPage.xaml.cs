@@ -296,6 +296,13 @@ public partial class CalendarioPage : ContentPage
             var testoColor = _viewModel.StringToColor(lezione.Corso?.ColoreTesto ?? "#FFFFFF");
             bool proseguimento = idProseguimento?.Contains(lezione.Id) == true;
 
+            // "Nome corso - Sala 1". La sala e' facoltativa: se manca resta
+            // solo il nome del corso, senza trattino a penzoloni.
+            string nomeCorso = lezione.Corso?.Nome ?? "";
+            string testoCorso = string.IsNullOrWhiteSpace(lezione.Sala?.Nome)
+                ? nomeCorso
+                : $"{nomeCorso} - {lezione.Sala!.Nome}";
+
             var badgeLayout = new VerticalStackLayout
             {
                 Spacing = 1,
@@ -312,7 +319,7 @@ public partial class CalendarioPage : ContentPage
                     },
                     new Label
                     {
-                        Text = lezione.Corso?.Nome ?? "",
+                        Text = testoCorso,
                         TextColor = testoColor,
                         FontSize = 11,
                         FontAttributes = FontAttributes.Bold,

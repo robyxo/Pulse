@@ -156,6 +156,54 @@
                                 IsToggled="{Binding StampaRicevutaCortesiaAttiva}"
                                 VerticalOptions="Center" />
                         </Grid>
+
+                        <BoxView
+                            Margin="0,4"
+                            BackgroundColor="#E2E8F0"
+                            HeightRequest="1" />
+
+                        <Grid ColumnDefinitions="*, Auto">
+                            <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                <Label FontAttributes="Bold" Text="Stampa diretta" />
+                                <Label
+                                    FontSize="12"
+                                    Text="La ricevuta esce subito dalla stampante predefinita, senza aprire il browser. Se la stampa non riesce, viene mostrata l'anteprima come prima."
+                                    TextColor="Gray" />
+                            </VerticalStackLayout>
+                            <Switch
+                                Grid.Column="1"
+                                IsToggled="{Binding StampaSilenziosaAttiva}"
+                                VerticalOptions="Center" />
+                        </Grid>
+
+                        <Grid ColumnDefinitions="*, Auto">
+                            <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                <Label FontAttributes="Bold" Text="Archivia una copia in PDF" />
+                                <Label
+                                    FontSize="12"
+                                    Text="Ogni ricevuta viene salvata anche come PDF, in una cartella per anno."
+                                    TextColor="Gray" />
+                            </VerticalStackLayout>
+                            <Switch
+                                Grid.Column="1"
+                                IsToggled="{Binding ArchiviaRicevutePdfAttiva}"
+                                VerticalOptions="Center" />
+                        </Grid>
+
+                        <VerticalStackLayout IsVisible="{Binding ArchiviaRicevutePdfAttiva}" Spacing="4">
+                            <Label
+                                FontSize="12"
+                                Text="Cartella di archivio (dentro verrà creata una sottocartella per anno)" />
+                            <Border
+                                Padding="10,0"
+                                Stroke="#CBD5E1"
+                                StrokeShape="RoundRectangle 8">
+                                <Entry
+                                    HeightRequest="42"
+                                    Placeholder="Es. D:\Scuola\Ricevute"
+                                    Text="{Binding CartellaRicevutePdf}" />
+                            </Border>
+                        </VerticalStackLayout>
                     </VerticalStackLayout>
                 </Border>
 
@@ -172,7 +220,7 @@
                             Text="📐 Formato Ricevuta" />
                         <Label
                             FontSize="12"
-                            Text="Dimensioni del foglio e margini di stampa della ricevuta di cortesia (in millimetri)."
+                            Text="La ricevuta esce su un foglio A4. Qui decidi quanto è grande il foglietto e in che punto del foglio viene stampato, partendo dall'angolo in alto a destra (in millimetri)."
                             TextColor="Gray" />
 
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
@@ -212,7 +260,7 @@
                             Margin="0,6,0,0"
                             FontAttributes="Bold"
                             FontSize="13"
-                            Text="Margini di stampa" />
+                            Text="Posizione sul foglio A4" />
 
                         <Grid
                             ColumnDefinitions="*,*"
@@ -223,7 +271,7 @@
                                 Grid.Row="0"
                                 Grid.Column="0"
                                 Spacing="4">
-                                <Label FontSize="12" Text="Sopra (mm)" />
+                                <Label FontSize="12" Text="Distanza dall'alto (mm)" />
                                 <Border
                                     Padding="10,0"
                                     Stroke="#CBD5E1"
@@ -238,7 +286,7 @@
                                 Grid.Row="0"
                                 Grid.Column="1"
                                 Spacing="4">
-                                <Label FontSize="12" Text="Destra (mm)" />
+                                <Label FontSize="12" Text="Distanza da destra (mm)" />
                                 <Border
                                     Padding="10,0"
                                     Stroke="#CBD5E1"
@@ -253,22 +301,7 @@
                                 Grid.Row="1"
                                 Grid.Column="0"
                                 Spacing="4">
-                                <Label FontSize="12" Text="Sotto (mm)" />
-                                <Border
-                                    Padding="10,0"
-                                    Stroke="#CBD5E1"
-                                    StrokeShape="RoundRectangle 8">
-                                    <Entry
-                                        HeightRequest="42"
-                                        Keyboard="Numeric"
-                                        Text="{Binding RicevutaMarginBottomMm}" />
-                                </Border>
-                            </VerticalStackLayout>
-                            <VerticalStackLayout
-                                Grid.Row="1"
-                                Grid.Column="1"
-                                Spacing="4">
-                                <Label FontSize="12" Text="Sinistra (mm)" />
+                                <Label FontSize="12" Text="Margine interno (mm)" />
                                 <Border
                                     Padding="10,0"
                                     Stroke="#CBD5E1"
@@ -279,6 +312,13 @@
                                         Text="{Binding RicevutaMarginLeftMm}" />
                                 </Border>
                             </VerticalStackLayout>
+                            <Label
+                                Grid.Row="1"
+                                Grid.Column="1"
+                                FontSize="11"
+                                Text="Lo spazio bianco fra il bordo del foglietto e il testo."
+                                TextColor="Gray"
+                                VerticalOptions="End" />
                         </Grid>
                     </VerticalStackLayout>
                 </Border>

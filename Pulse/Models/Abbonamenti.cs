@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Pulse.Models;
 
@@ -31,6 +30,16 @@ public partial class Abbonamenti
     public int GiorniRimanentiCongelati { get; set; }
 
     public int Attivo { get; set; }
+
+    public DateTime? DataPagamento { get; set; }
+
+    public string? MetodoPagamento { get; set; }
+
+    public int? Stornato { get; set; }
+
+    public DateTime? DataStorno { get; set; }
+
+    public string? MotivoStorno { get; set; }
 
     public virtual Allievi Allievo { get; set; } = null!;
 

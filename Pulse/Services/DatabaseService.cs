@@ -78,6 +78,7 @@ public class DatabaseService : IDatabaseService
         return await context.Lezionis
             .Include(l => l.Corso)
             .Include(l => l.Insegnante)
+            .Include(l => l.Sala)
             .Where(l => l.GiornoSettimana >= 1 && l.GiornoSettimana <= 7)
             .OrderBy(l => l.GiornoSettimana)
             .ThenBy(l => l.OraInizio)
@@ -113,6 +114,58 @@ public class DatabaseService : IDatabaseService
             .Where(l => l.CorsoId == corsoId)
             .OrderBy(l => l.GiornoSettimana)
             .ThenBy(l => l.OraInizio)
+            .ToListAsync();
+    }
+
+    // ================================================
+    // SALE
+    // ================================================
+
+    public async Task<List<Sale>> GetSaleAttiveAsync()
+    {
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
+        return await context.Sales
+            .Where(s => s.Attivo == 1)
+            .OrderBy(s => s.Nome)
+            .ToListAsync();
+    }
+
+    public async Task<bool> SalvaSalaAsync(Sale sala)
+    {
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
+        bool nuova = sala.Id == 0;
+        if (nuova) sala.Attivo = 1;
+
+        AgganciaPerSalvataggio(context, sala, nuova);
+        return await context.SaveChangesAsync() > 0;
+    }
+
+    public async Task<bool> EliminaSalaAsync(int id)
+    {
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
+        var sala = await context.Sales.FindAsync(id);
+        if (sala == null) return false;
+
+        sala.Attivo = 0; // Soft delete
+        return await context.SaveChangesAsync() > 0;
+    }
+
+    // Le lezioni sono ricorrenti settimanali, quindi per trovare le candidate
+    // bastano sala e giorno: la sovrapposizione oraria si verifica poi in memoria.
+    public async Task<List<Lezioni>> GetLezioniPerSalaEGiornoAsync(int salaId, int giornoSettimana, int lezioneDaEscludereId)
+    {
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
+        return await context.Lezionis
+            .Include(l => l.Corso)
+            .Include(l => l.Insegnante)
+            .Where(l => l.SalaId == salaId
+                     && l.GiornoSettimana == giornoSettimana
+                     && l.Id != lezioneDaEscludereId)
+            .OrderBy(l => l.OraInizio)
             .ToListAsync();
     }
 

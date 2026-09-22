@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Maui.Storage;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Pulse.Models;
 using Pulse.Services;
@@ -186,6 +187,16 @@ public partial class ImpostazioniViewModel : BaseViewModel
     [ObservableProperty]
     private int _ricevutaMarginLeftMm = 5;
 
+    // --- STAMPA DIRETTA E ARCHIVIO PDF ---
+    [ObservableProperty]
+    private bool _stampaSilenziosaAttiva;
+
+    [ObservableProperty]
+    private bool _archiviaRicevutePdfAttiva;
+
+    [ObservableProperty]
+    private string? _cartellaRicevutePdf;
+
     // --- DOCUMENTO PRIVACY ---
     [ObservableProperty]
     private bool _stampaDocumentoPrivacyAttiva;
@@ -365,7 +376,33 @@ public partial class ImpostazioniViewModel : BaseViewModel
         RicevutaMarginRightMm = Impostazioni.RicevutaMarginRightMm ?? 3;
         RicevutaMarginBottomMm = Impostazioni.RicevutaMarginBottomMm ?? 3;
         RicevutaMarginLeftMm = Impostazioni.RicevutaMarginLeftMm ?? 5;
+
+        StampaSilenziosaAttiva = Impostazioni.StampaSilenziosa == 1;
+        ArchiviaRicevutePdfAttiva = Impostazioni.ArchiviaRicevutePdf == 1;
+        CartellaRicevutePdf = Impostazioni.CartellaRicevutePdf;
+
         FunzioneMaestroAvanzataAttiva = Impostazioni.FunzioneMaestroAvanzataAttiva == 1;
+    }
+
+    [RelayCommand]
+    public async Task SceglieCartellaRicevuteAsync()
+    {
+        try
+        {
+            var risultato = await FolderPicker.Default.PickAsync(CancellationToken.None);
+
+            if (risultato.IsSuccessful && risultato.Folder is not null)
+            {
+                CartellaRicevutePdf = risultato.Folder.Path;
+            }
+        }
+        catch (Exception ex)
+        {
+            await Shell.Current.DisplayAlert(
+                "Errore",
+                $"Impossibile scegliere la cartella: {ex.Message}\n\nPuoi comunque incollare il percorso a mano.",
+                "OK");
+        }
     }
 
     [RelayCommand]
@@ -442,6 +479,10 @@ public partial class ImpostazioniViewModel : BaseViewModel
         Impostazioni.RicevutaMarginRightMm = RicevutaMarginRightMm;
         Impostazioni.RicevutaMarginBottomMm = RicevutaMarginBottomMm;
         Impostazioni.RicevutaMarginLeftMm = RicevutaMarginLeftMm;
+
+        Impostazioni.StampaSilenziosa = StampaSilenziosaAttiva ? 1 : 0;
+        Impostazioni.ArchiviaRicevutePdf = ArchiviaRicevutePdfAttiva ? 1 : 0;
+        Impostazioni.CartellaRicevutePdf = CartellaRicevutePdf?.Trim();
 
         Impostazioni.FunzioneMaestroAvanzataAttiva = FunzioneMaestroAvanzataAttiva ? 1 : 0;
 

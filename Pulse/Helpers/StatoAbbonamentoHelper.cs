@@ -43,6 +43,20 @@ public static class StatoAbbonamentoHelper
         _ => "Nessuno"
     };
 
+    /// <summary>
+    /// Ordine di urgenza: piu' basso = merita attenzione prima.
+    /// Serve a scegliere, fra i corsi di uno stesso allievo, quale determina
+    /// lo stato mostrato in tabella.
+    /// </summary>
+    public static int Priorita(StatoAbbonamento stato) => stato switch
+    {
+        StatoAbbonamento.Scaduto => 0,
+        StatoAbbonamento.InScadenza => 1,
+        StatoAbbonamento.InPausa => 2,
+        StatoAbbonamento.Attivo => 3,
+        _ => 4
+    };
+
     public static string GetIcona(StatoAbbonamento stato) => stato switch
     {
         StatoAbbonamento.Attivo => "✅",

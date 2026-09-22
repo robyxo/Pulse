@@ -119,7 +119,7 @@
                         Grid.Column="1"
                         FontAttributes="Bold"
                         FontSize="12"
-                        Text="Corso Attuale"
+                        Text="Corsi"
                         TextColor="#475569" />
                     <Label
                         Grid.Column="2"

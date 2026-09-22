@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Pulse.Views.GestioneSalaPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:Pulse.ViewModels"
+    Title="{Binding Title}"
+    x:DataType="vm:GestioneSalaViewModel"
+    BackgroundColor="#F8FAFC">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="14">
+
+            <!--  NOME  -->
+            <Label
+                FontAttributes="Bold"
+                Text="Nome della sala:"
+                TextColor="#1E293B" />
+            <Border
+                Padding="10,0"
+                Stroke="#CBD5E1"
+                StrokeShape="RoundRectangle 8">
+                <Entry
+                    HeightRequest="44"
+                    Placeholder="Es. Sala Grande"
+                    Text="{Binding Nome}" />
+            </Border>
+
+            <!--  DESCRIZIONE  -->
+            <Label
+                FontAttributes="Bold"
+                Text="Descrizione (facoltativa):"
+                TextColor="#1E293B" />
+            <Border
+                Padding="10,0"
+                Stroke="#CBD5E1"
+                StrokeShape="RoundRectangle 8">
+                <Entry
+                    HeightRequest="44"
+                    Placeholder="Es. Piano terra, con specchi"
+                    Text="{Binding Descrizione}" />
+            </Border>
+
+            <!--  CAPIENZA  -->
+            <Label
+                FontAttributes="Bold"
+                Text="Capienza (persone):"
+                TextColor="#1E293B" />
+            <Border
+                Padding="10,0"
+                Stroke="#CBD5E1"
+                StrokeShape="RoundRectangle 8">
+                <Entry
+                    HeightRequest="44"
+                    Keyboard="Numeric"
+                    Placeholder="0"
+                    Text="{Binding Capienza}" />
+            </Border>
+            <Label
+                FontSize="12"
+                Text="Lascia 0 se non vuoi indicarla."
+                TextColor="Gray" />
+
+            <!--  AZIONI  -->
+            <Button
+                Margin="0,20,0,0"
+                BackgroundColor="#10B981"
+                Command="{Binding SalvaSalaCommand}"
+                CornerRadius="10"
+                FontAttributes="Bold"
+                HeightRequest="48"
+                Text="💾 Salva Sala"
+                TextColor="White" />
+
+            <Button
+                BackgroundColor="#EF4444"
+                Command="{Binding EliminaSalaCommand}"
+                CornerRadius="10"
+                FontAttributes="Bold"
+                HeightRequest="48"
+                IsVisible="{Binding IsEdizione}"
+                Text="🗑️ Elimina Sala"
+                TextColor="White" />
+
+            <ActivityIndicator
+                IsRunning="{Binding IsBusy}"
+                IsVisible="{Binding IsBusy}"
+                VerticalOptions="Center" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

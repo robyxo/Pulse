@@ -36,7 +36,10 @@ public partial class AppShell : Shell
 
              // 📨 Rotte Notifiche & Impostazioni
             { AppRoutes.Notifiche.Pagina, typeof(NotifichePage) },
-            { AppRoutes.Impostazioni.Pagina, typeof(ImpostazioniPage) }
+            { AppRoutes.Impostazioni.Pagina, typeof(ImpostazioniPage) },
+                        // 🚪 Rotte Sale
+            { AppRoutes.Sale.PaginaSale, typeof(SalePage) },
+            { AppRoutes.Sale.GestioneSala, typeof(GestioneSalaPage) },
         };
 
         foreach (var item in routes)

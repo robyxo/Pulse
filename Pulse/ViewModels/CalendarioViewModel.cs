@@ -170,6 +170,10 @@ public partial class CalendarioViewModel : BaseViewModel
         await Shell.Current.GoToAsync(AppRoutes.Allievi.PaginaAllievi);
 
     [RelayCommand]
+    public async Task NavigaGestioneSale() =>
+        await Shell.Current.GoToAsync(AppRoutes.Sale.PaginaSale);
+
+    [RelayCommand]
     public async Task NavigaNotifiche() =>
         await Shell.Current.GoToAsync(AppRoutes.Notifiche.Pagina);
 

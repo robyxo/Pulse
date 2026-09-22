@@ -140,6 +140,13 @@
                     TextColor="White" />
 
                 <Button
+                    BackgroundColor="#0EA5E9"
+                    Command="{Binding NavigaGestioneSaleCommand}"
+                    FontAttributes="Bold"
+                    Text="🚪 Gestione Sale"
+                    TextColor="White" />
+
+                <Button
                     BackgroundColor="#F59E0B"
                     Command="{Binding NavigaNotificheCommand}"
                     FontAttributes="Bold"

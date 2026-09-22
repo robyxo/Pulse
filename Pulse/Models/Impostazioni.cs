@@ -54,4 +54,22 @@ public partial class Impostazioni
     public int? RicevutaMarginLeftMm { get; set; }
 
     public int? FunzioneMaestroAvanzataAttiva { get; set; }
+
+    public int? StampaSilenziosa { get; set; }
+
+    public int? ArchiviaRicevutePdf { get; set; }
+
+    public string? CartellaRicevutePdf { get; set; }
+
+    public int? DispositivoPrivacy { get; set; }
+
+    public string? CartellaModuliPath { get; set; }
+
+    public int? ApiTabletAttiva { get; set; }
+
+    public int? ApiTabletPorta { get; set; }
+
+    public int? StagioneCorrenteId { get; set; }
+
+    public virtual Stagioni? StagioneCorrente { get; set; }
 }

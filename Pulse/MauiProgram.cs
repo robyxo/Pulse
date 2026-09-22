@@ -22,26 +22,30 @@ public static class MauiProgram
 
         // 1. Percorso del Database SQLite in AppData
         var dbFileName = "Pulse.db";
-        var dbPath = Path.Combine(FileSystem.AppDataDirectory, dbFileName);
+        var dbFolder = FileSystem.AppDataDirectory;
 
-#if DEBUG
-        // ⚠️ FLAG DI EMERGENZA:
-        // Imposta a 'true' se modifichi lo schema/tabelle del DB e vuoi ricrearlo da zero in Debug.
-        // Lascia a 'false' durante il lavoro normale per non perdere i dati salvati.
-        bool resetDatabaseDiEmergenza = false;
+        // Su Windows non pacchettizzato questa cartella può non esistere ancora:
+        // senza crearla, SQLite risponde "unable to open database file".
+        Directory.CreateDirectory(dbFolder);
 
-        if (resetDatabaseDiEmergenza && File.Exists(dbPath))
+        var dbPath = Path.Combine(dbFolder, dbFileName);
+
+        // Se il database non c'è ma restano i file di appoggio di una sessione
+        // precedente, SQLite si rifiuta di ricrearlo: "unable to open database file".
+        if (!File.Exists(dbPath))
         {
-            try
+            foreach (var residuo in new[] { dbPath + "-wal", dbPath + "-shm", dbPath + "-journal" })
             {
-                File.Delete(dbPath);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"⚠️ Impossibile eliminare il database: {ex.Message}");
+                try
+                {
+                    if (File.Exists(residuo)) File.Delete(residuo);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"⚠️ Impossibile eliminare {residuo}: {ex.Message}");
+                }
             }
         }
-#endif
 
         builder.Services.AddDbContextFactory<PulseContext>(options =>
     options.UseSqlite($"Data Source={dbPath}"));
@@ -60,6 +64,8 @@ public static class MauiProgram
         builder.Services.AddTransient<NotificheViewModel>();
         builder.Services.AddTransient<ImpostazioniViewModel>();
         builder.Services.AddTransient<CalendarioEventiViewModel>();
+        builder.Services.AddTransient<SaleViewModel>();
+        builder.Services.AddTransient<GestioneSalaViewModel>();
 
         // 3. Registrazione Views (Pagine)
         builder.Services.AddTransient<MainPage>();
@@ -74,16 +80,21 @@ public static class MauiProgram
         builder.Services.AddTransient<NotifichePage>();
         builder.Services.AddTransient<ImpostazioniPage>();
         builder.Services.AddTransient<CalendarioEventiPage>();
+        builder.Services.AddTransient<SalePage>();
+        builder.Services.AddTransient<GestioneSalaPage>();
+
 
         // 4. Registrazione Servizi
         builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
         builder.Services.AddSingleton<IEmailService, EmailService>();
         builder.Services.AddSingleton<IImpostazioniService, ImpostazioniService>();
+        builder.Services.AddSingleton<IStampaService, StampaService>();
         builder.Services.AddSingleton<RicevutaService>();
         builder.Services.AddSingleton<IBackupService, BackupService>();
         builder.Services.AddSingleton<CompensiMaestriService>();
         builder.Services.AddSingleton<PrivacyDocumentService>();
         builder.Services.AddSingleton<IAggiornamentoService, AggiornamentoService>();
+        builder.Services.AddSingleton<IMigrazioneDbService, MigrazioneDbService>();
 
         ConfigureWindowsSpecific(builder);
 
@@ -99,6 +110,10 @@ public static class MauiProgram
         {
             db.Database.EnsureCreated();
         }
+
+        // 6. Allinea lo schema sulle installazioni già esistenti (EnsureCreated non lo fa)
+        app.Services.GetRequiredService<IMigrazioneDbService>()
+            .AggiornaSchemaAsync().GetAwaiter().GetResult();
 
         return app;
     }

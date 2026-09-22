@@ -37,7 +37,15 @@ public partial class Allievi
 
     public int? Attivo { get; set; }
 
+    public int? DaAbbonare { get; set; }
+
+    public DateTime? DataRegistrazione { get; set; }
+
+    public string? Origine { get; set; }
+
     public virtual ICollection<Abbonamenti> Abbonamentis { get; set; } = new List<Abbonamenti>();
+
+    public virtual ICollection<Comunicazioni> Comunicazionis { get; set; } = new List<Comunicazioni>();
 
     public virtual ICollection<Iscrizioni> Iscrizionis { get; set; } = new List<Iscrizioni>();
 

@@ -72,15 +72,27 @@ public partial class AllieviViewModel : BaseViewModel
         var allievi = await _dbService.GetAllieviAttiviAsync();
         var abbonamenti = await _dbService.GetAbbonamentiAttiviAsync();
 
-        var ultimoPerAllievo = abbonamenti
+        // Per ogni allievo si tiene l'ultimo abbonamento di OGNI corso, non uno solo:
+        // altrimenti chi frequenta piu' corsi mostrerebbe lo stato di un corso a caso
+        // e un abbonamento in scadenza resterebbe nascosto dietro uno ancora valido.
+        var abbonamentiPerAllievo = abbonamenti
             .GroupBy(a => a.AllievoId)
-            .ToDictionary(g => g.Key, g => g.OrderByDescending(x => x.DataScadenza).First());
+            .ToDictionary(
+                g => g.Key,
+                g => g.GroupBy(a => a.CorsoId)
+                      .Select(perCorso => perCorso
+                          .OrderByDescending(a => a.DataScadenza)
+                          .ThenByDescending(a => a.Id)
+                          .First())
+                      .ToList());
 
         _listaCompletaDTO = allievi
             .Select(a => new AllievoTabellaDTO
             {
                 Allievo = a,
-                UltimoAbbonamento = ultimoPerAllievo.TryGetValue(a.Id, out var abb) ? abb : null
+                AbbonamentiPerCorso = abbonamentiPerAllievo.TryGetValue(a.Id, out var lista)
+                    ? lista
+                    : new List<Abbonamenti>()
             })
             .ToList();
 
@@ -99,10 +111,13 @@ public partial class AllieviViewModel : BaseViewModel
                 (x.Allievo.CodiceFiscale != null && x.Allievo.CodiceFiscale.Contains(TestoRicerca, StringComparison.OrdinalIgnoreCase)));
         }
 
-        // 2. Filtro per Corso
+        // 2. Filtro per Corso — vale su QUALSIASI corso dell'allievo, non solo
+        //    sull'ultimo: altrimenti filtrando "Salsa" sparirebbe chi fa Salsa
+        //    ma ha un altro abbonamento con scadenza piu' lontana.
         if (CorsoSelezionatoFiltro != null && CorsoSelezionatoFiltro.Id > 0)
         {
-            filtrati = filtrati.Where(x => x.UltimoAbbonamento != null && x.UltimoAbbonamento.CorsoId == CorsoSelezionatoFiltro.Id);
+            int corsoId = CorsoSelezionatoFiltro.Id;
+            filtrati = filtrati.Where(x => x.FrequentaCorso(corsoId));
         }
 
         // 3. Filtro per Stato Abbonamento

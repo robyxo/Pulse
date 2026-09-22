@@ -17,9 +17,13 @@ public partial class Lezioni
 
     public string OraFine { get; set; } = null!;
 
+    public int? SalaId { get; set; }
+
     public virtual Corsi Corso { get; set; } = null!;
 
     public virtual Insegnanti? Insegnante { get; set; }
 
     public virtual ICollection<Presenze> Presenzes { get; set; } = new List<Presenze>();
+
+    public virtual Sale? Sala { get; set; }
 }

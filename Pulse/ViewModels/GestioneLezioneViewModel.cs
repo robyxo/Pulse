@@ -29,6 +29,9 @@ public partial class GestioneLezioneViewModel : BaseViewModel
     private Insegnanti? _maestroSelezionato;
 
     [ObservableProperty]
+    private Sale? _salaSelezionata;
+
+    [ObservableProperty]
     private string _giornoSelezionato = "Lunedì";
 
     [ObservableProperty]
@@ -51,6 +54,9 @@ public partial class GestioneLezioneViewModel : BaseViewModel
 
     [ObservableProperty]
     private ObservableCollection<Insegnanti> _listaMaestri = new();
+
+    [ObservableProperty]
+    private ObservableCollection<Sale> _listaSale = new();
 
     [ObservableProperty]
     private ObservableCollection<AllievoPresenzaDTO> _listaAllievi = new();
@@ -97,9 +103,11 @@ public partial class GestioneLezioneViewModel : BaseViewModel
         {
             var corsi = await _dbService.GetCorsiAttiviAsync();
             var maestri = await _dbService.GetInsegnantiAttiviAsync();
+            var sale = await _dbService.GetSaleAttiveAsync();
 
             ListaCorsi = new ObservableCollection<Corsi>(corsi);
             ListaMaestri = new ObservableCollection<Insegnanti>(maestri);
+            ListaSale = new ObservableCollection<Sale>(sale);
 
             IsEdizione = Lezione.Id > 0;
 
@@ -117,6 +125,11 @@ public partial class GestioneLezioneViewModel : BaseViewModel
 
             if (Lezione.InsegnanteId.HasValue && Lezione.InsegnanteId.Value > 0)
                 MaestroSelezionato = ListaMaestri.FirstOrDefault(m => m.Id == Lezione.InsegnanteId.Value);
+
+            if (Lezione.SalaId.HasValue && Lezione.SalaId.Value > 0)
+                SalaSelezionata = ListaSale.FirstOrDefault(s => s.Id == Lezione.SalaId.Value);
+            else if (ListaSale.Count == 1)
+                SalaSelezionata = ListaSale[0]; // Con una sola sala non ha senso farla scegliere
 
             await CaricaAllieviPerCorsoAsync();
         });
@@ -243,11 +256,32 @@ public partial class GestioneLezioneViewModel : BaseViewModel
             return;
         }
 
+        int giornoDb = GiorniSettimana.IndexOf(GiornoSelezionato) + 1;
+
+        // La sovrapposizione in sala e' solo una segnalazione: la scuola puo'
+        // avere motivi validi per accavallare due lezioni, quindi si avvisa
+        // e si lascia decidere.
+        string? conflitto = await CercaConflittoSalaAsync(giornoDb);
+        if (conflitto != null)
+        {
+            string inizioTesto = OraInizio.ToString(@"hh\:mm");
+            string fineTesto = OraFine.ToString(@"hh\:mm");
+
+            bool prosegui = await Shell.Current.DisplayAlert(
+                "⚠️ Sala già occupata",
+                $"In «{SalaSelezionata!.Nome}», {GiornoSelezionato.ToLower()} dalle {inizioTesto} alle {fineTesto}, c'è già:\n\n{conflitto}\n\nVuoi salvare lo stesso?",
+                "Salva comunque",
+                "Annulla");
+
+            if (!prosegui) return;
+        }
+
         await EseguiConCaricamento(async () =>
         {
             Lezione.CorsoId = CorsoSelezionato.Id;
             Lezione.InsegnanteId = MaestroSelezionato.Id;
-            Lezione.GiornoSettimana = GiorniSettimana.IndexOf(GiornoSelezionato) + 1;
+            Lezione.SalaId = SalaSelezionata?.Id;
+            Lezione.GiornoSettimana = giornoDb;
             Lezione.OraInizio = OraInizio.ToString(@"hh\:mm");
             Lezione.OraFine = OraFine.ToString(@"hh\:mm");
 
@@ -255,6 +289,42 @@ public partial class GestioneLezioneViewModel : BaseViewModel
             WeakReferenceMessenger.Default.Send(new CalendarioViewModel.RefreshGridMessage());
             await Shell.Current.Navigation.PopAsync();
         });
+    }
+
+    /// <summary>
+    /// Cerca lezioni gia' presenti nella stessa sala, nello stesso giorno, con
+    /// orari che si accavallano. Restituisce l'elenco pronto da mostrare,
+    /// oppure null se non c'e' nessuna sovrapposizione.
+    /// </summary>
+    private async Task<string?> CercaConflittoSalaAsync(int giornoDb)
+    {
+        if (SalaSelezionata == null) return null;
+
+        var altreLezioni = await _dbService.GetLezioniPerSalaEGiornoAsync(
+            SalaSelezionata.Id,
+            giornoDb,
+            Lezione.Id);
+
+        // Due intervalli si sovrappongono se ciascuno inizia prima che l'altro finisca.
+        var sovrapposte = altreLezioni
+            .Where(l => TimeSpan.TryParse(l.OraInizio, out var inizio)
+                     && TimeSpan.TryParse(l.OraFine, out var fine)
+                     && inizio < OraFine
+                     && fine > OraInizio)
+            .ToList();
+
+        if (sovrapposte.Count == 0) return null;
+
+        var righe = sovrapposte.Select(l =>
+        {
+            string maestro = l.Insegnante != null
+                ? $" — {l.Insegnante.Nome} {l.Insegnante.Cognome}".TrimEnd()
+                : string.Empty;
+
+            return $"• {l.Corso?.Nome ?? "Lezione"}  {l.OraInizio}-{l.OraFine}{maestro}";
+        });
+
+        return string.Join("\n", righe);
     }
 
     [RelayCommand]

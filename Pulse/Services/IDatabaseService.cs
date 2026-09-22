@@ -20,6 +20,19 @@ public interface IDatabaseService
     Task<List<Lezioni>> GetLezioniPerCorsoAsync(int corsoId);
 
     // ================================================
+    // SALE
+    // ================================================
+    Task<List<Sale>> GetSaleAttiveAsync();
+    Task<bool> SalvaSalaAsync(Sale sala);
+    Task<bool> EliminaSalaAsync(int id);
+
+    /// <summary>
+    /// Lezioni gia' presenti in una sala in un dato giorno, esclusa quella che
+    /// si sta modificando. Serve a segnalare le sovrapposizioni di orario.
+    /// </summary>
+    Task<List<Lezioni>> GetLezioniPerSalaEGiornoAsync(int salaId, int giornoSettimana, int lezioneDaEscludereId);
+
+    // ================================================
     // MAESTRI
     // ================================================
     Task<List<Insegnanti>> GetInsegnantiAttiviAsync();

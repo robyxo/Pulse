@@ -18,4 +18,10 @@ public partial class CalendarioChiusure
     public string? Tipo { get; set; }
 
     public int? EmailInviata { get; set; }
+
+    public int? Recupero { get; set; }
+
+    public int? StagioneId { get; set; }
+
+    public virtual Stagioni? Stagione { get; set; }
 }

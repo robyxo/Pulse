@@ -45,6 +45,22 @@
                     SelectedItem="{Binding MaestroSelezionato}" />
             </Border>
 
+            <!--  SALA  -->
+            <Label
+                FontAttributes="Bold"
+                Text="Sala:"
+                TextColor="#1E293B" />
+            <Border
+                Padding="10,0"
+                Stroke="#CBD5E1"
+                StrokeShape="RoundRectangle 8">
+                <Picker
+                    Title="Seleziona Sala"
+                    ItemDisplayBinding="{Binding Nome}"
+                    ItemsSource="{Binding ListaSale}"
+                    SelectedItem="{Binding SalaSelezionata}" />
+            </Border>
+
             <!--  GIORNO  -->
             <Label
                 FontAttributes="Bold"

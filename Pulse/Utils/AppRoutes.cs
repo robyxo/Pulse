@@ -41,4 +41,9 @@ public static class AppRoutes
     {
         public const string Pagina = "ImpostazioniPage";
     }
+    public static class Sale
+    {
+        public const string PaginaSale = "SalePage";
+        public const string GestioneSala = "GestioneSalaPage";
+    }
 }
