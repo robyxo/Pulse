@@ -95,6 +95,8 @@ public static class MauiProgram
         builder.Services.AddSingleton<PrivacyDocumentService>();
         builder.Services.AddSingleton<IAggiornamentoService, AggiornamentoService>();
         builder.Services.AddSingleton<IMigrazioneDbService, MigrazioneDbService>();
+        builder.Services.AddSingleton<IAvvisiDispositivoService, AvvisiDispositivoService>();
+        builder.Services.AddSingleton<IServerDispositivoService, ServerDispositivoService>();
 
         ConfigureWindowsSpecific(builder);
 
@@ -114,6 +116,9 @@ public static class MauiProgram
         // 6. Allinea lo schema sulle installazioni già esistenti (EnsureCreated non lo fa)
         app.Services.GetRequiredService<IMigrazioneDbService>()
             .AggiornaSchemaAsync().GetAwaiter().GetResult();
+
+        // 7. Accende il collegamento con il tablet, se attivo nelle impostazioni
+        _ = Task.Run(() => app.Services.GetRequiredService<IServerDispositivoService>().AggiornaDaImpostazioniAsync());
 
         return app;
     }

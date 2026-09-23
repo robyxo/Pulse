@@ -615,6 +615,58 @@
                     WidthRequest="56" />
             </Grid>
 
+            <!--  STATO DEL MODULO PRIVACY  -->
+            <Border
+                Padding="12"
+                BackgroundColor="White"
+                IsVisible="{Binding MostraStatoPrivacy}"
+                Stroke="#E2E8F0"
+                StrokeShape="RoundRectangle 10">
+                <VerticalStackLayout Spacing="8">
+                    <Label
+                        FontAttributes="Bold"
+                        FontSize="13"
+                        Text="{Binding StatoPrivacyTesto}"
+                        TextColor="{Binding StatoPrivacyColore}" />
+
+                    <Button
+                        BackgroundColor="#10B981"
+                        Command="{Binding ConfermaFirmaPrivacyCommand}"
+                        CornerRadius="8"
+                        FontAttributes="Bold"
+                        HeightRequest="42"
+                        IsVisible="{Binding MostraBottoneFirma}"
+                        Text="✍️ Segna come firmato"
+                        TextColor="White" />
+
+                    <Grid
+                        ColumnDefinitions="*,Auto"
+                        ColumnSpacing="8"
+                        IsVisible="{Binding PrivacyFirmata}">
+                        <Button
+                            Grid.Column="0"
+                            BackgroundColor="#0EA5E9"
+                            Command="{Binding ApriPdfPrivacyCommand}"
+                            CornerRadius="8"
+                            FontAttributes="Bold"
+                            HeightRequest="42"
+                            IsVisible="{Binding HaPdfArchiviato}"
+                            Text="📂 Apri PDF archiviato"
+                            TextColor="White" />
+                        <Button
+                            Grid.Column="1"
+                            BackgroundColor="#64748B"
+                            Command="{Binding AnnullaFirmaPrivacyCommand}"
+                            CornerRadius="8"
+                            FontSize="12"
+                            HeightRequest="42"
+                            Text="Annulla firma"
+                            TextColor="White"
+                            WidthRequest="120" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
             <Button
                 BackgroundColor="#EF4444"
                 Command="{Binding EliminaAllievoCommand}"

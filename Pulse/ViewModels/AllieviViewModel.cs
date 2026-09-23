@@ -38,6 +38,7 @@ public partial class AllieviViewModel : BaseViewModel
         "In Scadenza",
         "In Pausa",
         "Scaduto",
+        "Da Abbonare",
         "Nessuno"
     };
 
@@ -54,6 +55,50 @@ public partial class AllieviViewModel : BaseViewModel
     public async Task CaricaAllieviAsync()
     {
         await EseguiConCaricamento(CaricaAllieviInternoAsync);
+
+        // Fuori dal caricamento: lo spinner è già spento mentre la segreteria decide.
+        await AvvisaAllieviDaAbbonareAsync();
+    }
+
+    /// <summary>
+    /// Promemoria all'apertura della pagina: chi si è registrato (per esempio dal
+    /// tablet) e non ha ancora un abbonamento. Copre il caso in cui il popup della
+    /// registrazione sia stato chiuso, o in quel momento non ci fosse nessuno al PC.
+    /// </summary>
+    private async Task AvvisaAllieviDaAbbonareAsync()
+    {
+        var daAbbonare = _listaCompletaDTO
+            .Where(x => x.IsDaAbbonare)
+            .OrderBy(x => x.Allievo.DataRegistrazione)
+            .ToList();
+
+        if (daAbbonare.Count == 0) return;
+
+        if (daAbbonare.Count == 1)
+        {
+            var allievo = daAbbonare[0];
+
+            bool apri = await Shell.Current.DisplayAlert(
+                "⚠️ Allievo da abbonare",
+                $"{allievo.NomeCompleto} si è registrato ma non ha ancora un abbonamento.\n\nVuoi aprire la scheda per farlo adesso?",
+                "Apri scheda",
+                "Più tardi");
+
+            if (apri) await ModificaAllievoAsync(allievo);
+            return;
+        }
+
+        // Più allievi: si sceglie chi aprire. Nome e data di registrazione, per gli omonimi.
+        var voci = daAbbonare.Select(x => x.NomeConRegistrazione).ToArray();
+
+        string scelta = await Shell.Current.DisplayActionSheet(
+            $"⚠️ {daAbbonare.Count} allievi registrati senza abbonamento",
+            "Più tardi",
+            null,
+            voci);
+
+        int indice = Array.IndexOf(voci, scelta);
+        if (indice >= 0) await ModificaAllievoAsync(daAbbonare[indice]);
     }
 
     private async Task CaricaAllieviInternoAsync()

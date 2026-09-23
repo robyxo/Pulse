@@ -103,6 +103,76 @@ public class RicevutaService
     }
 
     /// <summary>
+    /// Anteprima con dati finti, per regolare dimensioni e posizione del foglietto
+    /// dalle Impostazioni senza dover creare un abbonamento vero.
+    ///
+    /// Riceve le impostazioni dal chiamante invece di rileggerle dal database, così
+    /// mostra i valori attualmente scritti nella pagina anche se non ancora salvati.
+    /// L'anteprima si apre sempre nel visualizzatore, mai in stampa diretta.
+    /// </summary>
+    public async Task AnteprimaRicevutaAsync(Impostazioni impostazioni)
+    {
+        try
+        {
+            string nomeScuola = string.IsNullOrWhiteSpace(impostazioni.NomeScuola)
+                ? "ASD SCUOLA DI DANZA PULSE"
+                : impostazioni.NomeScuola;
+
+            string logoBase64 = string.Empty;
+            if (!string.IsNullOrWhiteSpace(impostazioni.LogoPath) && File.Exists(impostazioni.LogoPath))
+            {
+                byte[] bytes = await File.ReadAllBytesAsync(impostazioni.LogoPath);
+                string estensione = Path.GetExtension(impostazioni.LogoPath).TrimStart('.').ToLowerInvariant();
+                string mime = estensione switch
+                {
+                    "png" => "image/png",
+                    "jpg" or "jpeg" => "image/jpeg",
+                    "gif" => "image/gif",
+                    "bmp" => "image/bmp",
+                    _ => "image/png"
+                };
+                logoBase64 = $"data:{mime};base64,{Convert.ToBase64String(bytes)}";
+            }
+
+            var abbonamentoFinto = new Abbonamenti
+            {
+                TipoAbbonamento = "Mensile",
+                DataInizio = DateTime.Today,
+                DataScadenza = DateTime.Today.AddDays(28),
+                ImportoTotale = 50,
+                ImportoPagato = 50,
+                IsPagato = 1,
+                Attivo = 1,
+                Allievo = new Allievi { Nome = "Mario", Cognome = "Rossi", Sesso = "M" },
+                Corso = new Corsi { Nome = "Salsa Base" }
+            };
+
+            var html = GeneraHtmlRicevuta(
+                abbonamentoFinto,
+                impostazioni,
+                nomeScuola,
+                impostazioni.IndirizzoScuola ?? string.Empty,
+                impostazioni.PartitaIva ?? string.Empty,
+                logoBase64,
+                "Lunedì 19:00-20:00, Mercoledì 19:00-20:00",
+                anteprima: true);
+
+            var tempFile = Path.Combine(FileSystem.CacheDirectory, $"AnteprimaRicevuta_{DateTime.Now:yyyyMMddHHmmss}.html");
+            await File.WriteAllTextAsync(tempFile, html);
+
+            await Launcher.Default.OpenAsync(new OpenFileRequest
+            {
+                Title = "Anteprima Ricevuta",
+                File = new ReadOnlyFile(tempFile)
+            });
+        }
+        catch (Exception ex)
+        {
+            await Shell.Current.DisplayAlert("Errore Anteprima", $"Impossibile aprire l'anteprima: {ex.Message}", "OK");
+        }
+    }
+
+    /// <summary>
     /// Archivio richiesto dalla scuola: una cartella per anno, dentro il percorso
     /// scelto nelle impostazioni. Es. ...\Ricevute\2026\Ricevuta_Rossi_Mario_20260922_181500.pdf
     /// </summary>
@@ -144,7 +214,11 @@ public class RicevutaService
         return string.Join(", ", pezzi);
     }
 
-    private string GeneraHtmlRicevuta(Abbonamenti a, Impostazioni impostazioni, string nomeScuola, string indirizzoScuola, string pivaScuola, string logoBase64, string orario)
+    /// <param name="anteprima">
+    /// True: aggiunge la maschera tratteggiata (bordo del foglio A4 e del foglietto)
+    /// per capire a colpo d'occhio dove finisce la carta. Non viene mai stampata.
+    /// </param>
+    private string GeneraHtmlRicevuta(Abbonamenti a, Impostazioni impostazioni, string nomeScuola, string indirizzoScuola, string pivaScuola, string logoBase64, string orario, bool anteprima = false)
     {
         // Il foglietto viene stampato su un foglio A4 (la stampante lo tratta come tale)
         // e posizionato nell'angolo in ALTO A DESTRA, dove la scuola appoggia i foglietti
@@ -181,6 +255,44 @@ public class RicevutaService
         string rigaOre = string.IsNullOrWhiteSpace(orario)
             ? string.Empty
             : $@"<div class=""riga""><span>Ore:</span><span>{orario}</span></div>";
+
+        // --- MASCHERA DI ANTEPRIMA ---
+        // Stringhe verbatim NON interpolate: le graffe restano graffe, non vanno raddoppiate.
+        string cssMaschera = anteprima ? @"
+.guida-foglio {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    border: 1px dashed #94A3B8;
+    pointer-events: none;
+}
+.guida-foglietto {
+    position: absolute;
+    border: 1px dashed #EF4444;
+    pointer-events: none;
+}
+.guida-nota {
+    position: absolute;
+    left: 8mm; bottom: 6mm;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 10px;
+    line-height: 1.5;
+    color: #64748B;
+}
+@media print {
+    .guida-foglio, .guida-foglietto, .guida-nota { display: none; }
+}
+" : string.Empty;
+
+        string htmlMaschera = anteprima
+            ? $@"    <div class=""guida-foglio""></div>
+    <div class=""guida-foglietto"" style=""top: {distanzaAlto}mm; right: {distanzaDestra}mm; width: {larghezza}mm; height: {altezza}mm;""></div>
+    <div class=""guida-nota"">
+        ANTEPRIMA — foglio A4 210 × 297 mm<br />
+        Foglietto {larghezza} × {altezza} mm, a {distanzaAlto} mm dall'alto e {distanzaDestra} mm da destra<br />
+        Le linee tratteggiate servono solo a regolarsi: non vengono stampate.
+    </div>
+"
+            : string.Empty;
 
         return $@"
 <!DOCTYPE html>
@@ -296,10 +408,11 @@ body {{
 @media print {{
     .stampa-btn {{ display: none; }}
 }}
+{cssMaschera}
 </style>
 </head>
 <body>
-    <div class=""foglietto"">
+{htmlMaschera}    <div class=""foglietto"">
         {blocchettoLogo}
         <div class=""intestazione"">{nomeScuola}</div>
         {(string.IsNullOrWhiteSpace(subIntestazione) ? "" : $@"<div class=""intestazione-sub"">{subIntestazione}</div>")}

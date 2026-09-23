@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using Pulse.Models;
 using Pulse.Services;
 using Microsoft.Maui.ApplicationModel;
+using QRCoder;
 
 namespace Pulse.ViewModels;
 
@@ -13,6 +14,8 @@ public partial class ImpostazioniViewModel : BaseViewModel
     private readonly IEmailService _emailService;
     private readonly IBackupService _backupService;
     private readonly IAggiornamentoService _aggiornamentoService;
+    private readonly RicevutaService _ricevutaService;
+    private readonly IServerDispositivoService _serverDispositivo;
 
     private static readonly Dictionary<string, (string Host, int Porta, bool Ssl)> ProviderNoti =
         new(StringComparer.OrdinalIgnoreCase)
@@ -197,6 +200,32 @@ public partial class ImpostazioniViewModel : BaseViewModel
     [ObservableProperty]
     private string? _cartellaRicevutePdf;
 
+    // --- ARCHIVIO MODULI PRIVACY FIRMATI ---
+    [ObservableProperty]
+    private string? _cartellaModuliPath;
+
+    // --- COMPILAZIONE DA DISPOSITIVO ---
+    // Acceso: il tablet può registrare nuovi allievi (server interno + QR code) e
+    // si usa ModuloPrivacyDispositivo.html (domande extra compilate dal tablet).
+    // Spento: niente tablet, si usa ModuloPrivacy.html (a penna).
+    [ObservableProperty]
+    private bool _dispositivoPrivacyAttivo;
+
+    [ObservableProperty]
+    private ImageSource? _qrCodeDispositivo;
+
+    [ObservableProperty]
+    private string? _linkDispositivo;
+
+    [ObservableProperty]
+    private bool _mostraQrDispositivo;
+
+    [ObservableProperty]
+    private string? _statoDispositivoTesto;
+
+    [ObservableProperty]
+    private string _statoDispositivoColore = "#64748B";
+
     // --- DOCUMENTO PRIVACY ---
     [ObservableProperty]
     private bool _stampaDocumentoPrivacyAttiva;
@@ -251,13 +280,38 @@ public partial class ImpostazioniViewModel : BaseViewModel
     [ObservableProperty]
     private bool _funzioneMaestroAvanzataAttiva;
 
-    public ImpostazioniViewModel(IImpostazioniService impostazioniService, IEmailService emailService, IBackupService backupService, IAggiornamentoService aggiornamentoService)
+    public ImpostazioniViewModel(IImpostazioniService impostazioniService, IEmailService emailService, IBackupService backupService, IAggiornamentoService aggiornamentoService, RicevutaService ricevutaService, IServerDispositivoService serverDispositivo)
     {
         _impostazioniService = impostazioniService;
         _emailService = emailService;
         _backupService = backupService;
         _aggiornamentoService = aggiornamentoService;
+        _ricevutaService = ricevutaService;
+        _serverDispositivo = serverDispositivo;
         Title = "Impostazioni";
+    }
+
+    /// <summary>
+    /// Apre l'anteprima con i valori scritti adesso nella pagina, anche se non
+    /// ancora salvati: serve proprio a provare i margini prima di confermarli.
+    /// </summary>
+    [RelayCommand]
+    public async Task AnteprimaRicevutaAsync()
+    {
+        var impostazioniProvvisorie = new Impostazioni
+        {
+            NomeScuola = NomeScuola,
+            IndirizzoScuola = IndirizzoScuola,
+            PartitaIva = PartitaIva,
+            LogoPath = LogoPath,
+            RicevutaLarghezzaMm = RicevutaLarghezzaMm,
+            RicevutaAltezzaMm = RicevutaAltezzaMm,
+            RicevutaMarginTopMm = RicevutaMarginTopMm,
+            RicevutaMarginRightMm = RicevutaMarginRightMm,
+            RicevutaMarginLeftMm = RicevutaMarginLeftMm
+        };
+
+        await _ricevutaService.AnteprimaRicevutaAsync(impostazioniProvvisorie);
     }
 
     partial void OnEmailSmtpUserChanged(string? value)
@@ -380,8 +434,169 @@ public partial class ImpostazioniViewModel : BaseViewModel
         StampaSilenziosaAttiva = Impostazioni.StampaSilenziosa == 1;
         ArchiviaRicevutePdfAttiva = Impostazioni.ArchiviaRicevutePdf == 1;
         CartellaRicevutePdf = Impostazioni.CartellaRicevutePdf;
+        CartellaModuliPath = Impostazioni.CartellaModuliPath;
+        DispositivoPrivacyAttivo = Impostazioni.DispositivoPrivacy == 1;
 
         FunzioneMaestroAvanzataAttiva = Impostazioni.FunzioneMaestroAvanzataAttiva == 1;
+
+        await AggiornaPannelloDispositivoAsync();
+    }
+
+    // ================================================
+    // DISPOSITIVO (TABLET): STATO E QR CODE
+    // ================================================
+
+    /// <summary>
+    /// Allinea il riquadro del tablet allo stato reale del server: acceso,
+    /// spento, in errore, o in attesa del salvataggio.
+    /// </summary>
+    private async Task AggiornaPannelloDispositivoAsync()
+    {
+        MostraQrDispositivo = false;
+        QrCodeDispositivo = null;
+        LinkDispositivo = null;
+
+        bool salvatoAcceso = Impostazioni.DispositivoPrivacy == 1;
+
+        if (DispositivoPrivacyAttivo != salvatoAcceso)
+        {
+            ImpostaStatoDispositivo(
+                DispositivoPrivacyAttivo
+                    ? "Premi «Salva» per accendere il collegamento con il tablet."
+                    : "Premi «Salva» per spegnere il collegamento con il tablet.",
+                "#64748B");
+            return;
+        }
+
+        if (!DispositivoPrivacyAttivo)
+        {
+            ImpostaStatoDispositivo(null, "#64748B");
+            return;
+        }
+
+        if (!_serverDispositivo.InAscolto)
+        {
+            ImpostaStatoDispositivo(
+                "🔴 " + (_serverDispositivo.UltimoErrore ?? "Il collegamento con il tablet non è attivo."),
+                "#DC2626");
+            return;
+        }
+
+        string? link = await _serverDispositivo.GetLinkRegistrazioneAsync();
+        if (link == null)
+        {
+            ImpostaStatoDispositivo(
+                "⚠️ Il PC non risulta collegato a nessuna rete: collegalo al Wi-Fi o al cavo della scuola.",
+                "#D97706");
+            return;
+        }
+
+        try
+        {
+            using var generatore = new QRCodeGenerator();
+            using var datiQr = generatore.CreateQrCode(link, QRCodeGenerator.ECCLevel.M);
+            byte[] png = new PngByteQRCode(datiQr).GetGraphic(8);
+            QrCodeDispositivo = ImageSource.FromStream(() => new MemoryStream(png));
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Impostazioni] QR non generato: {ex.Message}");
+        }
+
+        LinkDispositivo = link;
+        MostraQrDispositivo = true;
+        ImpostaStatoDispositivo(
+            $"🟢 Attivo sulla porta {_serverDispositivo.Porta}: inquadra il QR code con il tablet.",
+            "#16A34A");
+    }
+
+    private void ImpostaStatoDispositivo(string? testo, string colore)
+    {
+        StatoDispositivoTesto = testo;
+        StatoDispositivoColore = colore;
+    }
+
+    partial void OnDispositivoPrivacyAttivoChanged(bool value)
+    {
+        // Durante il caricamento le impostazioni non sono ancora pronte:
+        // ci pensa AggiornaPannelloDispositivoAsync alla fine.
+        if (IsBusy) return;
+        _ = AggiornaPannelloDispositivoAsync();
+    }
+
+    [RelayCommand]
+    public async Task CopiaLinkDispositivoAsync()
+    {
+        if (string.IsNullOrWhiteSpace(LinkDispositivo)) return;
+
+        await Clipboard.Default.SetTextAsync(LinkDispositivo);
+        await Shell.Current.DisplayAlert("Copiato", "Link copiato negli appunti.", "OK");
+    }
+
+    /// <summary>Apre la pagina del tablet nel browser del PC, per provarla.</summary>
+    [RelayCommand]
+    public async Task ProvaLinkDispositivoAsync()
+    {
+        if (string.IsNullOrWhiteSpace(LinkDispositivo)) return;
+
+        try
+        {
+            await Launcher.Default.OpenAsync(new Uri(LinkDispositivo));
+        }
+        catch (Exception ex)
+        {
+            await Shell.Current.DisplayAlert("Errore", $"Impossibile aprire il browser: {ex.Message}", "OK");
+        }
+    }
+
+    /// <summary>
+    /// Nuova chiave nel QR: il vecchio QR (stampato, fotografato, salvato nei
+    /// preferiti) smette di funzionare. Il tablet va inquadrato di nuovo.
+    /// </summary>
+    [RelayCommand]
+    public async Task RigeneraQrDispositivoAsync()
+    {
+        bool conferma = await Shell.Current.DisplayAlert(
+            "Rigenera QR code",
+            "Il QR code attuale smetterà di funzionare e il tablet dovrà inquadrare quello nuovo.\n\nContinuare?",
+            "Rigenera",
+            "Annulla");
+
+        if (!conferma) return;
+
+        await EseguiSempre(async () =>
+        {
+            await _serverDispositivo.RigeneraChiaveAsync();
+            await AggiornaPannelloDispositivoAsync();
+        });
+    }
+
+    /// <summary>
+    /// Apre (creandola se serve) la cartella dove va il modulo privacy della scuola.
+    /// </summary>
+    [RelayCommand]
+    public Task ApriCartellaModelliPrivacyAsync() => PrivacyDocumentService.ApriCartellaModelliAsync();
+
+    /// <summary>Cartella dove archiviare i moduli privacy firmati.</summary>
+    [RelayCommand]
+    public async Task SceglieCartellaModuliAsync()
+    {
+        try
+        {
+            var risultato = await FolderPicker.Default.PickAsync(CancellationToken.None);
+
+            if (risultato.IsSuccessful && risultato.Folder is not null)
+            {
+                CartellaModuliPath = risultato.Folder.Path;
+            }
+        }
+        catch (Exception ex)
+        {
+            await Shell.Current.DisplayAlert(
+                "Errore",
+                $"Impossibile scegliere la cartella: {ex.Message}\n\nPuoi comunque incollare il percorso a mano.",
+                "OK");
+        }
     }
 
     [RelayCommand]
@@ -483,10 +698,16 @@ public partial class ImpostazioniViewModel : BaseViewModel
         Impostazioni.StampaSilenziosa = StampaSilenziosaAttiva ? 1 : 0;
         Impostazioni.ArchiviaRicevutePdf = ArchiviaRicevutePdfAttiva ? 1 : 0;
         Impostazioni.CartellaRicevutePdf = CartellaRicevutePdf?.Trim();
+        Impostazioni.CartellaModuliPath = CartellaModuliPath?.Trim();
+        Impostazioni.DispositivoPrivacy = DispositivoPrivacyAttivo ? 1 : 0;
 
         Impostazioni.FunzioneMaestroAvanzataAttiva = FunzioneMaestroAvanzataAttiva ? 1 : 0;
 
         await _impostazioniService.SalvaImpostazioniAsync(Impostazioni);
+
+        // Accende o spegne il collegamento con il tablet secondo l'interruttore.
+        await _serverDispositivo.AggiornaDaImpostazioniAsync();
+        await AggiornaPannelloDispositivoAsync();
     }
 
     [RelayCommand]

@@ -75,6 +75,30 @@
                             Text="{Binding MotivoForm}" />
                     </Border>
 
+                    <!--  RECUPERO: ha senso solo per la chiusura normale  -->
+                    <Grid ColumnDefinitions="*, Auto" IsVisible="{Binding MostraRecupero}">
+                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                            <Label
+                                FontAttributes="Bold"
+                                Text="Recupera i giorni di chiusura"
+                                TextColor="#1E293B" />
+                            <Label
+                                FontSize="12"
+                                Text="Gli abbonamenti attivi vengono prolungati dei giorni di chiusura."
+                                TextColor="Gray" />
+                        </VerticalStackLayout>
+                        <Switch
+                            Grid.Column="1"
+                            IsToggled="{Binding RecuperoAttivo}"
+                            VerticalOptions="Center" />
+                    </Grid>
+
+                    <Label
+                        FontAttributes="Italic"
+                        FontSize="12"
+                        Text="{Binding TestoInfoTipo}"
+                        TextColor="#0EA5E9" />
+
                     <HorizontalStackLayout Spacing="10">
                         <Button
                             BackgroundColor="#10B981"

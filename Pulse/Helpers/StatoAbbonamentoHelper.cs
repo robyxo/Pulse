@@ -8,7 +8,13 @@ public enum StatoAbbonamento
     InPausa,
     Scaduto,
     InScadenza,
-    Attivo
+    Attivo,
+
+    /// <summary>
+    /// Registrato (per esempio dal tablet) ma senza nessun abbonamento:
+    /// la segreteria deve ancora farglielo.
+    /// </summary>
+    DaAbbonare
 }
 
 public static class StatoAbbonamentoHelper
@@ -40,6 +46,7 @@ public static class StatoAbbonamentoHelper
         StatoAbbonamento.InScadenza => "In Scadenza",
         StatoAbbonamento.InPausa => "In Pausa",
         StatoAbbonamento.Scaduto => "Scaduto",
+        StatoAbbonamento.DaAbbonare => "Da Abbonare",
         _ => "Nessuno"
     };
 
@@ -62,6 +69,7 @@ public static class StatoAbbonamentoHelper
         StatoAbbonamento.Attivo => "✅",
         StatoAbbonamento.InScadenza => "⏳",
         StatoAbbonamento.InPausa => "⏸️",
+        StatoAbbonamento.DaAbbonare => "⚠️",
         _ => "❌"
     };
 
@@ -71,6 +79,7 @@ public static class StatoAbbonamentoHelper
         StatoAbbonamento.InScadenza => "#F59E0B",  // ambra
         StatoAbbonamento.InPausa => "#06B6D4",     // azzurro
         StatoAbbonamento.Scaduto => "#EF4444",     // rosso
+        StatoAbbonamento.DaAbbonare => "#EAB308",  // giallo
         _ => "#94A3B8"                             // grigio
     };
 

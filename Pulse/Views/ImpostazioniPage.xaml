@@ -194,15 +194,28 @@
                             <Label
                                 FontSize="12"
                                 Text="Cartella di archivio (dentro verrà creata una sottocartella per anno)" />
-                            <Border
-                                Padding="10,0"
-                                Stroke="#CBD5E1"
-                                StrokeShape="RoundRectangle 8">
-                                <Entry
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <Border
+                                    Grid.Column="0"
+                                    Padding="10,0"
+                                    Stroke="#CBD5E1"
+                                    StrokeShape="RoundRectangle 8">
+                                    <Entry
+                                        HeightRequest="42"
+                                        Placeholder="Es. D:\Scuola\Ricevute"
+                                        Text="{Binding CartellaRicevutePdf}" />
+                                </Border>
+                                <Button
+                                    Grid.Column="1"
+                                    BackgroundColor="#64748B"
+                                    Command="{Binding SceglieCartellaRicevuteCommand}"
+                                    CornerRadius="8"
+                                    FontAttributes="Bold"
                                     HeightRequest="42"
-                                    Placeholder="Es. D:\Scuola\Ricevute"
-                                    Text="{Binding CartellaRicevutePdf}" />
-                            </Border>
+                                    Text="Sfoglia"
+                                    TextColor="White"
+                                    WidthRequest="100" />
+                            </Grid>
                         </VerticalStackLayout>
                     </VerticalStackLayout>
                 </Border>
@@ -320,6 +333,22 @@
                                 TextColor="Gray"
                                 VerticalOptions="End" />
                         </Grid>
+
+                        <!--  ANTEPRIMA: usa i valori scritti adesso, anche non salvati  -->
+                        <Button
+                            Margin="0,10,0,0"
+                            BackgroundColor="#4F46E5"
+                            Command="{Binding AnteprimaRicevutaCommand}"
+                            CornerRadius="10"
+                            FontAttributes="Bold"
+                            HeightRequest="46"
+                            Text="👁️ Anteprima ricevuta"
+                            TextColor="White" />
+                        <Label
+                            FontSize="11"
+                            HorizontalTextAlignment="Center"
+                            Text="Si apre una ricevuta di prova con i valori qui sopra, anche se non ancora salvati."
+                            TextColor="Gray" />
                     </VerticalStackLayout>
                 </Border>
 
@@ -327,7 +356,6 @@
                 <Border
                     Padding="16"
                     BackgroundColor="White"
-                    IsVisible="{Binding ModelliPrivacyDisponibili}"
                     Stroke="#E2E8F0"
                     StrokeShape="RoundRectangle 12">
                     <VerticalStackLayout Spacing="10">
@@ -336,7 +364,156 @@
                             FontSize="16"
                             Text="🔒 Documento Privacy" />
 
-                        <Grid ColumnDefinitions="*, Auto">
+                        <!--  Sempre visibile: senza questo bottone non ci sarebbe modo
+                              di arrivare alla cartella per metterci il primo modello.  -->
+                        <Label
+                            FontSize="12"
+                            Text="Il modulo della scuola va messo in una cartella fuori dall'applicazione, così gli aggiornamenti non lo sovrascrivono. Dentro trovi le istruzioni e un esempio da adattare."
+                            TextColor="Gray" />
+                        <Button
+                            BackgroundColor="#0EA5E9"
+                            Command="{Binding ApriCartellaModelliPrivacyCommand}"
+                            CornerRadius="10"
+                            FontAttributes="Bold"
+                            HeightRequest="46"
+                            Text="📂 Apri cartella modelli privacy"
+                            TextColor="White" />
+
+                        <!--  DISPOSITIVO: sempre visibile, perché il tablet funziona
+                              anche senza nessun modello (chiede solo l'anagrafica).  -->
+                        <Grid Margin="0,6,0,0" ColumnDefinitions="*, Auto">
+                            <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                <Label FontAttributes="Bold" Text="Dispositivo" />
+                                <Label
+                                    FontSize="12"
+                                    Text="Acceso: gli allievi si registrano da soli dal tablet (inquadrando il QR code qui sotto) e si usa ModuloPrivacyDispositivo.html, con le domande extra. Spento: niente tablet, si usa ModuloPrivacy.html da compilare a penna."
+                                    TextColor="Gray" />
+                            </VerticalStackLayout>
+                            <Switch
+                                Grid.Column="1"
+                                IsToggled="{Binding DispositivoPrivacyAttivo}"
+                                VerticalOptions="Center" />
+                        </Grid>
+
+                        <!--  COLLEGAMENTO CON IL TABLET: stato e QR code  -->
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="13"
+                            Text="{Binding StatoDispositivoTesto}"
+                            TextColor="{Binding StatoDispositivoColore}" />
+
+                        <Border
+                            Padding="14"
+                            BackgroundColor="#F8FAFC"
+                            IsVisible="{Binding MostraQrDispositivo}"
+                            Stroke="#E2E8F0"
+                            StrokeShape="RoundRectangle 10">
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="16">
+                                <Border
+                                    Grid.Column="0"
+                                    Padding="6"
+                                    BackgroundColor="White"
+                                    Stroke="#E2E8F0"
+                                    StrokeShape="RoundRectangle 8"
+                                    VerticalOptions="Start">
+                                    <Image
+                                        HeightRequest="200"
+                                        Source="{Binding QrCodeDispositivo}"
+                                        WidthRequest="200" />
+                                </Border>
+
+                                <VerticalStackLayout Grid.Column="1" Spacing="8">
+                                    <Label
+                                        FontSize="12"
+                                        Text="Inquadra il QR code con la fotocamera del tablet e salva la pagina nei preferiti (o sulla schermata Home). Il tablet deve essere collegato alla stessa rete Wi-Fi della scuola."
+                                        TextColor="Gray" />
+                                    <Label
+                                        FontFamily="Consolas"
+                                        FontSize="12"
+                                        LineBreakMode="CharacterWrap"
+                                        Text="{Binding LinkDispositivo}"
+                                        TextColor="#334155" />
+                                    <HorizontalStackLayout Spacing="8">
+                                        <Button
+                                            BackgroundColor="#64748B"
+                                            Command="{Binding CopiaLinkDispositivoCommand}"
+                                            CornerRadius="8"
+                                            FontSize="13"
+                                            HeightRequest="38"
+                                            Text="📋 Copia link"
+                                            TextColor="White" />
+                                        <Button
+                                            BackgroundColor="#0EA5E9"
+                                            Command="{Binding ProvaLinkDispositivoCommand}"
+                                            CornerRadius="8"
+                                            FontSize="13"
+                                            HeightRequest="38"
+                                            Text="🌐 Prova sul PC"
+                                            TextColor="White" />
+                                        <Button
+                                            BackgroundColor="#F59E0B"
+                                            Command="{Binding RigeneraQrDispositivoCommand}"
+                                            CornerRadius="8"
+                                            FontSize="13"
+                                            HeightRequest="38"
+                                            Text="🔄 Rigenera QR"
+                                            TextColor="White" />
+                                    </HorizontalStackLayout>
+                                    <Label
+                                        FontSize="11"
+                                        Text="La prima volta Windows può chiedere il permesso per la rete: scegli «Consenti» (reti private). Se il tablet non apre la pagina, controlla che il PC sia su una rete impostata come «Privata»."
+                                        TextColor="Gray" />
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Border>
+
+                        <BoxView
+                            Margin="0,4"
+                            BackgroundColor="#E2E8F0"
+                            HeightRequest="1"
+                            IsVisible="{Binding ModelliPrivacyDisponibili}" />
+
+                        <!--  ARCHIVIO DEI MODULI FIRMATI  -->
+                        <VerticalStackLayout IsVisible="{Binding ModelliPrivacyDisponibili}" Spacing="4">
+                            <Label
+                                FontAttributes="Bold"
+                                FontSize="12"
+                                Text="Cartella di archivio dei moduli firmati" />
+                            <Label
+                                FontSize="11"
+                                Text="Quando la segreteria spunta «Firmato» sulla scheda allievo, il modulo viene salvato in PDF qui dentro, in una sottocartella per anno."
+                                TextColor="Gray" />
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <Border
+                                    Grid.Column="0"
+                                    Padding="10,0"
+                                    Stroke="#CBD5E1"
+                                    StrokeShape="RoundRectangle 8">
+                                    <Entry
+                                        HeightRequest="42"
+                                        Placeholder="Es. D:\Scuola\ModuliPrivacy"
+                                        Text="{Binding CartellaModuliPath}" />
+                                </Border>
+                                <Button
+                                    Grid.Column="1"
+                                    BackgroundColor="#64748B"
+                                    Command="{Binding SceglieCartellaModuliCommand}"
+                                    CornerRadius="8"
+                                    FontAttributes="Bold"
+                                    HeightRequest="42"
+                                    Text="Sfoglia"
+                                    TextColor="White"
+                                    WidthRequest="100" />
+                            </Grid>
+                        </VerticalStackLayout>
+
+                        <BoxView
+                            Margin="0,4"
+                            BackgroundColor="#E2E8F0"
+                            HeightRequest="1"
+                            IsVisible="{Binding ModelliPrivacyDisponibili}" />
+
+                        <Grid ColumnDefinitions="*, Auto" IsVisible="{Binding ModelliPrivacyDisponibili}">
                             <VerticalStackLayout Grid.Column="0" Spacing="2">
                                 <Label FontAttributes="Bold" Text="Stampa Documento Privacy" />
                                 <Label

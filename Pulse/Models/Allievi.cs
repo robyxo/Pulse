@@ -45,6 +45,8 @@ public partial class Allievi
 
     public virtual ICollection<Abbonamenti> Abbonamentis { get; set; } = new List<Abbonamenti>();
 
+    public virtual ICollection<CampiExtraAllievo> CampiExtraAllievos { get; set; } = new List<CampiExtraAllievo>();
+
     public virtual ICollection<Comunicazioni> Comunicazionis { get; set; } = new List<Comunicazioni>();
 
     public virtual ICollection<Iscrizioni> Iscrizionis { get; set; } = new List<Iscrizioni>();

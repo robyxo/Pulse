@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Security.Cryptography;
+using Microsoft.EntityFrameworkCore;
+using Pulse.Helpers;
 using Pulse.Models;
 
 namespace Pulse.Services;
@@ -222,6 +224,13 @@ public class DatabaseService : IDatabaseService
     // ALLIEVI
     // ================================================
 
+    public async Task<Allievi?> GetAllievoAsync(int id)
+    {
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
+        return await context.Allievis.FirstOrDefaultAsync(a => a.Id == id && a.Attivo == 1);
+    }
+
     public async Task<List<Allievi>> GetAllieviAttiviAsync()
     {
         await using var context = await _contextFactory.CreateDbContextAsync();
@@ -320,7 +329,23 @@ public class DatabaseService : IDatabaseService
         if (nuovo) abbonamento.Attivo = 1;
 
         AgganciaPerSalvataggio(context, abbonamento, nuovo);
-        return await context.SaveChangesAsync() > 0;
+        bool salvato = await context.SaveChangesAsync() > 0;
+
+        // Primo abbonamento di un allievo registrato (per esempio dal tablet):
+        // non è più "da abbonare". Sta qui e non nei ViewModel così vale da ogni
+        // punto: scheda allievo, rinnovo, pagamento rapido dal calendario.
+        if (salvato && nuovo)
+        {
+            await context.Allievis
+                .Where(a => a.Id == abbonamento.AllievoId && a.DaAbbonare == 1)
+                .ExecuteUpdateAsync(s => s.SetProperty(a => a.DaAbbonare, 0));
+
+            // Allinea anche la copia in memoria: altrimenti un "Salva allievo" fatto
+            // subito dopo riscriverebbe DaAbbonare = 1 sul database.
+            if (abbonamento.Allievo is { } allievo) allievo.DaAbbonare = 0;
+        }
+
+        return salvato;
     }
 
     public async Task<bool> EliminaAbbonamentoAsync(int id)
@@ -347,7 +372,7 @@ public class DatabaseService : IDatabaseService
             .ToListAsync();
     }
 
-    public async Task<(bool Successo, int AbbonamentiEstesi)> SalvaChiusuraAsync(CalendarioChiusure chiusura)
+    public async Task<(bool Successo, int AbbonamentiEstesi, int AbbonamentiChiusi)> SalvaChiusuraAsync(CalendarioChiusure chiusura)
     {
         await using var context = await _contextFactory.CreateDbContextAsync();
 
@@ -357,42 +382,64 @@ public class DatabaseService : IDatabaseService
 
         bool salvataggioOk = await context.SaveChangesAsync() > 0;
         int abbonamentiEstesi = 0;
+        int abbonamentiChiusi = 0;
 
-        // Estensione automatica: solo per NUOVE "Chiusure" (mai per gli "Eventi",
-        // e mai in automatico quando si modifica una chiusura già esistente,
-        // per evitare di estendere più volte gli stessi abbonamenti).
+        // Gli abbonamenti si toccano solo alla creazione di una nuova chiusura:
+        // mai per gli "Eventi", e mai rimodificando una chiusura esistente,
+        // altrimenti gli stessi abbonamenti verrebbero spostati piu' volte.
         if (salvataggioOk
             && eraNuova
-            && string.Equals(chiusura.Tipo, "Chiusura", StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(chiusura.Tipo, TipiEvento.Evento, StringComparison.OrdinalIgnoreCase)
             && DateTime.TryParse(chiusura.DataInizio, out var dataInizioChiusura)
             && DateTime.TryParse(chiusura.DataFine, out var dataFineChiusura))
         {
-            int giorniChiusura = (dataFineChiusura.Date - dataInizioChiusura.Date).Days + 1;
+            // Solo gli abbonamenti ATTUALMENTE ATTIVI il cui periodo si sovrappone
+            // alla chiusura (gia' esistenti a DB in questo momento).
+            var abbonamentiSovrapposti = await context.Abbonamentis
+                .Where(a => a.Attivo == 1
+                    && a.DataInizio.Date <= dataFineChiusura.Date
+                    && a.DataScadenza.Date >= dataInizioChiusura.Date)
+                .ToListAsync();
 
-            if (giorniChiusura > 0)
+            bool stagionale = string.Equals(chiusura.Tipo, TipiEvento.ChiusuraStagionale, StringComparison.OrdinalIgnoreCase);
+
+            if (stagionale)
             {
-                // Solo gli abbonamenti ATTUALMENTE ATTIVI il cui periodo si sovrappone
-                // alla chiusura (già esistenti a DB in questo momento).
-                var abbonamentiSovrapposti = await context.Abbonamentis
-                    .Where(a => a.Attivo == 1
-                        && a.DataInizio.Date <= dataFineChiusura.Date
-                        && a.DataScadenza.Date >= dataInizioChiusura.Date)
-                    .ToListAsync();
-
+                // Fine stagione: gli abbonamenti si chiudono il giorno in cui chiude
+                // la scuola, non vengono prolungati. Chi scade gia' prima resta com'e'.
                 foreach (var abbonamento in abbonamentiSovrapposti)
                 {
-                    abbonamento.DataScadenza = abbonamento.DataScadenza.AddDays(giorniChiusura);
+                    if (abbonamento.DataScadenza.Date > dataInizioChiusura.Date)
+                    {
+                        abbonamento.DataScadenza = dataInizioChiusura.Date;
+                        abbonamentiChiusi++;
+                    }
                 }
+            }
+            else if (chiusura.Recupero != 0)
+            {
+                // Recupero attivo (impostazione predefinita): la chiusura viene
+                // restituita agli allievi come giorni in piu' sull'abbonamento.
+                int giorniChiusura = (dataFineChiusura.Date - dataInizioChiusura.Date).Days + 1;
 
-                if (abbonamentiSovrapposti.Count > 0)
+                if (giorniChiusura > 0 && abbonamentiSovrapposti.Count > 0)
                 {
-                    await context.SaveChangesAsync();
+                    foreach (var abbonamento in abbonamentiSovrapposti)
+                    {
+                        abbonamento.DataScadenza = abbonamento.DataScadenza.AddDays(giorniChiusura);
+                    }
+
                     abbonamentiEstesi = abbonamentiSovrapposti.Count;
                 }
             }
+
+            if (abbonamentiEstesi > 0 || abbonamentiChiusi > 0)
+            {
+                await context.SaveChangesAsync();
+            }
         }
 
-        return (salvataggioOk, abbonamentiEstesi);
+        return (salvataggioOk, abbonamentiEstesi, abbonamentiChiusi);
     }
 
     public async Task<bool> EliminaChiusuraAsync(int id)
@@ -404,6 +451,200 @@ public class DatabaseService : IDatabaseService
 
         context.CalendarioChiusures.Remove(chiusura);
         return await context.SaveChangesAsync() > 0;
+    }
+
+    // ================================================
+    // COMUNICAZIONI INVIATE
+    // ================================================
+
+    public async Task<List<Comunicazioni>> GetComunicazioniAsync(int limite = 200)
+    {
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
+        return await context.Comunicazionis
+            .Include(c => c.Allievo)
+            .Where(c => c.Attivo == 1)
+            .OrderByDescending(c => c.DataInvio)
+            .Take(limite)
+            .ToListAsync();
+    }
+
+    public async Task<bool> RegistraComunicazioneAsync(
+        string tipo,
+        string? oggetto,
+        string? corpo,
+        IEnumerable<string> destinatari,
+        bool esito,
+        string? messaggioErrore = null,
+        int? allievoId = null)
+    {
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
+        var elenco = destinatari?
+            .Where(d => !string.IsNullOrWhiteSpace(d))
+            .Select(d => d.Trim())
+            .ToList() ?? new List<string>();
+
+        var comunicazione = new Comunicazioni
+        {
+            DataInvio = DateTime.Now,
+            Tipo = tipo,
+            Oggetto = oggetto,
+            Corpo = corpo,
+            AllievoId = allievoId,
+            // Un invio = una riga; gli indirizzi restano consultabili qui dentro.
+            Destinatario = string.Join("; ", elenco),
+            Esito = esito ? 1 : 0,
+            MessaggioErrore = messaggioErrore,
+            Attivo = 1
+        };
+
+        context.Comunicazionis.Add(comunicazione);
+        return await context.SaveChangesAsync() > 0;
+    }
+
+    // ================================================
+    // CAMPI EXTRA DEL MODULO
+    // ================================================
+
+    public async Task<List<CampiExtraAllievo>> GetCampiExtraAllievoAsync(int allievoId)
+    {
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
+        return await context.CampiExtraAllievos
+            .Where(c => c.AllievoId == allievoId && c.Attivo == 1)
+            .OrderBy(c => c.Chiave)
+            .ToListAsync();
+    }
+
+    public async Task<bool> SalvaCampoExtraAsync(int allievoId, string chiave, string? etichetta, string? valore, string origine = "Tablet")
+    {
+        if (allievoId <= 0 || string.IsNullOrWhiteSpace(chiave)) return false;
+
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
+        var esistente = await context.CampiExtraAllievos
+            .FirstOrDefaultAsync(c => c.AllievoId == allievoId && c.Chiave == chiave);
+
+        if (esistente == null)
+        {
+            context.CampiExtraAllievos.Add(new CampiExtraAllievo
+            {
+                AllievoId = allievoId,
+                Chiave = chiave,
+                Etichetta = etichetta,
+                Valore = valore,
+                DataInserimento = DateTime.Now,
+                Origine = origine,
+                Attivo = 1
+            });
+        }
+        else
+        {
+            esistente.Valore = valore;
+            esistente.Etichetta = etichetta ?? esistente.Etichetta;
+            esistente.DataInserimento = DateTime.Now;
+            esistente.Origine = origine;
+            esistente.Attivo = 1;
+        }
+
+        return await context.SaveChangesAsync() > 0;
+    }
+
+    public async Task<List<(string Valore, int Conteggio)>> GetStatisticheCampoExtraAsync(string chiave)
+    {
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
+        var righe = await context.CampiExtraAllievos
+            .Where(c => c.Chiave == chiave && c.Attivo == 1 && c.Valore != null && c.Valore != "")
+            .GroupBy(c => c.Valore!)
+            .Select(g => new { Valore = g.Key, Conteggio = g.Count() })
+            .OrderByDescending(x => x.Conteggio)
+            .ToListAsync();
+
+        return righe.Select(r => (r.Valore, r.Conteggio)).ToList();
+    }
+
+    // ================================================
+    // REGISTRAZIONE DA DISPOSITIVO (TABLET)
+    // ================================================
+
+    // Nome della riga in DispositiviAutorizzati che contiene la chiave del QR.
+    private const string NomeDispositivoRegistrazioni = "Tablet registrazioni";
+
+    public async Task<bool> EsisteCodiceFiscaleAsync(string codiceFiscale)
+    {
+        if (string.IsNullOrWhiteSpace(codiceFiscale)) return false;
+
+        string cf = codiceFiscale.Trim().ToUpperInvariant();
+
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
+        // Volutamente senza filtro su Attivo: anche un allievo eliminato conta,
+        // se ne occupa la segreteria.
+        return await context.Allievis
+            .AnyAsync(a => a.CodiceFiscale != null && a.CodiceFiscale.Trim().ToUpper() == cf);
+    }
+
+    public async Task<string> GetOCreaChiaveDispositivoAsync()
+    {
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
+        var esistente = await context.DispositiviAutorizzatis
+            .Where(d => d.Nome == NomeDispositivoRegistrazioni && d.Attivo == 1)
+            .OrderByDescending(d => d.Id)
+            .FirstOrDefaultAsync();
+
+        if (esistente != null) return esistente.Token;
+
+        var nuovo = new DispositiviAutorizzati
+        {
+            Nome = NomeDispositivoRegistrazioni,
+            Token = GeneraChiave(),
+            Attivo = 1
+        };
+        context.DispositiviAutorizzatis.Add(nuovo);
+        await context.SaveChangesAsync();
+
+        return nuovo.Token;
+    }
+
+    public async Task<string> RigeneraChiaveDispositivoAsync()
+    {
+        await using (var context = await _contextFactory.CreateDbContextAsync())
+        {
+            await context.DispositiviAutorizzatis
+                .Where(d => d.Nome == NomeDispositivoRegistrazioni && d.Attivo == 1)
+                .ExecuteUpdateAsync(s => s.SetProperty(d => d.Attivo, 0));
+        }
+
+        return await GetOCreaChiaveDispositivoAsync();
+    }
+
+    public async Task<bool> VerificaChiaveDispositivoAsync(string? chiave, string? indirizzoIp)
+    {
+        if (string.IsNullOrWhiteSpace(chiave)) return false;
+
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
+        var dispositivo = await context.DispositiviAutorizzatis
+            .FirstOrDefaultAsync(d => d.Token == chiave && d.Attivo == 1);
+
+        if (dispositivo == null) return false;
+
+        dispositivo.UltimoAccesso = DateTime.Now;
+        dispositivo.IndirizzoIp = indirizzoIp;
+        await context.SaveChangesAsync();
+
+        return true;
+    }
+
+    /// <summary>24 caratteri casuali, sicuri da mettere in un link.</summary>
+    private static string GeneraChiave()
+    {
+        return Convert.ToBase64String(RandomNumberGenerator.GetBytes(18))
+            .Replace('+', '-')
+            .Replace('/', '_');
     }
 
     // ================================================

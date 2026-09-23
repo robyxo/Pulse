@@ -6,10 +6,6 @@ namespace Pulse.Models;
 
 public partial class PulseContext : DbContext
 {
-    public PulseContext()
-    {
-    }
-
     public PulseContext(DbContextOptions<PulseContext> options)
         : base(options)
     {
@@ -20,6 +16,8 @@ public partial class PulseContext : DbContext
     public virtual DbSet<Allievi> Allievis { get; set; }
 
     public virtual DbSet<CalendarioChiusure> CalendarioChiusures { get; set; }
+
+    public virtual DbSet<CampiExtraAllievo> CampiExtraAllievos { get; set; }
 
     public virtual DbSet<Comunicazioni> Comunicazionis { get; set; }
 
@@ -98,6 +96,25 @@ public partial class PulseContext : DbContext
             entity.Property(e => e.Tipo).HasDefaultValue("Chiusura");
 
             entity.HasOne(d => d.Stagione).WithMany(p => p.CalendarioChiusures).HasForeignKey(d => d.StagioneId);
+        });
+
+        modelBuilder.Entity<CampiExtraAllievo>(entity =>
+        {
+            entity.ToTable("CampiExtraAllievo");
+
+            entity.HasIndex(e => e.AllievoId, "IX_CampiExtraAllievo_AllievoId");
+
+            entity.HasIndex(e => new { e.AllievoId, e.Chiave }, "IX_CampiExtraAllievo_Allievo_Chiave").IsUnique();
+
+            entity.HasIndex(e => e.Chiave, "IX_CampiExtraAllievo_Chiave");
+
+            entity.Property(e => e.Attivo).HasDefaultValue(1);
+            entity.Property(e => e.DataInserimento).HasColumnType("DATETIME");
+            entity.Property(e => e.Origine).HasDefaultValue("Tablet");
+
+            entity.HasOne(d => d.Allievo).WithMany(p => p.CampiExtraAllievos)
+                .HasForeignKey(d => d.AllievoId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
         });
 
         modelBuilder.Entity<Comunicazioni>(entity =>

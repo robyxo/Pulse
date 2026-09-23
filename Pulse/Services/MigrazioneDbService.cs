@@ -103,6 +103,21 @@ public class MigrazioneDbService : IMigrazioneDbService
                 UltimoAccesso DATETIME,
                 Attivo        INTEGER DEFAULT 1)
             """),
+
+        // Risposte alle domande extra del modulo privacy (una riga per risposta).
+        // Senza questa, sui PC delle scuole la stampa col modello dispositivo
+        // andrebbe in errore: la tabella esisterebbe solo dove la DDL è stata data a mano.
+        ("CampiExtraAllievo", """
+            CREATE TABLE CampiExtraAllievo (
+                Id              INTEGER PRIMARY KEY AUTOINCREMENT,
+                AllievoId       INTEGER NOT NULL REFERENCES Allievi (Id),
+                Chiave          TEXT NOT NULL,
+                Etichetta       TEXT,
+                Valore          TEXT,
+                DataInserimento DATETIME,
+                Origine         TEXT DEFAULT 'Tablet',
+                Attivo          INTEGER DEFAULT 1)
+            """),
     };
 
     private static readonly (string Tabella, string Colonna, string Definizione)[] ColonneAttese =
@@ -150,6 +165,9 @@ public class MigrazioneDbService : IMigrazioneDbService
         ("IX_Comunicazioni_DataInvio",         "CREATE INDEX IX_Comunicazioni_DataInvio ON Comunicazioni (DataInvio)"),
         ("IX_Privacy_Id_Allievo",              "CREATE INDEX IX_Privacy_Id_Allievo ON Privacy (Id_Allievo)"),
         ("IX_DispositiviAutorizzati_Token",    "CREATE UNIQUE INDEX IX_DispositiviAutorizzati_Token ON DispositiviAutorizzati (Token)"),
+        ("IX_CampiExtraAllievo_AllievoId",     "CREATE INDEX IX_CampiExtraAllievo_AllievoId ON CampiExtraAllievo (AllievoId)"),
+        ("IX_CampiExtraAllievo_Chiave",        "CREATE INDEX IX_CampiExtraAllievo_Chiave ON CampiExtraAllievo (Chiave)"),
+        ("IX_CampiExtraAllievo_Allievo_Chiave","CREATE UNIQUE INDEX IX_CampiExtraAllievo_Allievo_Chiave ON CampiExtraAllievo (AllievoId, Chiave)"),
     };
 
     /// <summary>
@@ -204,7 +222,7 @@ public class MigrazioneDbService : IMigrazioneDbService
             {
                 if (tabelleEsistenti.Contains(nome)) continue;
 
-                copiaSicurezzaFatta = await GarantisciCopiaSicurezzaAsync(connessione, copiaSicurezzaFatta);
+                copiaSicurezzaFatta = GarantisciCopiaSicurezza(connessione, copiaSicurezzaFatta);
 
                 if (await EseguiAsync(connessione, ddl))
                 {
@@ -226,7 +244,7 @@ public class MigrazioneDbService : IMigrazioneDbService
                 {
                     if (colonneEsistenti.Contains(colonna)) continue;
 
-                    copiaSicurezzaFatta = await GarantisciCopiaSicurezzaAsync(connessione, copiaSicurezzaFatta);
+                    copiaSicurezzaFatta = GarantisciCopiaSicurezza(connessione, copiaSicurezzaFatta);
 
                     if (await EseguiAsync(connessione, $"ALTER TABLE {tabella} ADD COLUMN {colonna} {definizione}"))
                     {
@@ -282,7 +300,7 @@ public class MigrazioneDbService : IMigrazioneDbService
     /// Copia il file del database prima della prima modifica di questa sessione.
     /// Se qualcosa va storto, la scuola ha comunque il suo archivio intatto.
     /// </summary>
-    private static async Task<bool> GarantisciCopiaSicurezzaAsync(DbConnection connessione, bool giaFatta)
+    private static bool GarantisciCopiaSicurezza(DbConnection connessione, bool giaFatta)
     {
         if (giaFatta) return true;
 
@@ -297,7 +315,11 @@ public class MigrazioneDbService : IMigrazioneDbService
                 cartella,
                 $"{nome}_prima_aggiornamento_{DateTime.Now:yyyyMMdd_HHmmss}.db");
 
-            await Task.Run(() => File.Copy(percorso, destinazione, overwrite: false));
+            // Copia sincrona, di proposito: AggiornaSchemaAsync viene chiamato all'avvio
+            // con .GetAwaiter().GetResult() sul thread dell'interfaccia. Un Task.Run qui
+            // proverebbe a rientrare su quel thread, che sta aspettando: l'app si blocca
+            // senza errori prima di mostrare la finestra. Il file e' piccolo, basta cosi'.
+            File.Copy(percorso, destinazione, overwrite: false);
 
             System.Diagnostics.Debug.WriteLine($"[MigrazioneDb] Copia di sicurezza: {destinazione}");
         }

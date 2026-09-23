@@ -70,6 +70,30 @@ public partial class GestioneAllievoViewModel : BaseViewModel
     [ObservableProperty]
     private bool _mostraBottonePrivacy = true;
 
+    // --- STATO DEL MODULO PRIVACY ---
+    // La firma resta sulla carta: qui si registra solo che è stata apposta,
+    // ed è quel momento a far nascere il PDF da conservare.
+    private Privacy? _privacyCorrente;
+
+    [ObservableProperty]
+    private bool _mostraStatoPrivacy;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(MostraBottoneFirma))]
+    private bool _privacyFirmata;
+
+    /// <summary>Il bottone per firmare si vede solo finché la firma non è registrata.</summary>
+    public bool MostraBottoneFirma => !PrivacyFirmata;
+
+    [ObservableProperty]
+    private string _statoPrivacyTesto = string.Empty;
+
+    [ObservableProperty]
+    private string _statoPrivacyColore = "#94A3B8";
+
+    [ObservableProperty]
+    private bool _haPdfArchiviato;
+
     // --- TABELLA E PAGINAZIONE ABBONAMENTI ---
     [ObservableProperty]
     private ObservableCollection<Abbonamenti> _listaAbbonamentiPaginata = new();
@@ -146,6 +170,48 @@ public partial class GestioneAllievoViewModel : BaseViewModel
         IsEdizione = value.Id > 0;
 
         _ = CaricaAbbonamentiAsync();
+        _ = CaricaStatoPrivacyAsync();
+    }
+
+    private async Task CaricaStatoPrivacyAsync()
+    {
+        // Ha senso solo su un allievo già a database: prima non c'è nulla da firmare.
+        MostraStatoPrivacy = Allievo.Id > 0 && MostraBottonePrivacy;
+
+        if (!MostraStatoPrivacy)
+        {
+            _privacyCorrente = null;
+            PrivacyFirmata = false;
+            HaPdfArchiviato = false;
+            return;
+        }
+
+        var righe = await _dbService.GetPrivacyAllievoAsync(Allievo.Id);
+        _privacyCorrente = righe.OrderByDescending(p => p.Id).FirstOrDefault();
+
+        PrivacyFirmata = _privacyCorrente?.Firmato == 1;
+
+        string? pdf = _privacyCorrente?.PercorsoPdf;
+        HaPdfArchiviato = !string.IsNullOrWhiteSpace(pdf) && File.Exists(pdf);
+
+        AggiornaTestoPrivacy();
+    }
+
+    private void AggiornaTestoPrivacy()
+    {
+        if (PrivacyFirmata)
+        {
+            string data = _privacyCorrente?.DataFirma?.ToString("dd/MM/yyyy") ?? "data non registrata";
+            StatoPrivacyTesto = HaPdfArchiviato
+                ? $"Firmato il {data} · copia PDF archiviata"
+                : $"Firmato il {data} · PDF non archiviato";
+            StatoPrivacyColore = HaPdfArchiviato ? "#10B981" : "#F59E0B";
+        }
+        else
+        {
+            StatoPrivacyTesto = "Modulo privacy non ancora firmato";
+            StatoPrivacyColore = "#94A3B8";
+        }
     }
 
     partial void OnTestoRicercaAbbonamentoChanged(string value)
@@ -672,6 +738,104 @@ public partial class GestioneAllievoViewModel : BaseViewModel
         {
             await _privacyDocumentService.ApriModuloVuotoAsync();
         }
+    }
+
+    // ✍️ FIRMA DEL MODULO PRIVACY
+    // La firma è a penna sulla carta: qui la segreteria registra che è avvenuta,
+    // e in quel momento nasce il PDF da conservare in archivio.
+    [RelayCommand]
+    public async Task ConfermaFirmaPrivacyAsync()
+    {
+        if (Allievo.Id == 0)
+        {
+            await Shell.Current.DisplayAlert("Attenzione", "Salva prima l'allievo.", "OK");
+            return;
+        }
+
+        bool conferma = await Shell.Current.DisplayAlert(
+            "Modulo firmato",
+            $"Confermi che {Nome} {Cognome} ha firmato il modulo privacy?\n\nVerrà archiviata una copia in PDF.",
+            "Sì, è firmato",
+            "Annulla");
+
+        if (!conferma) return;
+
+        await EseguiConCaricamento(async () =>
+        {
+            SincronizzaAllievoDaCampi();
+
+            var privacy = _privacyCorrente ?? new Privacy { IdAllievo = Allievo.Id };
+
+            privacy.IdAllievo = Allievo.Id;
+            privacy.Firmato = 1;
+            privacy.DataFirma = DateTime.Now;
+            privacy.Data ??= DateTime.Now.ToString("yyyy-MM-dd");
+            privacy.PresaVisione = 1;
+            privacy.Attivo = 1;
+            // Quale dei due modelli (a penna o dispositivo) è stato firmato davvero.
+            privacy.ModelloUsato = await _privacyDocumentService.NomeModelloInUsoAsync();
+
+            string? percorsoPdf = await _privacyDocumentService.ArchiviaModuloFirmatoAsync(Allievo);
+            if (!string.IsNullOrWhiteSpace(percorsoPdf))
+            {
+                privacy.PercorsoPdf = percorsoPdf;
+            }
+
+            await _dbService.SalvaPrivacyAsync(privacy);
+            _privacyCorrente = privacy;
+
+            await CaricaStatoPrivacyAsync();
+
+            if (string.IsNullOrWhiteSpace(percorsoPdf))
+            {
+                // La firma è registrata lo stesso: il PDF si può rigenerare dopo.
+                await Shell.Current.DisplayAlert(
+                    "Firma registrata",
+                    "La firma è stata registrata, ma la copia PDF non è stata creata.\n\nControlla che in Impostazioni sia indicata la cartella di archivio dei moduli.",
+                    "OK");
+            }
+        });
+    }
+
+    [RelayCommand]
+    public async Task ApriPdfPrivacyAsync()
+    {
+        string? percorso = _privacyCorrente?.PercorsoPdf;
+
+        if (string.IsNullOrWhiteSpace(percorso) || !File.Exists(percorso))
+        {
+            await Shell.Current.DisplayAlert("Attenzione", "La copia PDF non è più disponibile nel percorso registrato.", "OK");
+            return;
+        }
+
+        await Launcher.Default.OpenAsync(new OpenFileRequest
+        {
+            Title = "Modulo Privacy Firmato",
+            File = new ReadOnlyFile(percorso)
+        });
+    }
+
+    [RelayCommand]
+    public async Task AnnullaFirmaPrivacyAsync()
+    {
+        if (_privacyCorrente == null) return;
+
+        bool conferma = await Shell.Current.DisplayAlert(
+            "Annulla firma",
+            "Vuoi togliere la spunta di firma?\n\nIl PDF già archiviato resta nella cartella: va eliminato a mano se non serve più.",
+            "Sì, togli",
+            "Annulla");
+
+        if (!conferma) return;
+
+        await EseguiConCaricamento(async () =>
+        {
+            _privacyCorrente.Firmato = 0;
+            _privacyCorrente.DataFirma = null;
+
+            await _dbService.SalvaPrivacyAsync(_privacyCorrente);
+            await CaricaStatoPrivacyAsync();
+        });
     }
 
     [RelayCommand]

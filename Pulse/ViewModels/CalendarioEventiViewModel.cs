@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Pulse.DTO;
+using Pulse.Helpers;
 using Pulse.Models;
 using Pulse.Services;
 using Pulse.Utils;
@@ -21,10 +22,35 @@ public partial class CalendarioEventiViewModel : BaseViewModel
     [ObservableProperty]
     private bool _isModifica;
 
-    public List<string> OpzioniTipo { get; } = new() { "Chiusura", "Evento" };
+    public List<string> OpzioniTipo { get; } = new()
+    {
+        TipiEvento.Chiusura,
+        TipiEvento.ChiusuraStagionale,
+        TipiEvento.Evento
+    };
 
     [ObservableProperty]
-    private string _tipoSelezionato = "Chiusura";
+    [NotifyPropertyChangedFor(nameof(MostraRecupero))]
+    [NotifyPropertyChangedFor(nameof(TestoInfoTipo))]
+    private string _tipoSelezionato = TipiEvento.Chiusura;
+
+    /// <summary>
+    /// Il recupero ha senso solo per una chiusura normale: un evento non tocca
+    /// gli abbonamenti, e a fine stagione gli abbonamenti si chiudono comunque.
+    /// </summary>
+    public bool MostraRecupero =>
+        string.Equals(TipoSelezionato, TipiEvento.Chiusura, StringComparison.OrdinalIgnoreCase);
+
+    public string TestoInfoTipo => TipoSelezionato switch
+    {
+        TipiEvento.ChiusuraStagionale => "Fine stagione: gli abbonamenti in corso scadranno il giorno di chiusura.",
+        TipiEvento.Evento => "L'evento è solo informativo: non modifica gli abbonamenti.",
+        _ => "Con il recupero attivo, i giorni di chiusura vengono restituiti agli allievi."
+    };
+
+    /// <summary>Predefinito attivo, come richiesto: la scuola può toglierlo caso per caso.</summary>
+    [ObservableProperty]
+    private bool _recuperoAttivo = true;
 
     [ObservableProperty]
     private DateTime _dataInizioForm = DateTime.Today;
@@ -69,7 +95,8 @@ public partial class CalendarioEventiViewModel : BaseViewModel
     {
         _chiusuraInModifica = null;
         IsModifica = false;
-        TipoSelezionato = "Chiusura";
+        TipoSelezionato = TipiEvento.Chiusura;
+        RecuperoAttivo = true;
         DataInizioForm = DateTime.Today;
         DataFineForm = DateTime.Today;
         MotivoForm = string.Empty;
@@ -83,6 +110,7 @@ public partial class CalendarioEventiViewModel : BaseViewModel
         _chiusuraInModifica = item.Chiusura;
         IsModifica = true;
         TipoSelezionato = item.Tipo;
+        RecuperoAttivo = item.Chiusura.Recupero != 0;
         DataInizioForm = item.DataInizioDate ?? DateTime.Today;
         DataFineForm = item.DataFineDate ?? DateTime.Today;
         MotivoForm = item.Motivo;
@@ -128,19 +156,35 @@ public partial class CalendarioEventiViewModel : BaseViewModel
 
         var chiusura = _chiusuraInModifica ?? new CalendarioChiusure();
         bool eraNuova = chiusura.Id == 0;
-        bool eraEvento = TipoSelezionato == "Evento";
+        bool eraEvento = TipoSelezionato == TipiEvento.Evento;
+        bool eraStagionale = TipoSelezionato == TipiEvento.ChiusuraStagionale;
+
+        // Il recupero spento è una scelta che costa giorni agli allievi:
+        // si chiede conferma. Per la chiusura stagionale non ha senso chiederlo,
+        // perché lì gli abbonamenti si chiudono comunque.
+        if (eraNuova && MostraRecupero && !RecuperoAttivo)
+        {
+            bool conferma = await AlertPopup.ShowConfirmation(
+                "Recupero disattivato",
+                "Gli abbonamenti NON verranno prolungati per questa chiusura: gli allievi perderanno i giorni di chiusura.\n\nVuoi procedere lo stesso?",
+                "Sì, procedi",
+                "Annulla");
+
+            if (!conferma) return;
+        }
 
         chiusura.Tipo = TipoSelezionato;
         chiusura.DataInizio = DataInizioForm.Date.ToString("yyyy-MM-dd");
         chiusura.DataFine = DataFineForm.Date.ToString("yyyy-MM-dd");
         chiusura.Motivo = MotivoForm.Trim();
         chiusura.Stato = 1;
+        chiusura.Recupero = (MostraRecupero && RecuperoAttivo) ? 1 : 0;
 
         bool salvataggioRiuscito = false;
 
         await EseguiConCaricamento(async () =>
         {
-            var (successo, abbonamentiEstesi) = await _dbService.SalvaChiusuraAsync(chiusura);
+            var (successo, abbonamentiEstesi, abbonamentiChiusi) = await _dbService.SalvaChiusuraAsync(chiusura);
 
             if (!successo)
             {
@@ -152,9 +196,24 @@ public partial class CalendarioEventiViewModel : BaseViewModel
 
             if (!eraEvento && eraNuova)
             {
-                string esito = abbonamentiEstesi > 0
-                    ? $"Chiusura salvata.\n{abbonamentiEstesi} abbonamenti attivi sono stati automaticamente prolungati."
-                    : "Chiusura salvata. Nessun abbonamento attivo risultava sovrapposto al periodo.";
+                string esito;
+
+                if (eraStagionale)
+                {
+                    esito = abbonamentiChiusi > 0
+                        ? $"Chiusura stagionale salvata.\n{abbonamentiChiusi} abbonamenti sono stati portati a scadenza al {DataInizioForm:dd/MM/yyyy}."
+                        : "Chiusura stagionale salvata. Nessun abbonamento risultava ancora in corso a quella data.";
+                }
+                else if (!RecuperoAttivo)
+                {
+                    esito = "Chiusura salvata senza recupero: gli abbonamenti restano invariati.";
+                }
+                else
+                {
+                    esito = abbonamentiEstesi > 0
+                        ? $"Chiusura salvata.\n{abbonamentiEstesi} abbonamenti attivi sono stati automaticamente prolungati."
+                        : "Chiusura salvata. Nessun abbonamento attivo risultava sovrapposto al periodo.";
+                }
 
                 await AlertPopup.Show("Fatto", esito);
             }
@@ -209,6 +268,15 @@ public partial class CalendarioEventiViewModel : BaseViewModel
             string messaggio = $"Ciao!\n\nTi segnaliamo un evento in programma il {dataTesto}: {chiusura.Motivo}.\n\nA presto!";
 
             bool esito = await _emailService.InviaEmailAsync(destinatari, oggetto, messaggio);
+
+            // Finisce nello storico comunicazioni, riuscita o no.
+            await _dbService.RegistraComunicazioneAsync(
+                "Email",
+                oggetto,
+                messaggio,
+                destinatari,
+                esito,
+                esito ? null : "Invio non riuscito: controllare la configurazione email.");
 
             if (esito)
             {

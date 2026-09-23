@@ -35,7 +35,15 @@ public class AllievoTabellaDTO
         .ThenBy(a => a.DataScadenza)
         .FirstOrDefault();
 
-    public StatoAbbonamento Stato => StatoAbbonamentoHelper.Calcola(AbbonamentoRilevante);
+    /// <summary>
+    /// Registrato (per esempio dal tablet) e ancora senza nessun abbonamento.
+    /// Appena la segreteria ne crea uno, il segno viene tolto in automatico.
+    /// </summary>
+    public bool IsDaAbbonare => Allievo.DaAbbonare == 1 && AbbonamentiPerCorso.Count == 0;
+
+    public StatoAbbonamento Stato => IsDaAbbonare
+        ? StatoAbbonamento.DaAbbonare
+        : StatoAbbonamentoHelper.Calcola(AbbonamentoRilevante);
 
     /// <summary>Nome del corso se e' uno solo, altrimenti quanti sono.</summary>
     public string CorsoNome => NumeroCorsi switch
@@ -77,7 +85,19 @@ public class AllievoTabellaDTO
         }
     }
 
+    /// <summary>Chiave del filtro Stato: non contiene icone, va confrontata col filtro.</summary>
     public string StatoChiave => StatoAbbonamentoHelper.GetEtichetta(Stato);
+
+    /// <summary>
+    /// Testo mostrato in tabella: uguale alla chiave, tranne il triangolo giallo
+    /// per chi è da abbonare, che deve saltare all'occhio.
+    /// </summary>
+    public string StatoVisualizzato => IsDaAbbonare ? $"⚠️ {StatoChiave}" : StatoChiave;
+
+    /// <summary>Per distinguere due omonimi nel promemoria.</summary>
+    public string NomeConRegistrazione => Allievo.DataRegistrazione.HasValue
+        ? $"{NomeCompleto} · registrato il {Allievo.DataRegistrazione.Value:dd/MM HH:mm}"
+        : NomeCompleto;
 
     public string ColorePallinoHex => StatoAbbonamentoHelper.GetColore(Stato);
 
