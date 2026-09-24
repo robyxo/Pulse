@@ -1,0 +1,9 @@
+Apri PowerShell come amministratore
+Vai nella cartella del progetto:
+powershell
+   cd D:\Progetti\Pulse
+Esegui:
+powershell
+   .\pubblica.cmd 1.0.1
+
+Così vedi tutti i messaggi e gli eventuali errori.

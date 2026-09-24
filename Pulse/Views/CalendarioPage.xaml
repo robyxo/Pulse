@@ -119,28 +119,28 @@
                 Spacing="5">
 
                 <Button
-                    BackgroundColor="#0284C7"
+                    BackgroundColor="#3B82F6"
                     Command="{Binding NavigaGestioneInsegnantiCommand}"
                     FontAttributes="Bold"
                     Text="👨‍🏫 Gestione Insegnanti"
                     TextColor="White" />
 
                 <Button
-                    BackgroundColor="#4F46E5"
+                    BackgroundColor="#10B981"
                     Command="{Binding NavigaGestioneCorsiCommand}"
                     FontAttributes="Bold"
-                    Text="📚 Gestione Corsi"
+                    Text="📖 Gestione Corsi"
                     TextColor="White" />
 
                 <Button
-                    BackgroundColor="#4F46E5"
+                    BackgroundColor="#EF4444"
                     Command="{Binding NavigaGestioneAllieviCommand}"
                     FontAttributes="Bold"
-                    Text="📚 Gestione Allievi"
+                    Text="👥 Gestione Allievi"
                     TextColor="White" />
 
                 <Button
-                    BackgroundColor="#0EA5E9"
+                    BackgroundColor="#06B6D4"
                     Command="{Binding NavigaGestioneSaleCommand}"
                     FontAttributes="Bold"
                     Text="🚪 Gestione Sale"
@@ -154,14 +154,14 @@
                     TextColor="White" />
 
                 <Button
-                    BackgroundColor="#64748B"
+                    BackgroundColor="#6B7280"
                     Command="{Binding NavigaImpostazioniCommand}"
                     FontAttributes="Bold"
                     Text="⚙️ Impostazioni"
                     TextColor="White" />
 
                 <Button
-                    BackgroundColor="#7C3AED"
+                    BackgroundColor="#A855F7"
                     Command="{Binding NavigaCalendarioEventiCommand}"
                     FontAttributes="Bold"
                     Text="📆 Calendario Eventi"

@@ -384,9 +384,10 @@
                                     Padding="16,10"
                                     Stroke="#F1F5F9"
                                     StrokeThickness="0.5">
+                                    <!--  regolazione perfetta "2.8*, 2*, 1.5*, 1.1*, 350" non toccare mai  -->
                                     <Grid
-                                        ColumnDefinitions="2*, 1.2*, 1*, 1*, 260"
-                                        ColumnSpacing="10"
+                                        ColumnDefinitions="2.8*, 2*, 1.5*, 1.1*, 350"
+                                        ColumnSpacing="4"
                                         VerticalOptions="Center">
 
                                         <!--  Corso e Tipologia  -->

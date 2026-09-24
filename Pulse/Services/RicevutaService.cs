@@ -414,7 +414,6 @@ body {{
 </head>
 <body>
 {htmlMaschera}    <div class=""foglietto"">
-        {blocchettoLogo}
         <div class=""intestazione"">{nomeScuola}</div>
         {(string.IsNullOrWhiteSpace(subIntestazione) ? "" : $@"<div class=""intestazione-sub"">{subIntestazione}</div>")}
 
