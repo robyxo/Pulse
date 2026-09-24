@@ -62,6 +62,21 @@ public class CompensiMaestriService
         return CalcolaOrePeriodoAsync(lezioni, dataInizio, dataFine);
     }
 
+    /// <summary>
+    /// Ore dell'anno scolastico (1 settembre - 31 agosto) che contiene il mese indicato.
+    /// </summary>
+    public Task<double> CalcolaOreAnnoScolasticoAsync(List<Lezioni> lezioni, int anno, int mese)
+    {
+        var (dataInizio, dataFine) = AnnoScolastico(anno, mese);
+        return CalcolaOrePeriodoAsync(lezioni, dataInizio, dataFine);
+    }
+
+    public static (DateTime Dal, DateTime Al) AnnoScolastico(int anno, int mese)
+    {
+        int annoInizio = mese >= 9 ? anno : anno - 1;
+        return (new DateTime(annoInizio, 9, 1), new DateTime(annoInizio + 1, 8, 31));
+    }
+
     private DateTime? ParseData(string? data) =>
         DateTime.TryParse(data, out var d) ? d : null;
 }

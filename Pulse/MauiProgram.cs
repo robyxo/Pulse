@@ -66,6 +66,7 @@ public static class MauiProgram
         builder.Services.AddTransient<CalendarioEventiViewModel>();
         builder.Services.AddTransient<SaleViewModel>();
         builder.Services.AddTransient<GestioneSalaViewModel>();
+        builder.Services.AddTransient<StatisticheViewModel>();
 
         // 3. Registrazione Views (Pagine)
         builder.Services.AddTransient<MainPage>();
@@ -82,6 +83,7 @@ public static class MauiProgram
         builder.Services.AddTransient<CalendarioEventiPage>();
         builder.Services.AddTransient<SalePage>();
         builder.Services.AddTransient<GestioneSalaPage>();
+        builder.Services.AddTransient<StatistichePage>();
 
 
         // 4. Registrazione Servizi
@@ -97,6 +99,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IMigrazioneDbService, MigrazioneDbService>();
         builder.Services.AddSingleton<IAvvisiDispositivoService, AvvisiDispositivoService>();
         builder.Services.AddSingleton<IServerDispositivoService, ServerDispositivoService>();
+        builder.Services.AddSingleton<IStatisticheService, StatisticheService>();
 
         ConfigureWindowsSpecific(builder);
 

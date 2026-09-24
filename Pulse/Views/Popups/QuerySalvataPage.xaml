@@ -1,0 +1,150 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Pulse.Views.Popups.QuerySalvataPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="Query salvata"
+    BackgroundColor="#F8FAFC">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="12">
+
+            <Label
+                x:Name="LblTitolo"
+                FontAttributes="Bold"
+                FontSize="18"
+                Text="🔎 Nuova query"
+                TextColor="#1E293B" />
+
+            <Label
+                FontSize="12"
+                Text="Le query vengono eseguite in sola lettura: possono solo leggere i dati, mai modificarli. Deve iniziare con SELECT."
+                TextColor="Gray" />
+
+            <!--  NOME  -->
+            <Label
+                FontAttributes="Bold"
+                Text="Nome:"
+                TextColor="#1E293B" />
+            <Border
+                Padding="10,0"
+                Stroke="#CBD5E1"
+                StrokeShape="RoundRectangle 8">
+                <Entry
+                    x:Name="EntryNome"
+                    HeightRequest="42"
+                    Placeholder="Es. Allievi senza email" />
+            </Border>
+
+            <!--  DESCRIZIONE  -->
+            <Label
+                FontAttributes="Bold"
+                Text="Descrizione (facoltativa):"
+                TextColor="#1E293B" />
+            <Border
+                Padding="10,0"
+                Stroke="#CBD5E1"
+                StrokeShape="RoundRectangle 8">
+                <Entry
+                    x:Name="EntryDescrizione"
+                    HeightRequest="42"
+                    Placeholder="A cosa serve" />
+            </Border>
+
+            <!--  CATEGORIA  -->
+            <Label
+                FontAttributes="Bold"
+                Text="Categoria (facoltativa):"
+                TextColor="#1E293B" />
+            <Border
+                Padding="10,0"
+                Stroke="#CBD5E1"
+                StrokeShape="RoundRectangle 8">
+                <Entry
+                    x:Name="EntryCategoria"
+                    HeightRequest="42"
+                    Placeholder="Es. Allievi, Incassi" />
+            </Border>
+
+            <!--  TESTO QUERY  -->
+            <Label
+                FontAttributes="Bold"
+                Text="Query SQL:"
+                TextColor="#1E293B" />
+            <Border
+                Padding="10"
+                Stroke="#CBD5E1"
+                StrokeShape="RoundRectangle 8">
+                <Editor
+                    x:Name="EditorQuery"
+                    FontFamily="Consolas"
+                    FontSize="13"
+                    HeightRequest="200"
+                    Placeholder="SELECT Nome, Cognome FROM Allievi WHERE Attivo = 1" />
+            </Border>
+
+            <Label
+                x:Name="LblEsitoProva"
+                FontSize="13"
+                IsVisible="False" />
+
+            <!--  SOLO AMMINISTRATORE  -->
+            <Grid
+                x:Name="RigaSoloAmministratore"
+                ColumnDefinitions="*,Auto">
+                <VerticalStackLayout Grid.Column="0" Spacing="2">
+                    <Label
+                        FontAttributes="Bold"
+                        Text="Solo amministratore"
+                        TextColor="#1E293B" />
+                    <Label
+                        FontSize="12"
+                        Text="Visibile solo quando Pulse gira da Visual Studio, non nelle scuole."
+                        TextColor="Gray" />
+                </VerticalStackLayout>
+                <Switch
+                    x:Name="SwitchSoloAmministratore"
+                    Grid.Column="1"
+                    VerticalOptions="Center" />
+            </Grid>
+
+            <FlexLayout
+                Margin="0,12,0,0"
+                Direction="Row"
+                JustifyContent="Start"
+                Wrap="Wrap">
+                <Button
+                    Margin="0,0,10,10"
+                    BackgroundColor="#0EA5E9"
+                    Clicked="OnProvaClicked"
+                    CornerRadius="10"
+                    FontAttributes="Bold"
+                    HeightRequest="46"
+                    Text="▶ Prova"
+                    TextColor="White"
+                    WidthRequest="120" />
+                <Button
+                    Margin="0,0,10,10"
+                    BackgroundColor="#10B981"
+                    Clicked="OnSalvaClicked"
+                    CornerRadius="10"
+                    FontAttributes="Bold"
+                    HeightRequest="46"
+                    Text="💾 Salva"
+                    TextColor="White"
+                    WidthRequest="120" />
+                <Button
+                    Margin="0,0,10,10"
+                    BackgroundColor="#64748B"
+                    Clicked="OnAnnullaClicked"
+                    CornerRadius="10"
+                    FontAttributes="Bold"
+                    HeightRequest="46"
+                    Text="Annulla"
+                    TextColor="White"
+                    WidthRequest="110" />
+            </FlexLayout>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

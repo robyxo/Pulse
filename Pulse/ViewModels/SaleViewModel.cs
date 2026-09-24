@@ -81,7 +81,7 @@ public partial class SaleViewModel : BaseViewModel
     {
         if (sala == null) return;
 
-        bool confermato = await Shell.Current.DisplayAlert(
+        bool confermato = await AlertPopup.ShowConfirmation(
             "Conferma Eliminazione",
             $"Sei sicuro di voler eliminare la sala '{sala.Nome}'?\n\nLe lezioni che la usano restano al loro posto, ma senza sala assegnata.",
             "Sì, Elimina",

@@ -3,6 +3,7 @@
     x:Class="Pulse.Views.CorsiPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:models="clr-namespace:Pulse.Models"
     xmlns:vm="clr-namespace:Pulse.ViewModels"
     x:Name="PageRoot"
     Title="Gestione Corsi"
@@ -64,7 +65,7 @@
             </CollectionView.EmptyView>
 
             <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="x:Object">
+                <DataTemplate x:DataType="models:Corsi">
                     <Border
                         Margin="0,0,0,10"
                         Padding="12"
@@ -127,7 +128,7 @@
                                 Grid.Column="2"
                                 Padding="0"
                                 BackgroundColor="#F1F5F9"
-                                Command="{Binding BindingContext.ModificaCorsoCommand, Source={x:Reference PageRoot}}"
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CorsiViewModel}}, Path=ModificaCorsoCommand}"
                                 CommandParameter="{Binding .}"
                                 CornerRadius="18"
                                 FontSize="16"
@@ -140,7 +141,7 @@
                                 Grid.Column="3"
                                 Padding="0"
                                 BackgroundColor="#FEE2E2"
-                                Command="{Binding BindingContext.EliminaCorsoCommand, Source={x:Reference PageRoot}}"
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CorsiViewModel}}, Path=EliminaCorsoCommand}"
                                 CommandParameter="{Binding .}"
                                 CornerRadius="18"
                                 FontSize="16"

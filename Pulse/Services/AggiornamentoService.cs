@@ -9,9 +9,10 @@ public class AggiornamentoService : IAggiornamentoService
 {
 #if WINDOWS
 
-    // Repository da cui vengono lette le release. Deve restare pubblico,
-    // altrimenti serve un token di accesso come secondo parametro di GithubSource.
-    private const string UrlRepository = "https://github.com/robyxo/Pulse";
+    // Repository PUBBLICO che contiene solo gli installer e gli aggiornamenti
+    // (li carica pubblica.cmd). Il codice resta nel repo privato robyxo/Pulse:
+    // cosi' Pulse installato nelle scuole scarica gli aggiornamenti senza password.
+    private const string UrlRepository = "https://github.com/robyxo/Pulse-Releases";
 
     private readonly UpdateManager _updateManager;
     private UpdateInfo? _aggiornamentoTrovato;

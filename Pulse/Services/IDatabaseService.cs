@@ -40,6 +40,11 @@ public interface IDatabaseService
     Task<bool> EliminaInsegnanteAsync(int id);
     Task<List<Lezioni>> GetLezioniPerInsegnanteAsync(int insegnanteId);
 
+    /// <summary>Pagamenti registrati per un maestro, dal più recente.</summary>
+    Task<List<PagamentiInsegnanti>> GetPagamentiInsegnanteAsync(int insegnanteId);
+    Task<bool> SalvaPagamentoInsegnanteAsync(PagamentiInsegnanti pagamento);
+    Task<bool> EliminaPagamentoInsegnanteAsync(int id);
+
     // ================================================
     // ALLIEVI
     // ================================================

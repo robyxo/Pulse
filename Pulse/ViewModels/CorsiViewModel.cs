@@ -79,7 +79,7 @@ public partial class CorsiViewModel : BaseViewModel
     {
         if (corso == null) return;
 
-        bool confermato = await Shell.Current.DisplayAlert(
+        bool confermato = await AlertPopup.ShowConfirmation(
             "Conferma Eliminazione",
             $"Sei sicuro di voler eliminare il corso '{corso.Nome}'?",
             "Sì, Elimina",

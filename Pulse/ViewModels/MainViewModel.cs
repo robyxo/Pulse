@@ -56,4 +56,9 @@ public partial class MainViewModel : BaseViewModel
     private async Task VaiAlCalendario() =>
         await EseguiConCaricamento(async () =>
             await Shell.Current.GoToAsync(AppRoutes.Calendario.Pagina));
+
+    [RelayCommand]
+    private async Task VaiAlleStatistiche() =>
+        await EseguiConCaricamento(async () =>
+            await Shell.Current.GoToAsync(AppRoutes.Statistiche.Pagina));
 }

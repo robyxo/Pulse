@@ -359,7 +359,7 @@
 
                     <BoxView BackgroundColor="#E2E8F0" HeightRequest="1" />
 
-                    <!--  RIGHE TABELLA (x:DataType="x:Object" garantisce la risoluzione dei Command con x:Reference)  -->
+                    <!--  RIGHE TABELLA: i Command si raggiungono con RelativeSource sul ViewModel della pagina  -->
                     <CollectionView ItemsSource="{Binding ListaAbbonamentiPaginata}" SelectionMode="None">
                         <CollectionView.EmptyView>
                             <VerticalStackLayout
@@ -379,7 +379,7 @@
                         </CollectionView.EmptyView>
 
                         <CollectionView.ItemTemplate>
-                            <DataTemplate x:DataType="x:Object">
+                            <DataTemplate x:DataType="models:Abbonamenti">
                                 <Border
                                     Padding="16,10"
                                     Stroke="#F1F5F9"
@@ -447,7 +447,7 @@
                                                 TextColor="White" />
                                         </Border>
 
-                                        <!--  Azioni con binding esplicito a PageRoot  -->
+                                        <!--  Azioni: i Command arrivano dal ViewModel della pagina (RelativeSource)  -->
                                         <HorizontalStackLayout
                                             Grid.Column="4"
                                             HorizontalOptions="Center"
@@ -458,7 +458,7 @@
                                             <Button
                                                 Padding="0"
                                                 BackgroundColor="#EDE9FE"
-                                                Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.ApriStoricoAbbonamentiCommand}"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:GestioneAllievoViewModel}}, Path=ApriStoricoAbbonamentiCommand}"
                                                 CommandParameter="{Binding .}"
                                                 CornerRadius="16"
                                                 FontSize="13"
@@ -469,7 +469,7 @@
                                             <Button
                                                 Padding="0"
                                                 BackgroundColor="#F1F5F9"
-                                                Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.StampaRicevutaCommand}"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:GestioneAllievoViewModel}}, Path=StampaRicevutaCommand}"
                                                 CommandParameter="{Binding .}"
                                                 CornerRadius="16"
                                                 FontSize="13"
@@ -480,7 +480,7 @@
                                             <Button
                                                 Padding="0"
                                                 BackgroundColor="#E2E8F0"
-                                                Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.ToggleSospensioneAbbonamentoCommand}"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:GestioneAllievoViewModel}}, Path=ToggleSospensioneAbbonamentoCommand}"
                                                 CommandParameter="{Binding .}"
                                                 CornerRadius="16"
                                                 FontSize="13"
@@ -491,7 +491,7 @@
                                             <Button
                                                 Padding="0"
                                                 BackgroundColor="#FEF9C3"
-                                                Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.DiminuisciSettimanaAbbonamentoCommand}"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:GestioneAllievoViewModel}}, Path=DiminuisciSettimanaAbbonamentoCommand}"
                                                 CommandParameter="{Binding .}"
                                                 CornerRadius="16"
                                                 FontAttributes="Bold"
@@ -504,7 +504,7 @@
                                             <Button
                                                 Padding="0"
                                                 BackgroundColor="#DCFCE7"
-                                                Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.AumentaSettimanaAbbonamentoCommand}"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:GestioneAllievoViewModel}}, Path=AumentaSettimanaAbbonamentoCommand}"
                                                 CommandParameter="{Binding .}"
                                                 CornerRadius="16"
                                                 FontAttributes="Bold"
@@ -517,7 +517,7 @@
                                             <Button
                                                 Padding="0"
                                                 BackgroundColor="#DBEAFE"
-                                                Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.RinnovaAbbonamentoCommand}"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:GestioneAllievoViewModel}}, Path=RinnovaAbbonamentoCommand}"
                                                 CommandParameter="{Binding .}"
                                                 CornerRadius="16"
                                                 FontSize="13"
@@ -528,7 +528,7 @@
                                             <Button
                                                 Padding="0"
                                                 BackgroundColor="#FEE2E2"
-                                                Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.EliminaAbbonamentoCommand}"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:GestioneAllievoViewModel}}, Path=EliminaAbbonamentoCommand}"
                                                 CommandParameter="{Binding .}"
                                                 CornerRadius="16"
                                                 FontSize="13"

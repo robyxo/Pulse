@@ -81,7 +81,7 @@ public partial class InsegnantiViewModel : BaseViewModel
     {
         if (insegnante == null) return;
 
-        bool confermato = await Shell.Current.DisplayAlert(
+        bool confermato = await AlertPopup.ShowConfirmation(
             "Conferma Eliminazione",
             $"Sei sicuro di voler eliminare l'insegnante '{insegnante.Nome} {insegnante.Cognome}'?",
             "Sì, Elimina",

@@ -48,19 +48,31 @@
 
         </VerticalStackLayout>
 
-        <!--  Pulsante per andare al Calendario  -->
-        <Button
+        <!--  Pulsanti: Calendario e Statistiche  -->
+        <HorizontalStackLayout
             Grid.Row="1"
             Margin="20,0,20,30"
-            BackgroundColor="#4F46E5"
-            Command="{Binding VaiAlCalendarioCommand}"
-            CornerRadius="12"
-            FontSize="18"
-            HeightRequest="60"
             HorizontalOptions="Center"
-            Text="📅 Vedi Calendario"
-            TextColor="White"
-            WidthRequest="250" />
+            Spacing="16">
+            <Button
+                BackgroundColor="#4F46E5"
+                Command="{Binding VaiAlCalendarioCommand}"
+                CornerRadius="12"
+                FontSize="18"
+                HeightRequest="60"
+                Text="📅 Vedi Calendario"
+                TextColor="White"
+                WidthRequest="250" />
+            <Button
+                BackgroundColor="#10B981"
+                Command="{Binding VaiAlleStatisticheCommand}"
+                CornerRadius="12"
+                FontSize="18"
+                HeightRequest="60"
+                Text="📊 Statistiche"
+                TextColor="White"
+                WidthRequest="250" />
+        </HorizontalStackLayout>
     </Grid>
 
 </ContentPage>

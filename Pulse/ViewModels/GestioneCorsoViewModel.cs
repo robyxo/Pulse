@@ -120,7 +120,7 @@ public partial class GestioneCorsoViewModel : BaseViewModel
     {
         if (string.IsNullOrWhiteSpace(Nome))
         {
-            await Shell.Current.DisplayAlert("Attenzione", "Inserisci il nome del corso.", "OK");
+            await AlertPopup.Show("Attenzione", "Inserisci il nome del corso.", "OK");
             return;
         }
 
@@ -148,7 +148,7 @@ public partial class GestioneCorsoViewModel : BaseViewModel
     {
         if (Corso == null || Corso.Id == 0) return;
 
-        bool conferma = await Shell.Current.DisplayAlert(
+        bool conferma = await AlertPopup.ShowConfirmation(
             "Conferma Eliminazione",
             $"Sei sicuro di voler eliminare il corso '{Corso.Nome}'?",
             "Sì, Elimina",

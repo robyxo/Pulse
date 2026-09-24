@@ -65,7 +65,7 @@
             </CollectionView.EmptyView>
 
             <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="x:Object">
+                <DataTemplate x:DataType="models:Insegnanti">
                     <Border
                         Margin="0,0,0,10"
                         Padding="12"
@@ -111,7 +111,7 @@
                                 Grid.Column="2"
                                 Padding="0"
                                 BackgroundColor="#F1F5F9"
-                                Command="{Binding BindingContext.ModificaInsegnanteCommand, Source={x:Reference PageRoot}}"
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:InsegnantiViewModel}}, Path=ModificaInsegnanteCommand}"
                                 CommandParameter="{Binding .}"
                                 CornerRadius="18"
                                 FontSize="16"
@@ -124,7 +124,7 @@
                                 Grid.Column="3"
                                 Padding="0"
                                 BackgroundColor="#FEE2E2"
-                                Command="{Binding BindingContext.EliminaInsegnanteCommand, Source={x:Reference PageRoot}}"
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:InsegnantiViewModel}}, Path=EliminaInsegnanteCommand}"
                                 CommandParameter="{Binding .}"
                                 CornerRadius="18"
                                 FontSize="16"

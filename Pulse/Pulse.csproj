@@ -21,6 +21,9 @@
 		<WindowsPackageType>None</WindowsPackageType>
 		<!-- Velopack: serve un Main scritto a mano, quindi si disattiva quello generato -->
 		<DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
+		<!-- MVVMTK0045: il toolkit suggerisce le "partial property" al posto dei campi [ObservableProperty]
+		     per la compatibilita' AOT/trimming su WinUI. Pulse non usa AOT ne' trimming: avviso spento. -->
+		<NoWarn>$(NoWarn);MVVMTK0045</NoWarn>
 
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
@@ -62,7 +65,7 @@
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.1" />
 		<PackageReference Include="QRCoder" Version="1.8.0" />
-		<PackageReference Include="Velopack" Version="0.0.1298" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'" />
+		<PackageReference Include="Velopack" Version="1.2.0" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'" />
 	</ItemGroup>
 
 	<ItemGroup>

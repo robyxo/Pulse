@@ -40,6 +40,8 @@ public partial class AppShell : Shell
                         // 🚪 Rotte Sale
             { AppRoutes.Sale.PaginaSale, typeof(SalePage) },
             { AppRoutes.Sale.GestioneSala, typeof(GestioneSalaPage) },
+            // 📊 Rotte Statistiche
+            { AppRoutes.Statistiche.Pagina, typeof(StatistichePage) }
         };
 
         foreach (var item in routes)

@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Pulse.DTO;
 using Pulse.Models;
+using Pulse.Utils;
 
 namespace Pulse.Services;
 
@@ -112,7 +113,7 @@ public class PrivacyDocumentService
     }
 
     private static Task AvvisaModelloMancanteAsync(string nomeFile) =>
-        Shell.Current.DisplayAlert(
+        AlertPopup.Show(
             "Modello non presente",
             $"Nella cartella Privacy dell'applicazione non è stato inserito il file {nomeFile}.\n\nSegui le istruzioni del file LEGGIMI.txt per aggiungere il modulo della tua scuola.",
             "OK");
@@ -146,7 +147,7 @@ public class PrivacyDocumentService
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlert("Errore", $"Impossibile aprire il modulo privacy: {ex.Message}", "OK");
+            await AlertPopup.Show("Errore", $"Impossibile aprire il modulo privacy: {ex.Message}", "OK");
         }
     }
 
@@ -191,7 +192,7 @@ public class PrivacyDocumentService
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlert("Errore", $"Impossibile generare il modulo privacy compilato: {ex.Message}", "OK");
+            await AlertPopup.Show("Errore", $"Impossibile generare il modulo privacy compilato: {ex.Message}", "OK");
         }
     }
 
@@ -233,7 +234,7 @@ public class PrivacyDocumentService
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlert("Errore", $"Impossibile aprire la cartella dei modelli: {ex.Message}", "OK");
+            await AlertPopup.Show("Errore", $"Impossibile aprire la cartella dei modelli: {ex.Message}", "OK");
         }
     }
 
@@ -518,7 +519,7 @@ public class PrivacyDocumentService
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlert("Errore", $"Impossibile generare il modulo privacy: {ex.Message}", "OK");
+            await AlertPopup.Show("Errore", $"Impossibile generare il modulo privacy: {ex.Message}", "OK");
         }
     }
 

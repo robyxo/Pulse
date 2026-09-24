@@ -220,6 +220,38 @@ public class DatabaseService : IDatabaseService
             .ToListAsync();
     }
 
+    public async Task<List<PagamentiInsegnanti>> GetPagamentiInsegnanteAsync(int insegnanteId)
+    {
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
+        return await context.PagamentiInsegnantis
+            .Where(p => p.InsegnanteId == insegnanteId && p.Attivo == 1)
+            .OrderByDescending(p => p.DataPagamento)
+            .ToListAsync();
+    }
+
+    public async Task<bool> SalvaPagamentoInsegnanteAsync(PagamentiInsegnanti pagamento)
+    {
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
+        bool nuovo = pagamento.Id == 0;
+        if (nuovo) pagamento.Attivo = 1;
+
+        AgganciaPerSalvataggio(context, pagamento, nuovo);
+        return await context.SaveChangesAsync() > 0;
+    }
+
+    public async Task<bool> EliminaPagamentoInsegnanteAsync(int id)
+    {
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
+        var pagamento = await context.PagamentiInsegnantis.FindAsync(id);
+        if (pagamento == null) return false;
+
+        pagamento.Attivo = 0; // Soft delete
+        return await context.SaveChangesAsync() > 0;
+    }
+
     // ================================================
     // ALLIEVI
     // ================================================
@@ -327,6 +359,11 @@ public class DatabaseService : IDatabaseService
 
         bool nuovo = abbonamento.Id == 0;
         if (nuovo) abbonamento.Attivo = 1;
+
+        // Data dell'incasso, per le statistiche. Si imposta qui cosi' vale per
+        // nuovo abbonamento, rinnovo e pagamento rapido dal calendario.
+        if (nuovo && abbonamento.IsPagato == 1 && abbonamento.DataPagamento == null)
+            abbonamento.DataPagamento = DateTime.Now;
 
         AgganciaPerSalvataggio(context, abbonamento, nuovo);
         bool salvato = await context.SaveChangesAsync() > 0;

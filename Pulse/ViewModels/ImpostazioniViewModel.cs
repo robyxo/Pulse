@@ -5,6 +5,7 @@ using Pulse.Models;
 using Pulse.Services;
 using Microsoft.Maui.ApplicationModel;
 using QRCoder;
+using Pulse.Utils;
 
 namespace Pulse.ViewModels;
 
@@ -118,7 +119,7 @@ public partial class ImpostazioniViewModel : BaseViewModel
 
         if (url != null)
         {
-            bool apriPagina = await Shell.Current.DisplayAlert(titolo, messaggio, "Apri Pagina", "Chiudi");
+            bool apriPagina = await AlertPopup.ShowConfirmation(titolo, messaggio, "Apri Pagina", "Chiudi");
 
             if (apriPagina)
             {
@@ -128,13 +129,13 @@ public partial class ImpostazioniViewModel : BaseViewModel
                 }
                 catch (Exception ex)
                 {
-                    await Shell.Current.DisplayAlert("Errore", $"Impossibile aprire il browser: {ex.Message}", "OK");
+                    await AlertPopup.Show("Errore", $"Impossibile aprire il browser: {ex.Message}", "OK");
                 }
             }
         }
         else
         {
-            await Shell.Current.DisplayAlert(titolo, messaggio, "OK");
+            await AlertPopup.Show(titolo, messaggio, "OK");
         }
     }
 
@@ -346,7 +347,7 @@ public partial class ImpostazioniViewModel : BaseViewModel
     {
         if (string.IsNullOrWhiteSpace(EmailSmtpUser))
         {
-            await Shell.Current.DisplayAlert("Attenzione", "Inserisci prima l'email della scuola.", "OK");
+            await AlertPopup.Show("Attenzione", "Inserisci prima l'email della scuola.", "OK");
             return;
         }
 
@@ -354,7 +355,7 @@ public partial class ImpostazioniViewModel : BaseViewModel
             ? EmailSmtpUser
             : EmailDestinatarioTest.Trim();
 
-        bool conferma = await Shell.Current.DisplayAlert(
+        bool conferma = await AlertPopup.ShowConfirmation(
             "Test Email",
             $"Verrà inviata una email di prova a:\n{destinatario}\n\nConfermi?",
             "Sì, Invia",
@@ -369,9 +370,9 @@ public partial class ImpostazioniViewModel : BaseViewModel
             var (successo, errore) = await _emailService.InviaEmailTestAsync(destinatario);
 
             if (successo)
-                await Shell.Current.DisplayAlert("Fatto", $"Email di prova inviata correttamente a {destinatario}.", "OK");
+                await AlertPopup.Show("Fatto", $"Email di prova inviata correttamente a {destinatario}.", "OK");
             else
-                await Shell.Current.DisplayAlert("Errore Invio", $"Invio non riuscito:\n{errore}", "OK");
+                await AlertPopup.Show("Errore Invio", $"Invio non riuscito:\n{errore}", "OK");
         });
     }
 
@@ -530,7 +531,7 @@ public partial class ImpostazioniViewModel : BaseViewModel
         if (string.IsNullOrWhiteSpace(LinkDispositivo)) return;
 
         await Clipboard.Default.SetTextAsync(LinkDispositivo);
-        await Shell.Current.DisplayAlert("Copiato", "Link copiato negli appunti.", "OK");
+        await AlertPopup.Show("Copiato", "Link copiato negli appunti.", "OK");
     }
 
     /// <summary>Apre la pagina del tablet nel browser del PC, per provarla.</summary>
@@ -545,7 +546,7 @@ public partial class ImpostazioniViewModel : BaseViewModel
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlert("Errore", $"Impossibile aprire il browser: {ex.Message}", "OK");
+            await AlertPopup.Show("Errore", $"Impossibile aprire il browser: {ex.Message}", "OK");
         }
     }
 
@@ -556,7 +557,7 @@ public partial class ImpostazioniViewModel : BaseViewModel
     [RelayCommand]
     public async Task RigeneraQrDispositivoAsync()
     {
-        bool conferma = await Shell.Current.DisplayAlert(
+        bool conferma = await AlertPopup.ShowConfirmation(
             "Rigenera QR code",
             "Il QR code attuale smetterà di funzionare e il tablet dovrà inquadrare quello nuovo.\n\nContinuare?",
             "Rigenera",
@@ -592,7 +593,7 @@ public partial class ImpostazioniViewModel : BaseViewModel
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlert(
+            await AlertPopup.Show(
                 "Errore",
                 $"Impossibile scegliere la cartella: {ex.Message}\n\nPuoi comunque incollare il percorso a mano.",
                 "OK");
@@ -613,7 +614,7 @@ public partial class ImpostazioniViewModel : BaseViewModel
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlert(
+            await AlertPopup.Show(
                 "Errore",
                 $"Impossibile scegliere la cartella: {ex.Message}\n\nPuoi comunque incollare il percorso a mano.",
                 "OK");
@@ -654,7 +655,7 @@ public partial class ImpostazioniViewModel : BaseViewModel
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlert("Errore", $"Impossibile caricare il logo: {ex.Message}", "OK");
+            await AlertPopup.Show("Errore", $"Impossibile caricare il logo: {ex.Message}", "OK");
         }
     }
 
@@ -716,7 +717,7 @@ public partial class ImpostazioniViewModel : BaseViewModel
         await EseguiConCaricamento(async () =>
         {
             await SalvaImpostazioniInternoAsync();
-            await Shell.Current.DisplayAlert("Fatto", "Impostazioni salvate correttamente.", "OK");
+            await AlertPopup.Show("Fatto", "Impostazioni salvate correttamente.", "OK");
         });
     }
 
@@ -730,11 +731,11 @@ public partial class ImpostazioniViewModel : BaseViewModel
             if (successo)
             {
                 await CaricaImpostazioniInternoAsync();
-                await Shell.Current.DisplayAlert("Fatto", $"Backup creato con successo:\n{percorso}", "OK");
+                await AlertPopup.Show("Fatto", $"Backup creato con successo:\n{percorso}", "OK");
             }
             else if (errore != null)
             {
-                await Shell.Current.DisplayAlert("Errore Backup", errore, "OK");
+                await AlertPopup.Show("Errore Backup", errore, "OK");
             }
         });
     }
@@ -756,7 +757,7 @@ public partial class ImpostazioniViewModel : BaseViewModel
 
         if (file == null) return;
 
-        bool conferma = await Shell.Current.DisplayAlert(
+        bool conferma = await AlertPopup.ShowConfirmation(
             "⚠️ Attenzione",
             $"Stai per sovrascrivere TUTTI i dati attuali di Pulse con il contenuto di:\n{file.FileName}\n\nQuesta operazione non si può annullare. Continuare?",
             "Sì, Ripristina",
@@ -770,14 +771,14 @@ public partial class ImpostazioniViewModel : BaseViewModel
 
             if (successo)
             {
-                await Shell.Current.DisplayAlert(
+                await AlertPopup.Show(
                     "Ripristino completato",
                     "Il database è stato ripristinato.\n\nChiudi completamente Pulse e riaprilo ora, altrimenti l'app continuerà a mostrare i vecchi dati rimasti in memoria.",
                     "OK");
             }
             else
             {
-                await Shell.Current.DisplayAlert("Errore Ripristino", errore ?? "Errore sconosciuto.", "OK");
+                await AlertPopup.Show("Errore Ripristino", errore ?? "Errore sconosciuto.", "OK");
             }
         });
     }
@@ -785,7 +786,7 @@ public partial class ImpostazioniViewModel : BaseViewModel
     [RelayCommand]
     public async Task ResetApplicazioneAsync()
     {
-        bool primaConferma = await Shell.Current.DisplayAlert(
+        bool primaConferma = await AlertPopup.ShowConfirmation(
             "⚠️ Reset Applicazione",
             "Questa operazione cancellerà TUTTI i dati di Pulse: allievi, corsi, lezioni, abbonamenti, iscrizioni, presenze, documenti privacy, chiusure calendario e tutte le impostazioni (logo, email, colori, ecc.).\n\nVuoi continuare?",
             "Sì, Continua",
@@ -793,7 +794,7 @@ public partial class ImpostazioniViewModel : BaseViewModel
 
         if (!primaConferma) return;
 
-        bool secondaConferma = await Shell.Current.DisplayAlert(
+        bool secondaConferma = await AlertPopup.ShowConfirmation(
             "⚠️ Sei sicuro?",
             "Questa azione NON si può annullare. Se ti servono i dati attuali, esci ora e fai prima un Backup dalla sezione qui sopra.\n\nVuoi procedere comunque con la cancellazione totale?",
             "Sì, Procedi",
@@ -801,7 +802,7 @@ public partial class ImpostazioniViewModel : BaseViewModel
 
         if (!secondaConferma) return;
 
-        string? testoConferma = await Shell.Current.DisplayPromptAsync(
+        string? testoConferma = await AlertPopup.ShowPrompt(
             "Conferma finale",
             "Per confermare in modo definitivo, scrivi la parola RESET (in maiuscolo) e premi OK.",
             "OK",
@@ -812,7 +813,7 @@ public partial class ImpostazioniViewModel : BaseViewModel
         {
             if (testoConferma != null)
             {
-                await Shell.Current.DisplayAlert("Annullato", "Reset annullato: la parola scritta non corrisponde.", "OK");
+                await AlertPopup.Show("Annullato", "Reset annullato: la parola scritta non corrisponde.", "OK");
             }
             return;
         }
@@ -823,14 +824,14 @@ public partial class ImpostazioniViewModel : BaseViewModel
 
             if (successo)
             {
-                await Shell.Current.DisplayAlert(
+                await AlertPopup.Show(
                     "Fatto",
                     "Tutti i dati sono stati cancellati. Chiudi e riapri Pulse per ripartire da zero.",
                     "OK");
             }
             else
             {
-                await Shell.Current.DisplayAlert("Errore", $"Reset non riuscito:\n{errore}", "OK");
+                await AlertPopup.Show("Errore", $"Reset non riuscito:\n{errore}", "OK");
             }
         });
     }
@@ -847,18 +848,18 @@ public partial class ImpostazioniViewModel : BaseViewModel
             if (errore != null)
             {
                 StatoAggiornamento = errore;
-                await Shell.Current.DisplayAlert("Aggiornamenti", errore, "OK");
+                await AlertPopup.Show("Aggiornamenti", errore, "OK");
                 return;
             }
 
             if (!ceUnAggiornamento)
             {
                 StatoAggiornamento = "Pulse è già aggiornato all'ultima versione.";
-                await Shell.Current.DisplayAlert("Aggiornamenti", StatoAggiornamento, "OK");
+                await AlertPopup.Show("Aggiornamenti", StatoAggiornamento, "OK");
                 return;
             }
 
-            bool vuoleAggiornare = await Shell.Current.DisplayAlert(
+            bool vuoleAggiornare = await AlertPopup.ShowConfirmation(
                 "Aggiornamento disponibile",
                 $"È disponibile la versione {nuovaVersione}.\n\nVuoi scaricarla e installarla adesso?\nPulse si chiuderà e si riaprirà da solo al termine.",
                 "Sì, aggiorna",
@@ -877,7 +878,7 @@ public partial class ImpostazioniViewModel : BaseViewModel
             if (!successo)
             {
                 StatoAggiornamento = "Aggiornamento non riuscito.";
-                await Shell.Current.DisplayAlert("Errore", $"Non è stato possibile aggiornare Pulse:\n{erroreDownload}", "OK");
+                await AlertPopup.Show("Errore", $"Non è stato possibile aggiornare Pulse:\n{erroreDownload}", "OK");
             }
         });
     }
@@ -887,20 +888,20 @@ public partial class ImpostazioniViewModel : BaseViewModel
     {
         if (string.IsNullOrWhiteSpace(SupportoTitolo) || string.IsNullOrWhiteSpace(SupportoDescrizione))
         {
-            await Shell.Current.DisplayAlert("Attenzione", "Inserisci sia il titolo che la descrizione del problema.", "OK");
+            await AlertPopup.Show("Attenzione", "Inserisci sia il titolo che la descrizione del problema.", "OK");
             return;
         }
 
         if (string.IsNullOrWhiteSpace(EmailSmtpHost) || string.IsNullOrWhiteSpace(EmailSmtpUser))
         {
-            await Shell.Current.DisplayAlert(
+            await AlertPopup.Show(
                 "Email non configurata",
                 "Per inviare una segnalazione al supporto devi prima configurare l'email della scuola nella sezione 'Email Scuola' qui sopra.",
                 "OK");
             return;
         }
 
-        bool conferma = await Shell.Current.DisplayAlert(
+        bool conferma = await AlertPopup.ShowConfirmation(
             "Invia Segnalazione",
             $"Vuoi inviare questa segnalazione al supporto?\n\nTitolo: {SupportoTitolo}",
             "Sì, Invia",
@@ -922,7 +923,7 @@ public partial class ImpostazioniViewModel : BaseViewModel
 
             if (esito)
             {
-                await Shell.Current.DisplayAlert(
+                await AlertPopup.Show(
                     "Fatto",
                     "Segnalazione inviata! Le eventuali risposte del supporto arriveranno nella tua casella di posta email, non in questa app.",
                     "OK");
@@ -931,7 +932,7 @@ public partial class ImpostazioniViewModel : BaseViewModel
             }
             else
             {
-                await Shell.Current.DisplayAlert("Errore Invio", "Non è stato possibile inviare la segnalazione. Controlla la configurazione email.", "OK");
+                await AlertPopup.Show("Errore Invio", "Non è stato possibile inviare la segnalazione. Controlla la configurazione email.", "OK");
             }
         });
     }

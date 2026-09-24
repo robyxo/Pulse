@@ -30,7 +30,7 @@ public class AvvisiDispositivoService : IAvvisiDispositivoService
                 // le farebbe perdere il lavoro. Se sceglie "Più tardi", l'allievo
                 // resta segnato in lista con il triangolo giallo e il promemoria
                 // compare alla prossima apertura di Gestione Allievi.
-                bool apri = await Shell.Current.DisplayAlert(
+                bool apri = await AlertPopup.ShowConfirmation(
                     "📝 Nuova registrazione",
                     $"Si è appena registrato {allievo.Nome} {allievo.Cognome}.\n\nVuoi aprire la sua scheda per fare l'abbonamento?",
                     "Apri scheda",

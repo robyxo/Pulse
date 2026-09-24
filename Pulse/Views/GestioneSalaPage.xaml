@@ -3,6 +3,7 @@
     x:Class="Pulse.Views.GestioneSalaPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:dto="clr-namespace:Pulse.DTO"
     xmlns:vm="clr-namespace:Pulse.ViewModels"
     Title="{Binding Title}"
     x:DataType="vm:GestioneSalaViewModel"
@@ -60,6 +61,59 @@
                 FontSize="12"
                 Text="Lascia 0 se non vuoi indicarla."
                 TextColor="Gray" />
+
+            <!--  COLORE  -->
+            <Label
+                FontAttributes="Bold"
+                Text="Colore della sala:"
+                TextColor="#1E293B" />
+
+            <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
+                <Border
+                    BackgroundColor="{Binding ColoreHex}"
+                    HeightRequest="40"
+                    Stroke="#CBD5E1"
+                    StrokeShape="RoundRectangle 20"
+                    WidthRequest="40" />
+                <Label
+                    FontSize="12"
+                    Text="Serve a riconoscere la sala negli elenchi"
+                    TextColor="#64748B"
+                    VerticalOptions="Center" />
+            </HorizontalStackLayout>
+
+            <FlexLayout
+                AlignItems="Center"
+                BindableLayout.ItemsSource="{Binding PaletteColori}"
+                Direction="Row"
+                JustifyContent="Start"
+                Wrap="Wrap">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="dto:OpzioneColore">
+                        <Button
+                            Margin="3"
+                            Padding="0"
+                            BackgroundColor="{Binding Hex}"
+                            BorderColor="Transparent"
+                            BorderWidth="3"
+                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:GestioneSalaViewModel}}, Path=SelezionaColoreCommand}"
+                            CommandParameter="{Binding Hex}"
+                            CornerRadius="18"
+                            HeightRequest="36"
+                            Text=""
+                            WidthRequest="36">
+                            <Button.Triggers>
+                                <DataTrigger
+                                    Binding="{Binding IsSelezionato}"
+                                    TargetType="Button"
+                                    Value="True">
+                                    <Setter Property="BorderColor" Value="#1E293B" />
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </FlexLayout>
 
             <!--  AZIONI  -->
             <Button

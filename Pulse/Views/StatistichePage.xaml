@@ -1,0 +1,618 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Pulse.Views.StatistichePage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:dto="clr-namespace:Pulse.DTO"
+    xmlns:models="clr-namespace:Pulse.Models"
+    xmlns:vm="clr-namespace:Pulse.ViewModels"
+    Title="Statistiche"
+    x:DataType="vm:StatisticheViewModel"
+    BackgroundColor="#F8FAFC">
+
+    <ContentPage.Resources>
+
+        <!--  Riga con barra orizzontale, usata da tutti gli elenchi a barre  -->
+        <DataTemplate x:Key="RigaBarra" x:DataType="dto:VoceGraficoDTO">
+            <Grid
+                Padding="0,4"
+                ColumnDefinitions="170,*,Auto"
+                ColumnSpacing="12"
+                RowDefinitions="Auto,Auto">
+                <Label
+                    Grid.Column="0"
+                    FontSize="13"
+                    LineBreakMode="TailTruncation"
+                    Text="{Binding Etichetta}"
+                    TextColor="#1E293B"
+                    VerticalOptions="Center" />
+                <ProgressBar
+                    Grid.Column="1"
+                    Progress="{Binding Proporzione}"
+                    ProgressColor="{Binding Colore}"
+                    VerticalOptions="Center" />
+                <Label
+                    Grid.Column="2"
+                    FontAttributes="Bold"
+                    FontSize="13"
+                    HorizontalTextAlignment="End"
+                    MinimumWidthRequest="110"
+                    Text="{Binding ValoreTesto}"
+                    TextColor="#1E293B"
+                    VerticalOptions="Center" />
+                <Label
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Grid.ColumnSpan="2"
+                    FontSize="11"
+                    IsVisible="{Binding HaDettaglio}"
+                    Text="{Binding Dettaglio}"
+                    TextColor="#64748B" />
+            </Grid>
+        </DataTemplate>
+
+        <Style x:Key="Scheda" TargetType="Border">
+            <Setter Property="Padding" Value="16" />
+            <Setter Property="BackgroundColor" Value="White" />
+            <Setter Property="Stroke" Value="#E2E8F0" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 12" />
+        </Style>
+
+        <Style x:Key="TitoloScheda" TargetType="Label">
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="TextColor" Value="#1E293B" />
+        </Style>
+
+        <Style x:Key="Riquadro" TargetType="Border">
+            <Setter Property="Margin" Value="0,0,10,10" />
+            <Setter Property="Padding" Value="12" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 10" />
+            <Setter Property="WidthRequest" Value="180" />
+        </Style>
+
+    </ContentPage.Resources>
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="16">
+
+            <!--  PERIODO  -->
+            <Border Style="{StaticResource Scheda}">
+                <VerticalStackLayout Spacing="12">
+                    <Label
+                        FontAttributes="Bold"
+                        FontSize="20"
+                        Text="📊 Statistiche"
+                        TextColor="#1E293B" />
+
+                    <FlexLayout
+                        AlignItems="End"
+                        Direction="Row"
+                        Wrap="Wrap">
+                        <VerticalStackLayout Margin="0,0,12,8" Spacing="4">
+                            <Label
+                                FontSize="12"
+                                Text="Periodo"
+                                TextColor="#64748B" />
+                            <Border Stroke="#CBD5E1" StrokeShape="RoundRectangle 8">
+                                <Picker
+                                    ItemsSource="{Binding OpzioniPeriodo}"
+                                    SelectedIndex="{Binding PeriodoSelezionatoIndex}"
+                                    WidthRequest="230" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Margin="0,0,12,8" Spacing="4">
+                            <Label
+                                FontSize="12"
+                                Text="Dal"
+                                TextColor="#64748B" />
+                            <Border Stroke="#CBD5E1" StrokeShape="RoundRectangle 8">
+                                <DatePicker
+                                    Date="{Binding DataDal}"
+                                    Format="dd/MM/yyyy"
+                                    WidthRequest="130" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Margin="0,0,12,8" Spacing="4">
+                            <Label
+                                FontSize="12"
+                                Text="Al"
+                                TextColor="#64748B" />
+                            <Border Stroke="#CBD5E1" StrokeShape="RoundRectangle 8">
+                                <DatePicker
+                                    Date="{Binding DataAl}"
+                                    Format="dd/MM/yyyy"
+                                    WidthRequest="130" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <Button
+                            Margin="0,0,0,8"
+                            Padding="18,0"
+                            BackgroundColor="#4F46E5"
+                            Command="{Binding AggiornaCommand}"
+                            CornerRadius="8"
+                            FontAttributes="Bold"
+                            HeightRequest="42"
+                            Text="🔄 Aggiorna"
+                            TextColor="White" />
+                    </FlexLayout>
+
+                    <Label
+                        FontSize="12"
+                        Text="{Binding PeriodoTesto}"
+                        TextColor="#64748B" />
+                </VerticalStackLayout>
+            </Border>
+
+            <ActivityIndicator
+                HorizontalOptions="Center"
+                IsRunning="{Binding IsBusy}"
+                IsVisible="{Binding IsBusy}" />
+
+            <!--  NUMERI PRINCIPALI  -->
+            <FlexLayout Direction="Row" Wrap="Wrap">
+
+                <Border
+                    BackgroundColor="#F0FDF4"
+                    Stroke="#BBF7D0"
+                    Style="{StaticResource Riquadro}">
+                    <VerticalStackLayout Spacing="2">
+                        <Label
+                            FontSize="12"
+                            Text="Entrate"
+                            TextColor="#166534" />
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="20"
+                            Text="{Binding Riepilogo.Entrate, StringFormat='€ {0:N2}'}"
+                            TextColor="#166534" />
+                        <Label
+                            FontSize="11"
+                            Text="{Binding Riepilogo.AbbonamentiVenduti, StringFormat='{0} abbonamenti incassati'}"
+                            TextColor="#166534" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border
+                    BackgroundColor="#FEF2F2"
+                    Stroke="#FECACA"
+                    Style="{StaticResource Riquadro}">
+                    <VerticalStackLayout Spacing="2">
+                        <Label
+                            FontSize="12"
+                            Text="Uscite (pagamenti maestri)"
+                            TextColor="#991B1B" />
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="20"
+                            Text="{Binding Riepilogo.Uscite, StringFormat='€ {0:N2}'}"
+                            TextColor="#991B1B" />
+                        <Label
+                            FontSize="11"
+                            Text="{Binding Riepilogo.CompensiPrevisti, StringFormat='Previsti: € {0:N2}'}"
+                            TextColor="#991B1B" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border
+                    BackgroundColor="#EFF6FF"
+                    Stroke="#BFDBFE"
+                    Style="{StaticResource Riquadro}">
+                    <VerticalStackLayout Spacing="2">
+                        <Label
+                            FontSize="12"
+                            Text="Saldo"
+                            TextColor="#1E40AF" />
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="20"
+                            Text="{Binding Riepilogo.Saldo, StringFormat='€ {0:N2}'}"
+                            TextColor="#1E40AF">
+                            <Label.Triggers>
+                                <DataTrigger
+                                    Binding="{Binding SaldoNegativo}"
+                                    TargetType="Label"
+                                    Value="True">
+                                    <Setter Property="TextColor" Value="#B91C1C" />
+                                </DataTrigger>
+                            </Label.Triggers>
+                        </Label>
+                        <Label
+                            FontSize="11"
+                            Text="Entrate meno uscite"
+                            TextColor="#1E40AF" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border
+                    BackgroundColor="#FFFBEB"
+                    Stroke="#FDE68A"
+                    Style="{StaticResource Riquadro}">
+                    <VerticalStackLayout Spacing="2">
+                        <Label
+                            FontSize="12"
+                            Text="Da incassare"
+                            TextColor="#92400E" />
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="20"
+                            Text="{Binding Riepilogo.DaIncassare, StringFormat='€ {0:N2}'}"
+                            TextColor="#92400E" />
+                        <Label
+                            FontSize="11"
+                            Text="Abbonamenti non saldati"
+                            TextColor="#92400E" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border
+                    BackgroundColor="White"
+                    Stroke="#E2E8F0"
+                    Style="{StaticResource Riquadro}">
+                    <VerticalStackLayout Spacing="2">
+                        <Label
+                            FontSize="12"
+                            Text="Allievi attivi"
+                            TextColor="#64748B" />
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="20"
+                            Text="{Binding Riepilogo.AllieviAttivi}"
+                            TextColor="#1E293B" />
+                        <Label
+                            FontSize="11"
+                            Text="Con un abbonamento nel periodo"
+                            TextColor="#64748B" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border
+                    BackgroundColor="White"
+                    Stroke="#E2E8F0"
+                    Style="{StaticResource Riquadro}">
+                    <VerticalStackLayout Spacing="2">
+                        <Label
+                            FontSize="12"
+                            Text="Nuovi allievi"
+                            TextColor="#64748B" />
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="20"
+                            Text="{Binding Riepilogo.AllieviNuovi}"
+                            TextColor="#1E293B" />
+                        <Label
+                            FontSize="11"
+                            Text="Primo abbonamento nel periodo"
+                            TextColor="#64748B" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border
+                    BackgroundColor="White"
+                    Stroke="#E2E8F0"
+                    Style="{StaticResource Riquadro}">
+                    <VerticalStackLayout Spacing="2">
+                        <Label
+                            FontSize="12"
+                            Text="⚠️ Da abbonare"
+                            TextColor="#64748B" />
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="20"
+                            Text="{Binding Riepilogo.AllieviDaAbbonare}"
+                            TextColor="#1E293B" />
+                        <Label
+                            FontSize="11"
+                            Text="Registrati, oggi senza abbonamento"
+                            TextColor="#64748B" />
+                    </VerticalStackLayout>
+                </Border>
+
+            </FlexLayout>
+
+            <!--  ENTRATE PER MESE  -->
+            <Border Style="{StaticResource Scheda}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Style="{StaticResource TitoloScheda}" Text="💶 Entrate mese per mese" />
+                    <VerticalStackLayout BindableLayout.ItemTemplate="{StaticResource RigaBarra}" BindableLayout.ItemsSource="{Binding EntratePerMese}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!--  CORSI  -->
+            <Border Style="{StaticResource Scheda}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Style="{StaticResource TitoloScheda}" Text="📚 Corsi più frequentati" />
+                    <Label
+                        FontSize="12"
+                        Text="Allievi diversi con un abbonamento valido nel periodo, e quanto ha incassato ogni corso."
+                        TextColor="#64748B" />
+                    <Label
+                        FontSize="13"
+                        IsVisible="{Binding NessunCorso}"
+                        Text="Nessun abbonamento nel periodo scelto."
+                        TextColor="Gray" />
+                    <VerticalStackLayout BindableLayout.ItemTemplate="{StaticResource RigaBarra}" BindableLayout.ItemsSource="{Binding Corsi}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!--  LEZIONI DEL CALENDARIO  -->
+            <Border IsVisible="{Binding MostraLezioni}" Style="{StaticResource Scheda}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Style="{StaticResource TitoloScheda}" Text="🗓️ Lezioni del calendario per iscritti" />
+                    <Label
+                        FontSize="12"
+                        Text="Iscritti = allievi con un abbonamento valido nel periodo per il corso della lezione. Si basa sull'orario settimanale di oggi."
+                        TextColor="#64748B" />
+
+                    <Label
+                        Margin="0,4,0,0"
+                        FontAttributes="Bold"
+                        FontSize="14"
+                        Text="🔝 Più frequentate"
+                        TextColor="#166534" />
+                    <VerticalStackLayout BindableLayout.ItemTemplate="{StaticResource RigaBarra}" BindableLayout.ItemsSource="{Binding LezioniPiuFrequentate}" />
+
+                    <Label
+                        Margin="0,8,0,0"
+                        FontAttributes="Bold"
+                        FontSize="14"
+                        IsVisible="{Binding MostraLezioniMeno}"
+                        Text="🔻 Meno frequentate"
+                        TextColor="#B91C1C" />
+                    <VerticalStackLayout
+                        BindableLayout.ItemTemplate="{StaticResource RigaBarra}"
+                        BindableLayout.ItemsSource="{Binding LezioniMenoFrequentate}"
+                        IsVisible="{Binding MostraLezioniMeno}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!--  TIPI DI ABBONAMENTO  -->
+            <Border Style="{StaticResource Scheda}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Style="{StaticResource TitoloScheda}" Text="🎟️ Abbonamenti venduti per tipo" />
+                    <VerticalStackLayout BindableLayout.ItemTemplate="{StaticResource RigaBarra}" BindableLayout.ItemsSource="{Binding TipiAbbonamento}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!--  MAESTRI  -->
+            <Border IsVisible="{Binding MostraInsegnanti}" Style="{StaticResource Scheda}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Style="{StaticResource TitoloScheda}" Text="👨‍🏫 Maestri: ore e compensi" />
+
+                    <Grid
+                        ColumnDefinitions="2*,*,*,*,*"
+                        ColumnSpacing="8">
+                        <Label Grid.Column="0" FontAttributes="Bold" FontSize="12" Text="Maestro" TextColor="#64748B" />
+                        <Label Grid.Column="1" FontAttributes="Bold" FontSize="12" HorizontalTextAlignment="End" Text="Ore" TextColor="#64748B" />
+                        <Label Grid.Column="2" FontAttributes="Bold" FontSize="12" HorizontalTextAlignment="End" Text="Previsto" TextColor="#64748B" />
+                        <Label Grid.Column="3" FontAttributes="Bold" FontSize="12" HorizontalTextAlignment="End" Text="Pagato" TextColor="#64748B" />
+                        <Label Grid.Column="4" FontAttributes="Bold" FontSize="12" HorizontalTextAlignment="End" Text="Da pagare" TextColor="#64748B" />
+                    </Grid>
+
+                    <BoxView BackgroundColor="#E2E8F0" HeightRequest="1" />
+
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding Insegnanti}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="dto:VoceInsegnanteDTO">
+                                <Grid
+                                    Padding="0,6"
+                                    ColumnDefinitions="2*,*,*,*,*"
+                                    ColumnSpacing="8">
+                                    <Label Grid.Column="0" FontAttributes="Bold" FontSize="13" Text="{Binding Nome}" TextColor="#1E293B" />
+                                    <Label Grid.Column="1" FontSize="13" HorizontalTextAlignment="End" Text="{Binding OreTesto}" TextColor="#1E293B" />
+                                    <Label Grid.Column="2" FontSize="13" HorizontalTextAlignment="End" Text="{Binding CompensoTesto}" TextColor="#1E293B" />
+                                    <Label Grid.Column="3" FontSize="13" HorizontalTextAlignment="End" Text="{Binding PagatoTesto}" TextColor="#166534" />
+                                    <Label Grid.Column="4" FontSize="13" HorizontalTextAlignment="End" Text="{Binding DaPagareTesto}" TextColor="#64748B">
+                                        <Label.Triggers>
+                                            <DataTrigger
+                                                Binding="{Binding HaDaPagare}"
+                                                TargetType="Label"
+                                                Value="True">
+                                                <Setter Property="TextColor" Value="#B91C1C" />
+                                                <Setter Property="FontAttributes" Value="Bold" />
+                                            </DataTrigger>
+                                        </Label.Triggers>
+                                    </Label>
+                                </Grid>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+
+                    <Label
+                        FontSize="11"
+                        Text="Ore calcolate sull'orario settimanale di oggi, escludendo le chiusure. I pagamenti si registrano nella scheda di ogni maestro."
+                        TextColor="Gray" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!--  DOMANDE EXTRA DEL MODULO  -->
+            <Border IsVisible="{Binding MostraCampiExtra}" Style="{StaticResource Scheda}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Style="{StaticResource TitoloScheda}" Text="📝 Risposte alle domande del modulo" />
+                    <Label
+                        FontSize="12"
+                        Text="Risposte date nel periodo, dal tablet o dalla scheda allievo."
+                        TextColor="#64748B" />
+
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding CampiExtra}" Spacing="14">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="dto:GruppoCampoExtraDTO">
+                                <VerticalStackLayout Spacing="4">
+                                    <Label
+                                        FontAttributes="Bold"
+                                        FontSize="14"
+                                        Text="{Binding Intestazione}"
+                                        TextColor="#7C3AED" />
+                                    <VerticalStackLayout BindableLayout.ItemTemplate="{StaticResource RigaBarra}" BindableLayout.ItemsSource="{Binding Risposte}" />
+                                </VerticalStackLayout>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <!--  QUERY SALVATE  -->
+            <Border Style="{StaticResource Scheda}">
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label
+                            Grid.Column="0"
+                            Style="{StaticResource TitoloScheda}"
+                            Text="🔎 Query salvate"
+                            VerticalOptions="Center" />
+                        <Button
+                            Grid.Column="1"
+                            Padding="0"
+                            BackgroundColor="#4F46E5"
+                            Command="{Binding NuovaQueryCommand}"
+                            CornerRadius="18"
+                            FontAttributes="Bold"
+                            FontSize="20"
+                            HeightRequest="36"
+                            IsVisible="{Binding PuoModificareQuery}"
+                            Text="+"
+                            TextColor="White"
+                            WidthRequest="36" />
+                    </Grid>
+
+                    <Label
+                        FontSize="13"
+                        IsVisible="{Binding NessunaQuery}"
+                        Text="Nessuna query salvata. Con il + puoi aggiungerne una: viene eseguita in sola lettura."
+                        TextColor="Gray" />
+
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding ListaQuery}" Spacing="6">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="models:QuerySalvate">
+                                <Border
+                                    Padding="10"
+                                    BackgroundColor="#F8FAFC"
+                                    Stroke="#E2E8F0"
+                                    StrokeShape="RoundRectangle 8">
+                                    <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
+                                        <VerticalStackLayout
+                                            Grid.Column="0"
+                                            Spacing="2"
+                                            VerticalOptions="Center">
+                                            <Label
+                                                FontAttributes="Bold"
+                                                FontSize="14"
+                                                Text="{Binding Nome}"
+                                                TextColor="#1E293B" />
+                                            <Label
+                                                FontSize="12"
+                                                LineBreakMode="TailTruncation"
+                                                Text="{Binding Descrizione}"
+                                                TextColor="#64748B" />
+                                        </VerticalStackLayout>
+                                        <Button
+                                            Grid.Column="1"
+                                            Padding="12,0"
+                                            BackgroundColor="#10B981"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:StatisticheViewModel}}, Path=EseguiQueryCommand}"
+                                            CommandParameter="{Binding .}"
+                                            CornerRadius="8"
+                                            FontAttributes="Bold"
+                                            HeightRequest="36"
+                                            Text="▶ Esegui"
+                                            TextColor="White" />
+                                        <Button
+                                            Grid.Column="2"
+                                            Padding="0"
+                                            BackgroundColor="#F1F5F9"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:StatisticheViewModel}}, Path=ModificaQueryCommand}"
+                                            CommandParameter="{Binding .}"
+                                            CornerRadius="18"
+                                            FontSize="16"
+                                            HeightRequest="36"
+                                            IsVisible="{Binding Source={RelativeSource AncestorType={x:Type vm:StatisticheViewModel}}, Path=PuoModificareQuery}"
+                                            Text="✏️"
+                                            WidthRequest="36" />
+                                        <Button
+                                            Grid.Column="3"
+                                            Padding="0"
+                                            BackgroundColor="#FEE2E2"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:StatisticheViewModel}}, Path=EliminaQueryCommand}"
+                                            CommandParameter="{Binding .}"
+                                            CornerRadius="18"
+                                            FontSize="16"
+                                            HeightRequest="36"
+                                            IsVisible="{Binding Source={RelativeSource AncestorType={x:Type vm:StatisticheViewModel}}, Path=PuoModificareQuery}"
+                                            Text="🗑️"
+                                            WidthRequest="36" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+
+                    <!--  RISULTATO  -->
+                    <Border
+                        Padding="12"
+                        BackgroundColor="#F8FAFC"
+                        IsVisible="{Binding MostraRisultato}"
+                        Stroke="#CBD5E1"
+                        StrokeShape="RoundRectangle 8">
+                        <VerticalStackLayout Spacing="8">
+                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                                <Label
+                                    Grid.Column="0"
+                                    FontAttributes="Bold"
+                                    FontSize="14"
+                                    Text="{Binding TitoloRisultato}"
+                                    TextColor="#1E293B"
+                                    VerticalOptions="Center" />
+                                <Button
+                                    Grid.Column="1"
+                                    Padding="12,0"
+                                    BackgroundColor="#0EA5E9"
+                                    Command="{Binding CopiaRisultatoCommand}"
+                                    CornerRadius="8"
+                                    FontSize="13"
+                                    HeightRequest="34"
+                                    Text="📋 Copia per Excel"
+                                    TextColor="White" />
+                                <Button
+                                    Grid.Column="2"
+                                    Padding="12,0"
+                                    BackgroundColor="#64748B"
+                                    Command="{Binding ChiudiRisultatoCommand}"
+                                    CornerRadius="8"
+                                    FontSize="13"
+                                    HeightRequest="34"
+                                    Text="Chiudi"
+                                    TextColor="White" />
+                            </Grid>
+                            <Label
+                                FontSize="12"
+                                Text="{Binding InfoRisultato}"
+                                TextColor="#64748B" />
+                            <ScrollView Orientation="Horizontal">
+                                <Label
+                                    FontFamily="Consolas"
+                                    FontSize="12"
+                                    LineBreakMode="NoWrap"
+                                    Text="{Binding TestoRisultato}"
+                                    TextColor="#1E293B">
+                                    <Label.Triggers>
+                                        <DataTrigger
+                                            Binding="{Binding RisultatoInErrore}"
+                                            TargetType="Label"
+                                            Value="True">
+                                            <Setter Property="TextColor" Value="#B91C1C" />
+                                            <Setter Property="LineBreakMode" Value="WordWrap" />
+                                        </DataTrigger>
+                                    </Label.Triggers>
+                                </Label>
+                            </ScrollView>
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+            </Border>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

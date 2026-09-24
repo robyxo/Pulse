@@ -4,6 +4,7 @@ using Pulse.Models;
 using Pulse.Services;
 using System.Collections.ObjectModel;
 using Pulse.Views.Popups;
+using Pulse.Utils;
 
 namespace Pulse.ViewModels;
 
@@ -344,12 +345,12 @@ public partial class GestioneAllievoViewModel : BaseViewModel
 
         if (corsiDisponibili == null || corsiDisponibili.Count == 0)
         {
-            await Shell.Current.DisplayAlert("Attenzione", "Prima devi creare un corso!", "OK");
+            await AlertPopup.Show("Attenzione", "Prima devi creare un corso!", "OK");
             return;
         }
 
         var opzioniCorsi = corsiDisponibili.Select(c => c.Nome).ToArray();
-        string corsoSelezionatoNome = await Shell.Current.DisplayActionSheet("Seleziona il Corso:", "Annulla", null, opzioniCorsi);
+        string corsoSelezionatoNome = await AlertPopup.ShowActionSheet("Seleziona il Corso:", "Annulla", null, opzioniCorsi);
 
         if (string.IsNullOrEmpty(corsoSelezionatoNome) || corsoSelezionatoNome == "Annulla") return;
 
@@ -385,7 +386,7 @@ public partial class GestioneAllievoViewModel : BaseViewModel
                 ? $"Abbonamento registrato con successo!\nScadenza: {nuovo.DataScadenza:dd/MM/yyyy}."
                 : $"Abbonamento aggiunto.\nScadenza: {nuovo.DataScadenza:dd/MM/yyyy}.\n\n⚠️ Verrà salvato insieme all'allievo quando premi «Salva».";
 
-            bool vuoleStampare = await Shell.Current.DisplayAlert(
+            bool vuoleStampare = await AlertPopup.ShowConfirmation(
                 "Abbonamento Creato",
                 $"{messaggio}\n\nVuoi stampare la ricevuta di cortesia?",
                 "Sì, Stampa",
@@ -406,7 +407,7 @@ public partial class GestioneAllievoViewModel : BaseViewModel
 
         if (abbonamento.IsSospeso == 0)
         {
-            bool confermaStop = await Shell.Current.DisplayAlert(
+            bool confermaStop = await AlertPopup.ShowConfirmation(
                 "Sospendi Abbonamento",
                 $"Sei sicuro di voler sospendere l'abbonamento '{abbonamento.Corso?.Nome ?? abbonamento.TipoAbbonamento}'? I giorni rimanenti verranno congelati.",
                 "Sì, Sospendi",
@@ -423,7 +424,7 @@ public partial class GestioneAllievoViewModel : BaseViewModel
         {
             DateTime nuovaScadenza = DateTime.Now.AddDays(abbonamento.GiorniRimanentiCongelati);
 
-            bool confermaPlay = await Shell.Current.DisplayAlert(
+            bool confermaPlay = await AlertPopup.ShowConfirmation(
                 "Ripristina Abbonamento",
                 $"Vuoi riattivare l'abbonamento? La nuova data di scadenza sarà il {nuovaScadenza:dd/MM/yyyy}.",
                 "Sì, Riattiva",
@@ -480,7 +481,7 @@ public partial class GestioneAllievoViewModel : BaseViewModel
         // Se il corso non ha più un prezzo impostato, si riusa quello dell'ultimo pagamento
         if (importo <= 0) importo = abbonamento.ImportoTotale;
 
-        bool conferma = await Shell.Current.DisplayAlert(
+        bool conferma = await AlertPopup.ShowConfirmation(
             "Conferma Rinnovo",
             $"Vuoi registrare un nuovo pagamento di € {importo:N2} per '{corso?.Nome ?? abbonamento.TipoAbbonamento}'?\n\nValidità: dal {dataInizio:dd/MM/yyyy} al {nuovaScadenza:dd/MM/yyyy}.",
             "Sì, Rinnova",
@@ -516,7 +517,7 @@ public partial class GestioneAllievoViewModel : BaseViewModel
 
         if (_stampaRicevutaCortesiaAttiva)
         {
-            bool vuoleStampare = await Shell.Current.DisplayAlert(
+            bool vuoleStampare = await AlertPopup.ShowConfirmation(
                 "Rinnovato",
                 $"Pagamento di € {importo:N2} registrato.\nNuova scadenza: {nuovaScadenza:dd/MM/yyyy}.\n\nVuoi stampare la ricevuta di cortesia?",
                 "Sì, Stampa",
@@ -549,7 +550,7 @@ public partial class GestioneAllievoViewModel : BaseViewModel
         // Aggiungerli no: si avvisa dopo, a cose fatte.
         if (giorni < 0)
         {
-            bool conferma = await Shell.Current.DisplayAlert(
+            bool conferma = await AlertPopup.ShowConfirmation(
                 "Togli 1 Settimana",
                 $"Vuoi anticipare la scadenza di {Math.Abs(giorni)} giorni?\nNuova scadenza: {nuovaScadenza:dd/MM/yyyy}",
                 "Sì, Togli",
@@ -569,7 +570,7 @@ public partial class GestioneAllievoViewModel : BaseViewModel
 
         if (giorni > 0)
         {
-            await Shell.Current.DisplayAlert(
+            await AlertPopup.Show(
                 "Settimana di Recupero Aggiunta",
                 $"Nuova scadenza: {abbonamento.DataScadenza:dd/MM/yyyy}.",
                 "OK");
@@ -582,7 +583,7 @@ public partial class GestioneAllievoViewModel : BaseViewModel
     {
         if (abbonamento == null) return;
 
-        bool conferma = await Shell.Current.DisplayAlert("Elimina", "Vuoi cancellare questo abbonamento dallo storico?", "Sì, Elimina", "Annulla");
+        bool conferma = await AlertPopup.ShowConfirmation("Elimina", "Vuoi cancellare questo abbonamento dallo storico?", "Sì, Elimina", "Annulla");
         if (conferma)
         {
             if (abbonamento.Id > 0)
@@ -675,7 +676,7 @@ public partial class GestioneAllievoViewModel : BaseViewModel
     {
         if (string.IsNullOrWhiteSpace(Nome) || string.IsNullOrWhiteSpace(Cognome))
         {
-            await Shell.Current.DisplayAlert("Attenzione", "Inserisci sia il nome che il cognome.", "OK");
+            await AlertPopup.Show("Attenzione", "Inserisci sia il nome che il cognome.", "OK");
             return;
         }
 
@@ -705,7 +706,7 @@ public partial class GestioneAllievoViewModel : BaseViewModel
     {
         if (string.IsNullOrWhiteSpace(Nome) || string.IsNullOrWhiteSpace(Cognome))
         {
-            await Shell.Current.DisplayAlert("Attenzione", "Inserisci sia il nome che il cognome.", "OK");
+            await AlertPopup.Show("Attenzione", "Inserisci sia il nome che il cognome.", "OK");
             return;
         }
 
@@ -718,7 +719,7 @@ public partial class GestioneAllievoViewModel : BaseViewModel
 
         if (opzioni.Count == 0)
         {
-            await Shell.Current.DisplayAlert(
+            await AlertPopup.Show(
                 "Modelli non presenti",
                 "Non è stato inserito nessun modello privacy nella cartella Privacy dell'applicazione. Vedi il file LEGGIMI.txt.",
                 "OK");
@@ -728,7 +729,7 @@ public partial class GestioneAllievoViewModel : BaseViewModel
         // Con un solo modello disponibile è inutile far scegliere
         string scelta = opzioni.Count == 1
             ? opzioni[0]
-            : await Shell.Current.DisplayActionSheet("Documento Privacy - Come lo vuoi?", "Annulla", null, opzioni.ToArray());
+            : await AlertPopup.ShowActionSheet("Documento Privacy - Come lo vuoi?", "Annulla", null, opzioni.ToArray());
 
         if (scelta == "Documento Compilato")
         {
@@ -748,11 +749,11 @@ public partial class GestioneAllievoViewModel : BaseViewModel
     {
         if (Allievo.Id == 0)
         {
-            await Shell.Current.DisplayAlert("Attenzione", "Salva prima l'allievo.", "OK");
+            await AlertPopup.Show("Attenzione", "Salva prima l'allievo.", "OK");
             return;
         }
 
-        bool conferma = await Shell.Current.DisplayAlert(
+        bool conferma = await AlertPopup.ShowConfirmation(
             "Modulo firmato",
             $"Confermi che {Nome} {Cognome} ha firmato il modulo privacy?\n\nVerrà archiviata una copia in PDF.",
             "Sì, è firmato",
@@ -789,7 +790,7 @@ public partial class GestioneAllievoViewModel : BaseViewModel
             if (string.IsNullOrWhiteSpace(percorsoPdf))
             {
                 // La firma è registrata lo stesso: il PDF si può rigenerare dopo.
-                await Shell.Current.DisplayAlert(
+                await AlertPopup.Show(
                     "Firma registrata",
                     "La firma è stata registrata, ma la copia PDF non è stata creata.\n\nControlla che in Impostazioni sia indicata la cartella di archivio dei moduli.",
                     "OK");
@@ -804,7 +805,7 @@ public partial class GestioneAllievoViewModel : BaseViewModel
 
         if (string.IsNullOrWhiteSpace(percorso) || !File.Exists(percorso))
         {
-            await Shell.Current.DisplayAlert("Attenzione", "La copia PDF non è più disponibile nel percorso registrato.", "OK");
+            await AlertPopup.Show("Attenzione", "La copia PDF non è più disponibile nel percorso registrato.", "OK");
             return;
         }
 
@@ -820,7 +821,7 @@ public partial class GestioneAllievoViewModel : BaseViewModel
     {
         if (_privacyCorrente == null) return;
 
-        bool conferma = await Shell.Current.DisplayAlert(
+        bool conferma = await AlertPopup.ShowConfirmation(
             "Annulla firma",
             "Vuoi togliere la spunta di firma?\n\nIl PDF già archiviato resta nella cartella: va eliminato a mano se non serve più.",
             "Sì, togli",
@@ -843,7 +844,7 @@ public partial class GestioneAllievoViewModel : BaseViewModel
     {
         if (Allievo == null || Allievo.Id == 0) return;
 
-        bool conferma = await Shell.Current.DisplayAlert(
+        bool conferma = await AlertPopup.ShowConfirmation(
             "Conferma Eliminazione",
             $"Sei sicuro di voler eliminare l'allievo '{Nome} {Cognome}'?",
             "Sì, Elimina",

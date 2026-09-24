@@ -78,7 +78,7 @@ public partial class AllieviViewModel : BaseViewModel
         {
             var allievo = daAbbonare[0];
 
-            bool apri = await Shell.Current.DisplayAlert(
+            bool apri = await AlertPopup.ShowConfirmation(
                 "⚠️ Allievo da abbonare",
                 $"{allievo.NomeCompleto} si è registrato ma non ha ancora un abbonamento.\n\nVuoi aprire la scheda per farlo adesso?",
                 "Apri scheda",
@@ -91,7 +91,7 @@ public partial class AllieviViewModel : BaseViewModel
         // Più allievi: si sceglie chi aprire. Nome e data di registrazione, per gli omonimi.
         var voci = daAbbonare.Select(x => x.NomeConRegistrazione).ToArray();
 
-        string scelta = await Shell.Current.DisplayActionSheet(
+        string scelta = await AlertPopup.ShowActionSheet(
             $"⚠️ {daAbbonare.Count} allievi registrati senza abbonamento",
             "Più tardi",
             null,
@@ -201,7 +201,7 @@ public partial class AllieviViewModel : BaseViewModel
     {
         if (item?.Allievo == null) return;
 
-        bool confermato = await Shell.Current.DisplayAlert(
+        bool confermato = await AlertPopup.ShowConfirmation(
             "Conferma Eliminazione",
             $"Sei sicuro di voler eliminare l'allievo '{item.NomeCompleto}'?",
             "Sì, Elimina",

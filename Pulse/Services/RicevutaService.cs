@@ -1,5 +1,6 @@
 ﻿using Pulse.Helpers;
 using Pulse.Models;
+using Pulse.Utils;
 
 namespace Pulse.Services;
 
@@ -98,7 +99,7 @@ public class RicevutaService
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlert("Errore Stampa", $"Impossibile aprire la ricevuta: {ex.Message}", "OK");
+            await AlertPopup.Show("Errore Stampa", $"Impossibile aprire la ricevuta: {ex.Message}", "OK");
         }
     }
 
@@ -168,7 +169,7 @@ public class RicevutaService
         }
         catch (Exception ex)
         {
-            await Shell.Current.DisplayAlert("Errore Anteprima", $"Impossibile aprire l'anteprima: {ex.Message}", "OK");
+            await AlertPopup.Show("Errore Anteprima", $"Impossibile aprire l'anteprima: {ex.Message}", "OK");
         }
     }
 

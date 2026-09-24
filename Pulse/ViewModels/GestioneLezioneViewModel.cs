@@ -6,6 +6,7 @@ using Pulse.Helpers;
 using Pulse.Models;
 using Pulse.Services;
 using System.Collections.ObjectModel;
+using Pulse.Utils;
 
 namespace Pulse.ViewModels;
 
@@ -176,7 +177,7 @@ public partial class GestioneLezioneViewModel : BaseViewModel
     {
         if (item?.Allievo == null || CorsoSelezionato == null) return;
 
-        string opzioneScelta = await Shell.Current.DisplayActionSheet(
+        string opzioneScelta = await AlertPopup.ShowActionSheet(
             $"Incasso per {item.NomeCompleto}:",
             "Annulla",
             null,
@@ -228,7 +229,7 @@ public partial class GestioneLezioneViewModel : BaseViewModel
 
         if (_stampaRicevutaCortesiaAttiva)
         {
-            bool stampa = await Shell.Current.DisplayAlert(
+            bool stampa = await AlertPopup.ShowConfirmation(
                 "Pagamento Registrato",
                 $"Incasso di € {importo:N2} salvato con successo.\nNuova scadenza: {dataFine:dd/MM/yyyy}.\n\nVuoi stampare la ricevuta di cortesia?",
                 "Sì, Stampa",
@@ -246,13 +247,13 @@ public partial class GestioneLezioneViewModel : BaseViewModel
     {
         if (CorsoSelezionato == null || MaestroSelezionato == null)
         {
-            await Shell.Current.DisplayAlert("Attenzione", "Seleziona sia un corso che un maestro.", "OK");
+            await AlertPopup.Show("Attenzione", "Seleziona sia un corso che un maestro.", "OK");
             return;
         }
 
         if (OraInizio >= OraFine)
         {
-            await Shell.Current.DisplayAlert("Attenzione", "L'orario di inizio deve precedere quello di fine.", "OK");
+            await AlertPopup.Show("Attenzione", "L'orario di inizio deve precedere quello di fine.", "OK");
             return;
         }
 
@@ -267,7 +268,7 @@ public partial class GestioneLezioneViewModel : BaseViewModel
             string inizioTesto = OraInizio.ToString(@"hh\:mm");
             string fineTesto = OraFine.ToString(@"hh\:mm");
 
-            bool prosegui = await Shell.Current.DisplayAlert(
+            bool prosegui = await AlertPopup.ShowConfirmation(
                 "⚠️ Sala già occupata",
                 $"In «{SalaSelezionata!.Nome}», {GiornoSelezionato.ToLower()} dalle {inizioTesto} alle {fineTesto}, c'è già:\n\n{conflitto}\n\nVuoi salvare lo stesso?",
                 "Salva comunque",
@@ -332,7 +333,7 @@ public partial class GestioneLezioneViewModel : BaseViewModel
     {
         if (Lezione.Id == 0) return;
 
-        bool conferma = await Shell.Current.DisplayAlert(
+        bool conferma = await AlertPopup.ShowConfirmation(
             "Elimina Lezione",
             "Vuoi eliminare questa lezione dal calendario?",
             "Sì, Elimina",
@@ -354,11 +355,11 @@ public partial class GestioneLezioneViewModel : BaseViewModel
     {
         if (CorsoSelezionato == null || ListaAllievi.Count == 0)
         {
-            await Shell.Current.DisplayAlert("Attenzione", "Nessun allievo con abbonamento attivo da prorogare per questo corso.", "OK");
+            await AlertPopup.Show("Attenzione", "Nessun allievo con abbonamento attivo da prorogare per questo corso.", "OK");
             return;
         }
 
-        bool conferma = await Shell.Current.DisplayAlert(
+        bool conferma = await AlertPopup.ShowConfirmation(
             "Salta Lezione",
             $"⚠️ Attenzione: confermando, a tutti gli allievi con abbonamento attivo su '{CorsoSelezionato.Nome}' verrà aggiunta automaticamente 1 settimana di validità, per recuperare la lezione saltata.\n\nProcedere?",
             "Sì, Salta Lezione",
@@ -379,7 +380,7 @@ public partial class GestioneLezioneViewModel : BaseViewModel
             await CaricaAllieviPerCorsoAsync();
         });
 
-        await Shell.Current.DisplayAlert("Fatto", "Lezione saltata: gli abbonamenti degli allievi sono stati prorogati di 1 settimana.", "OK");
+        await AlertPopup.Show("Fatto", "Lezione saltata: gli abbonamenti degli allievi sono stati prorogati di 1 settimana.", "OK");
     }
 
 }
