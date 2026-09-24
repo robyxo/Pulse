@@ -19,6 +19,8 @@
 		<ApplicationDisplayVersion>1.0.0</ApplicationDisplayVersion>
 		<ApplicationVersion>1</ApplicationVersion>
 		<WindowsPackageType>None</WindowsPackageType>
+		<!-- Icona dell'eseguibile Pulse.exe (senza questa la versione Release usa l'icona di default .NET) -->
+		<ApplicationIcon Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">Resources\AppIcon\pulse.ico</ApplicationIcon>
 		<!-- Velopack: serve un Main scritto a mano, quindi si disattiva quello generato -->
 		<DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
 		<!-- MVVMTK0045: il toolkit suggerisce le "partial property" al posto dei campi [ObservableProperty]
