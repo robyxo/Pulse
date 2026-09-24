@@ -6,6 +6,7 @@
     xmlns:dto="clr-namespace:Pulse.DTO"
     xmlns:vm="clr-namespace:Pulse.ViewModels"
     Title="{Binding Title}"
+    x:Name="PageRoot"
     x:DataType="vm:GestioneSalaViewModel"
     BackgroundColor="#F8FAFC">
 
@@ -89,14 +90,14 @@
                 JustifyContent="Start"
                 Wrap="Wrap">
                 <BindableLayout.ItemTemplate>
-                    <DataTemplate x:DataType="dto:OpzioneColore">
+                    <DataTemplate x:DataType="x:Object">
                         <Button
                             Margin="3"
                             Padding="0"
                             BackgroundColor="{Binding Hex}"
                             BorderColor="Transparent"
                             BorderWidth="3"
-                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:GestioneSalaViewModel}}, Path=SelezionaColoreCommand}"
+                            Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.SelezionaColoreCommand}"
                             CommandParameter="{Binding Hex}"
                             CornerRadius="18"
                             HeightRequest="36"

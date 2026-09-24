@@ -6,6 +6,7 @@
     xmlns:dto="clr-namespace:Pulse.DTO"
     xmlns:vm="clr-namespace:Pulse.ViewModels"
     Title="Gestione Insegnante"
+    x:Name="PageRoot"
     x:DataType="vm:GestioneInsegnanteViewModel"
     BackgroundColor="#F8FAFC">
 
@@ -160,7 +161,7 @@
 
                         <VerticalStackLayout BindableLayout.ItemsSource="{Binding ListaPagamenti}" Spacing="2">
                             <BindableLayout.ItemTemplate>
-                                <DataTemplate x:DataType="dto:PagamentoMaestroDTO">
+                                <DataTemplate x:DataType="x:Object">
                                     <Grid Padding="0,4" ColumnDefinitions="1.1*,1.5*,*,1.2*,Auto" ColumnSpacing="8">
                                         <Label Grid.Column="0" FontSize="12" Text="{Binding DataTesto}" TextColor="#64748B" VerticalOptions="Center" />
                                         <Label Grid.Column="1" FontSize="12" Text="{Binding PeriodoTesto}" TextColor="#1E293B" VerticalOptions="Center" />
@@ -170,7 +171,7 @@
                                             Grid.Column="4"
                                             Padding="0"
                                             BackgroundColor="#FEE2E2"
-                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:GestioneInsegnanteViewModel}}, Path=EliminaPagamentoCommand}"
+                                            Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.EliminaPagamentoCommand}"
                                             CommandParameter="{Binding .}"
                                             CornerRadius="15"
                                             FontSize="12"

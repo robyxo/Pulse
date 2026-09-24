@@ -7,6 +7,7 @@
     xmlns:models="clr-namespace:Pulse.Models"
     xmlns:vm="clr-namespace:Pulse.ViewModels"
     Title="Statistiche"
+    x:Name="PageRoot"
     x:DataType="vm:StatisticheViewModel"
     BackgroundColor="#F8FAFC">
 
@@ -486,7 +487,7 @@
 
                     <VerticalStackLayout BindableLayout.ItemsSource="{Binding ListaQuery}" Spacing="6">
                         <BindableLayout.ItemTemplate>
-                            <DataTemplate x:DataType="models:QuerySalvate">
+                            <DataTemplate x:DataType="x:Object">
                                 <Border
                                     Padding="10"
                                     BackgroundColor="#F8FAFC"
@@ -512,7 +513,7 @@
                                             Grid.Column="1"
                                             Padding="12,0"
                                             BackgroundColor="#10B981"
-                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:StatisticheViewModel}}, Path=EseguiQueryCommand}"
+                                            Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.EseguiQueryCommand}"
                                             CommandParameter="{Binding .}"
                                             CornerRadius="8"
                                             FontAttributes="Bold"
@@ -523,24 +524,24 @@
                                             Grid.Column="2"
                                             Padding="0"
                                             BackgroundColor="#F1F5F9"
-                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:StatisticheViewModel}}, Path=ModificaQueryCommand}"
+                                            Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.ModificaQueryCommand}"
                                             CommandParameter="{Binding .}"
                                             CornerRadius="18"
                                             FontSize="16"
                                             HeightRequest="36"
-                                            IsVisible="{Binding Source={RelativeSource AncestorType={x:Type vm:StatisticheViewModel}}, Path=PuoModificareQuery}"
+                                            IsVisible="{Binding Source={x:Reference PageRoot}, Path=BindingContext.PuoModificareQuery}"
                                             Text="✏️"
                                             WidthRequest="36" />
                                         <Button
                                             Grid.Column="3"
                                             Padding="0"
                                             BackgroundColor="#FEE2E2"
-                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:StatisticheViewModel}}, Path=EliminaQueryCommand}"
+                                            Command="{Binding Source={x:Reference PageRoot}, Path=BindingContext.EliminaQueryCommand}"
                                             CommandParameter="{Binding .}"
                                             CornerRadius="18"
                                             FontSize="16"
                                             HeightRequest="36"
-                                            IsVisible="{Binding Source={RelativeSource AncestorType={x:Type vm:StatisticheViewModel}}, Path=PuoModificareQuery}"
+                                            IsVisible="{Binding Source={x:Reference PageRoot}, Path=BindingContext.PuoModificareQuery}"
                                             Text="🗑️"
                                             WidthRequest="36" />
                                     </Grid>

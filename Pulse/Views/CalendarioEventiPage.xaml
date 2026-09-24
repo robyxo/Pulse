@@ -3,7 +3,6 @@
     x:Class="Pulse.Views.CalendarioEventiPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:dto="clr-namespace:Pulse.DTO"
     xmlns:vm="clr-namespace:Pulse.ViewModels"
     x:Name="PageRoot"
     Title="Calendario Eventi"
@@ -141,7 +140,7 @@
                         TextColor="Gray" />
                 </CollectionView.EmptyView>
                 <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="dto:ChiusuraEventoDTO">
+                    <DataTemplate x:DataType="x:Object">
                         <Border
                             Margin="0,0,0,8"
                             Padding="12"
@@ -183,7 +182,7 @@
                                     <Button
                                         Padding="0"
                                         BackgroundColor="#F1F5F9"
-                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CalendarioEventiViewModel}}, Path=ModificaElementoCommand}"
+                                        Command="{Binding BindingContext.ModificaElementoCommand, Source={x:Reference PageRoot}}"
                                         CommandParameter="{Binding .}"
                                         CornerRadius="18"
                                         FontSize="14"
@@ -193,7 +192,7 @@
                                     <Button
                                         Padding="0"
                                         BackgroundColor="#FEE2E2"
-                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CalendarioEventiViewModel}}, Path=EliminaElementoCommand}"
+                                        Command="{Binding BindingContext.EliminaElementoCommand, Source={x:Reference PageRoot}}"
                                         CommandParameter="{Binding .}"
                                         CornerRadius="18"
                                         FontSize="14"

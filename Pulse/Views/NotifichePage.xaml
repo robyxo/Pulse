@@ -95,7 +95,7 @@
                             StrokeShape="RoundRectangle 10">
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:NotificheViewModel}}, Path=MostraDettaglioCommand}"
+                                    Command="{Binding BindingContext.MostraDettaglioCommand, Source={x:Reference PageRoot}}"
                                     CommandParameter="{Binding .}" />
                             </Border.GestureRecognizers>
 

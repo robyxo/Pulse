@@ -3,7 +3,6 @@
     x:Class="Pulse.Views.AllieviPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:dto="clr-namespace:Pulse.DTO"
     xmlns:vm="clr-namespace:Pulse.ViewModels"
     x:Name="PageRoot"
     Title="Gestione Allievi"
@@ -173,7 +172,7 @@
                     </CollectionView.EmptyView>
 
                     <CollectionView.ItemTemplate>
-                        <DataTemplate x:DataType="dto:AllievoTabellaDTO">
+                        <DataTemplate x:DataType="x:Object">
                             <Grid
                                 Padding="16,10"
                                 ColumnDefinitions="2*, 1.5*, 1.2*, 1.2*, Auto"
@@ -251,7 +250,7 @@
                                     <Button
                                         Padding="0"
                                         BackgroundColor="#F1F5F9"
-                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:AllieviViewModel}}, Path=ModificaAllievoCommand}"
+                                        Command="{Binding BindingContext.ModificaAllievoCommand, Source={x:Reference PageRoot}}"
                                         CommandParameter="{Binding .}"
                                         CornerRadius="16"
                                         FontSize="14"
@@ -262,7 +261,7 @@
                                     <Button
                                         Padding="0"
                                         BackgroundColor="#FEE2E2"
-                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:AllieviViewModel}}, Path=EliminaAllievoCommand}"
+                                        Command="{Binding BindingContext.EliminaAllievoCommand, Source={x:Reference PageRoot}}"
                                         CommandParameter="{Binding .}"
                                         CornerRadius="16"
                                         FontSize="14"
