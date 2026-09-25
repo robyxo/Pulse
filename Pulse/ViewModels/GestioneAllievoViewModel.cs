@@ -177,7 +177,17 @@ public partial class GestioneAllievoViewModel : BaseViewModel
     private async Task CaricaStatoPrivacyAsync()
     {
         // Ha senso solo su un allievo già a database: prima non c'è nulla da firmare.
-        MostraStatoPrivacy = Allievo.Id > 0 && MostraBottonePrivacy;
+        // E solo se in Impostazioni c'è la cartella di archivio dei moduli firmati:
+        // senza, "Segna come firmato" non può creare il PDF e il riquadro è inutile.
+        // Le impostazioni si rileggono qui per non dipendere da CaricaFlagImpostazioniAsync,
+        // che gira in parallelo e potrebbe non aver ancora finito.
+        var impostazioni = await _impostazioniService.GetImpostazioniAsync();
+        bool privacyAttiva = impostazioni.StampaDocumentoPrivacy == 1
+                             && PrivacyDocumentService.AlmenoUnModelloDisponibile;
+        bool archivioPdfAttivo = !string.IsNullOrWhiteSpace(impostazioni.CartellaModuliPath)
+                                 && PrivacyDocumentService.ModelloHtmlDisponibile;
+
+        MostraStatoPrivacy = Allievo.Id > 0 && privacyAttiva && archivioPdfAttivo;
 
         if (!MostraStatoPrivacy)
         {
@@ -716,6 +726,8 @@ public partial class GestioneAllievoViewModel : BaseViewModel
         var opzioni = new List<string>();
         if (PrivacyDocumentService.ModelloCompilatoDisponibile) opzioni.Add("Documento Compilato");
         if (PrivacyDocumentService.ModelloVuotoDisponibile) opzioni.Add("Modulo Vuoto");
+        // Solo il modello HTML sa togliere la data: con i .docx la voce non compare.
+        if (PrivacyDocumentService.ModelloHtmlDisponibile) opzioni.Add("Modulo Vuoto senza data");
 
         if (opzioni.Count == 0)
         {
@@ -738,6 +750,10 @@ public partial class GestioneAllievoViewModel : BaseViewModel
         else if (scelta == "Modulo Vuoto")
         {
             await _privacyDocumentService.ApriModuloVuotoAsync();
+        }
+        else if (scelta == "Modulo Vuoto senza data")
+        {
+            await _privacyDocumentService.ApriModuloVuotoAsync(senzaData: true);
         }
     }
 

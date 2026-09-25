@@ -118,12 +118,14 @@ public class PrivacyDocumentService
             $"Nella cartella Privacy dell'applicazione non è stato inserito il file {nomeFile}.\n\nSegui le istruzioni del file LEGGIMI.txt per aggiungere il modulo della tua scuola.",
             "OK");
 
-    public async Task ApriModuloVuotoAsync()
+    /// <param name="senzaData">Solo con il modello HTML: al posto della data di oggi
+    /// (inizio e accanto alla firma) una riga puntinata da scrivere a penna.</param>
+    public async Task ApriModuloVuotoAsync(bool senzaData = false)
     {
         // Il modello HTML della scuola ha la precedenza sul .docx.
         if (ModelloHtmlDisponibile)
         {
-            await StampaModuloHtmlAsync(allievo: null, compilato: false);
+            await StampaModuloHtmlAsync(allievo: null, compilato: false, senzaData: senzaData);
             return;
         }
 
@@ -332,7 +334,7 @@ public class PrivacyDocumentService
     /// <summary>
     /// Genera l'HTML del modulo dal modello della scuola.
     /// </summary>
-    public async Task<string> GeneraHtmlModuloAsync(Allievi? allievo, bool compilato)
+    public async Task<string> GeneraHtmlModuloAsync(Allievi? allievo, bool compilato, bool senzaData = false)
     {
         string percorsoModello = await ScegliModelloHtmlAsync()
             ?? throw new FileNotFoundException("Nessun modello HTML presente nella cartella Privacy.");
@@ -341,7 +343,12 @@ public class PrivacyDocumentService
 
         foreach (var coppia in await CostruisciValoriScuolaAsync())
         {
-            modello = modello.Replace(coppia.Key, coppia.Value);
+            // "Vuoto senza data": la data la scrive la segreteria a penna.
+            string valore = senzaData && coppia.Key == "{{DATA_OGGI}}"
+                ? "<span style='display:inline-block;min-width:30mm;border-bottom:1px dotted #333'>&nbsp;</span>"
+                : coppia.Value;
+
+            modello = modello.Replace(coppia.Key, valore);
         }
 
         foreach (var coppia in CostruisciValoriAllievo(allievo))
@@ -487,11 +494,11 @@ public class PrivacyDocumentService
     /// Genera e manda in stampa il modulo. Segue il flag "Stampa diretta" delle
     /// impostazioni: se è spento si apre l'anteprima nel visualizzatore.
     /// </summary>
-    private async Task StampaModuloHtmlAsync(Allievi? allievo, bool compilato)
+    private async Task StampaModuloHtmlAsync(Allievi? allievo, bool compilato, bool senzaData = false)
     {
         try
         {
-            string html = await GeneraHtmlModuloAsync(allievo, compilato);
+            string html = await GeneraHtmlModuloAsync(allievo, compilato, senzaData);
 
             var impostazioni = await _impostazioniService.GetImpostazioniAsync();
             bool silenziosa = impostazioni.StampaSilenziosa == 1;
@@ -612,7 +619,7 @@ modificarlo, le tue note mettile in un altro file.
    archivio e nelle statistiche.
 
    {{EXTRA:PROFESSIONE|Professione|testo}}
-   {{EXTRA:CONOSCENZA|Come ci hai conosciuto|scelta:RADIO,FACEBOOK,VOLANTINO,AMICO}}
+   {{EXTRA:CONOSCENZA|Come ci hai conosciuto|scelta:RADIO,FACEBOOK,INSTAGRAM,VOLANTINO,AMICO}}
    {{EXTRA:TAGLIA}}                          (etichetta = chiave, testo libero)
 
    - La CHIAVE (prima parte) va in MAIUSCOLO, senza spazi: e' con quella che le

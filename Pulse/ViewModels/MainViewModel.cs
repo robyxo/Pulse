@@ -8,6 +8,11 @@ namespace Pulse.ViewModels;
 public partial class MainViewModel : BaseViewModel
 {
     private readonly IImpostazioniService _impostazioniService;
+    private readonly IAggiornamentoService _aggiornamentoService;
+
+    // Il controllo si fa una volta per avvio del programma, non a ogni ritorno alla Home.
+    // Static perché MainViewModel è transient.
+    private static bool _controlloAggiornamentiFatto;
 
     [ObservableProperty]
     private string _messaggioBenvenuto = "Ciao! Benvenuto in Pulse";
@@ -24,9 +29,10 @@ public partial class MainViewModel : BaseViewModel
     [ObservableProperty]
     private bool _mostraEmojiDefault = true;
 
-    public MainViewModel(IImpostazioniService impostazioniService)
+    public MainViewModel(IImpostazioniService impostazioniService, IAggiornamentoService aggiornamentoService)
     {
         _impostazioniService = impostazioniService;
+        _aggiornamentoService = aggiornamentoService;
         Title = "Home";
     }
 
@@ -49,6 +55,41 @@ public partial class MainViewModel : BaseViewModel
             LogoScuola = null;
             MostraLogo = false;
             MostraEmojiDefault = true;
+        }
+    }
+
+    /// <summary>
+    /// All'apertura di Pulse: se su GitHub c'è una versione nuova, lo dice e porta
+    /// alle Impostazioni. Ricompare a ogni avvio finché non si aggiorna.
+    /// Silenzioso se non c'è internet, se è già aggiornato o se si avvia da
+    /// Visual Studio (Pulse non installato con il Setup).
+    /// </summary>
+    public async Task ControllaAggiornamentiAllAvvioAsync()
+    {
+        if (_controlloAggiornamentiFatto) return;
+        _controlloAggiornamentiFatto = true;
+
+        if (!_aggiornamentoService.InstallazioneGestita) return;
+
+        try
+        {
+            var (ceUnAggiornamento, nuovaVersione, _) = await _aggiornamentoService.ControllaAggiornamentiAsync();
+            if (!ceUnAggiornamento) return;
+
+            string versione = string.IsNullOrWhiteSpace(nuovaVersione) ? string.Empty : $" ({nuovaVersione})";
+
+            bool vaiAlleImpostazioni = await AlertPopup.ShowConfirmation(
+                "Aggiornamento disponibile",
+                $"È disponibile una nuova versione di Pulse{versione}.\n\nVai in Impostazioni > Aggiornamenti per aggiornare.",
+                "Vai alle Impostazioni",
+                "Più tardi");
+
+            if (vaiAlleImpostazioni)
+                await Shell.Current.GoToAsync(AppRoutes.Impostazioni.Pagina);
+        }
+        catch
+        {
+            // Un controllo fallito non deve mai disturbare l'avvio.
         }
     }
 

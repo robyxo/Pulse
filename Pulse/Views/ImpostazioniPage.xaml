@@ -233,7 +233,7 @@
                             Text="📐 Formato Ricevuta" />
                         <Label
                             FontSize="12"
-                            Text="La ricevuta esce su un foglio A4. Qui decidi quanto è grande il foglietto e in che punto del foglio viene stampato, partendo dall'angolo in alto a destra (in millimetri)."
+                            Text="La ricevuta esce su un foglio A4. Qui decidi quanto è grande il foglietto e in che punto del foglio viene stampato, partendo dall'angolo in alto a sinistra (in millimetri)."
                             TextColor="Gray" />
 
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
@@ -299,7 +299,7 @@
                                 Grid.Row="0"
                                 Grid.Column="1"
                                 Spacing="4">
-                                <Label FontSize="12" Text="Distanza da destra (mm)" />
+                                <Label FontSize="12" Text="Distanza da sinistra (mm)" />
                                 <Border
                                     Padding="10,0"
                                     Stroke="#CBD5E1"

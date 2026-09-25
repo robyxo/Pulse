@@ -15,6 +15,7 @@
         {
             base.OnAppearing();
             _ = _viewModel.CaricaIntestazioneAsync();
+            _ = _viewModel.ControllaAggiornamentiAllAvvioAsync();
         }
     }
 }

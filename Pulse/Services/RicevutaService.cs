@@ -222,16 +222,16 @@ public class RicevutaService
     private string GeneraHtmlRicevuta(Abbonamenti a, Impostazioni impostazioni, string nomeScuola, string indirizzoScuola, string pivaScuola, string logoBase64, string orario, bool anteprima = false)
     {
         // Il foglietto viene stampato su un foglio A4 (la stampante lo tratta come tale)
-        // e posizionato nell'angolo in ALTO A DESTRA, dove la scuola appoggia i foglietti
+        // e posizionato nell'angolo in ALTO A SINISTRA, dove la scuola appoggia i foglietti
         // nel vassoio di alimentazione.
         //   RicevutaMarginTopMm   -> distanza dal bordo superiore del foglio
-        //   RicevutaMarginRightMm -> distanza dal bordo destro del foglio
+        //   RicevutaMarginRightMm -> distanza dal bordo SINISTRO del foglio (nome colonna storico)
         //   RicevutaMarginLeftMm  -> margine interno del foglietto
         //   RicevutaMarginBottomMm non viene piu' usato per il posizionamento
         int larghezza = impostazioni.RicevutaLarghezzaMm ?? 90;
         int altezza = impostazioni.RicevutaAltezzaMm ?? 90;
         int distanzaAlto = impostazioni.RicevutaMarginTopMm ?? 10;
-        int distanzaDestra = impostazioni.RicevutaMarginRightMm ?? 10;
+        int distanzaSinistra = impostazioni.RicevutaMarginRightMm ?? 10;
         int marginInterno = impostazioni.RicevutaMarginLeftMm ?? 5;
 
         string blocchettoLogo = string.IsNullOrWhiteSpace(logoBase64)
@@ -239,8 +239,7 @@ public class RicevutaService
             : $"<img src=\"{logoBase64}\" class=\"logo\" />";
 
         string rigaIndirizzo = string.IsNullOrWhiteSpace(indirizzoScuola) ? string.Empty : indirizzoScuola;
-        string rigaPiva = string.IsNullOrWhiteSpace(pivaScuola) ? string.Empty : $"P.IVA/C.F.: {pivaScuola}";
-        string subIntestazione = string.Join(" · ", new[] { rigaIndirizzo, rigaPiva }.Where(s => !string.IsNullOrWhiteSpace(s)));
+        string subIntestazione = rigaIndirizzo; // partita IVA non stampata sulla ricevuta di cortesia (richiesta della scuola)
 
         string titoloCortesia = a.Allievo?.Sesso switch
         {
@@ -286,10 +285,10 @@ public class RicevutaService
 
         string htmlMaschera = anteprima
             ? $@"    <div class=""guida-foglio""></div>
-    <div class=""guida-foglietto"" style=""top: {distanzaAlto}mm; right: {distanzaDestra}mm; width: {larghezza}mm; height: {altezza}mm;""></div>
+    <div class=""guida-foglietto"" style=""top: {distanzaAlto}mm; left: {distanzaSinistra}mm; width: {larghezza}mm; height: {altezza}mm;""></div>
     <div class=""guida-nota"">
         ANTEPRIMA — foglio A4 210 × 297 mm<br />
-        Foglietto {larghezza} × {altezza} mm, a {distanzaAlto} mm dall'alto e {distanzaDestra} mm da destra<br />
+        Foglietto {larghezza} × {altezza} mm, a {distanzaAlto} mm dall'alto e {distanzaSinistra} mm da sinistra<br />
         Le linee tratteggiate servono solo a regolarsi: non vengono stampate.
     </div>
 "
@@ -321,7 +320,7 @@ body {{
 .foglietto {{
     position: absolute;
     top: {distanzaAlto}mm;
-    right: {distanzaDestra}mm;
+    left: {distanzaSinistra}mm;
     width: {larghezza}mm;
     height: {altezza}mm;
     padding: {marginInterno}mm;
