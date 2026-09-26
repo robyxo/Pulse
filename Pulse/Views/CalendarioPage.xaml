@@ -16,38 +16,19 @@
             BackgroundColor="White"
             Spacing="8">
 
+            <!--  Colori dei rettangoli: per corso (default) o per sala.
+                  Le frecce delle settimane sono state tolte: l'orario e' uguale tutto l'anno.  -->
             <HorizontalStackLayout HorizontalOptions="Center" Spacing="10">
-                <Button
-                    BackgroundColor="#4F46E5"
-                    Command="{Binding SettimanaPrecedenteCommand}"
-                    CornerRadius="8"
-                    HeightRequest="40"
-                    Text="◀"
-                    TextColor="White"
-                    WidthRequest="40" />
-                <Button
-                    Padding="15,0"
-                    BackgroundColor="#10B981"
-                    Command="{Binding VaiOggiCommand}"
-                    CornerRadius="8"
-                    HeightRequest="40"
-                    Text="📅 Oggi"
-                    TextColor="White" />
                 <Label
                     FontAttributes="Bold"
-                    FontSize="16"
-                    HorizontalTextAlignment="Center"
-                    Text="{Binding SettimanaCorrente, StringFormat='{0:dd MMM yyyy}'}"
-                    VerticalOptions="Center"
-                    WidthRequest="140" />
-                <Button
-                    BackgroundColor="#4F46E5"
-                    Command="{Binding SettimanaSuccessivaCommand}"
-                    CornerRadius="8"
-                    HeightRequest="40"
-                    Text="▶"
-                    TextColor="White"
-                    WidthRequest="40" />
+                    Text="Colori per:"
+                    VerticalOptions="Center" />
+                <Border Stroke="#CBD5E1" StrokeShape="RoundRectangle 8">
+                    <Picker
+                        ItemsSource="{Binding OpzioniColori}"
+                        SelectedItem="{Binding ColoriPer}"
+                        WidthRequest="150" />
+                </Border>
             </HorizontalStackLayout>
 
             <VerticalStackLayout IsVisible="{Binding OrarioScaglionatoAttivo}" Spacing="8">

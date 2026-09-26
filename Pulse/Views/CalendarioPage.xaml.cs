@@ -85,9 +85,7 @@ public partial class CalendarioPage : ContentPage
 
         for (int i = 0; i < giorni.Count; i++)
         {
-            var isOggi = DateTime.Today.DayOfWeek == giorni[i] &&
-                         DateTime.Today >= _viewModel.SettimanaCorrente.Date &&
-                         DateTime.Today < _viewModel.SettimanaCorrente.Date.AddDays(7);
+            var isOggi = DateTime.Today.DayOfWeek == giorni[i];
 
             grid.Add(CreaCellaIntestazione(_viewModel.GetNomeGiorno(giorni[i]), isOggi), i + 1, 0);
         }
@@ -292,17 +290,27 @@ public partial class CalendarioPage : ContentPage
 
         foreach (var lezione in lezioniCella)
         {
-            var badgeColor = _viewModel.StringToColor(lezione.Corso?.Colore ?? "#4F46E5");
-            var testoColor = _viewModel.StringToColor(lezione.Corso?.ColoreTesto ?? "#FFFFFF");
+            Color badgeColor;
+            Color testoColor;
+            if (_viewModel.ColoriPerSala)
+            {
+                // Colore della sala; grigio se la lezione non ha sala o la sala non ha colore.
+                string? coloreSala = lezione.Sala?.Colore;
+                badgeColor = string.IsNullOrWhiteSpace(coloreSala)
+                    ? Color.FromArgb("#CBD5E1")
+                    : _viewModel.StringToColor(coloreSala);
+                testoColor = CalendarioViewModel.ColoreTestoLeggibile(badgeColor);
+            }
+            else
+            {
+                badgeColor = _viewModel.StringToColor(lezione.Corso?.Colore ?? "#4F46E5");
+                testoColor = _viewModel.StringToColor(lezione.Corso?.ColoreTesto ?? "#FFFFFF");
+            }
+
             bool proseguimento = idProseguimento?.Contains(lezione.Id) == true;
 
-            // "Nome corso - Sala 1". La sala e' facoltativa: se manca resta
-            // solo il nome del corso, senza trattino a penzoloni.
-            string nomeCorso = lezione.Corso?.Nome ?? "";
-            string testoCorso = string.IsNullOrWhiteSpace(lezione.Sala?.Nome)
-                ? nomeCorso
-                : $"{nomeCorso} - {lezione.Sala!.Nome}";
-
+            // Tre righe, una sotto l'altra: Corso / Orario / Sala.
+            // La sala e' facoltativa: se manca la riga non c'e'.
             var badgeLayout = new VerticalStackLayout
             {
                 Spacing = 1,
@@ -310,23 +318,34 @@ public partial class CalendarioPage : ContentPage
                 {
                     new Label
                     {
-                        Text = proseguimento
-                            ? $"↳ fino alle {lezione.OraFine}"
-                            : $"🕒 {lezione.OraInizio} - {lezione.OraFine}",
-                        TextColor = testoColor,
-                        FontSize = 10,
-                        FontAttributes = FontAttributes.Bold
-                    },
-                    new Label
-                    {
-                        Text = testoCorso,
+                        Text = lezione.Corso?.Nome ?? "",
                         TextColor = testoColor,
                         FontSize = 11,
                         FontAttributes = FontAttributes.Bold,
                         LineBreakMode = LineBreakMode.TailTruncation
+                    },
+                    new Label
+                    {
+                        Text = proseguimento
+                            ? $"↳ fino alle {lezione.OraFine}"
+                            : $"🕒 {lezione.OraInizio} - {lezione.OraFine}",
+                        TextColor = testoColor,
+                        FontSize = 10
                     }
                 }
             };
+
+            // Nei proseguimenti la sala non si ripete: basta il rettangolo della prima riga.
+            if (!proseguimento && !string.IsNullOrWhiteSpace(lezione.Sala?.Nome))
+            {
+                badgeLayout.Children.Add(new Label
+                {
+                    Text = $"🚪 {lezione.Sala!.Nome}",
+                    TextColor = testoColor,
+                    FontSize = 10,
+                    LineBreakMode = LineBreakMode.TailTruncation
+                });
+            }
 
             var badge = new Border
             {

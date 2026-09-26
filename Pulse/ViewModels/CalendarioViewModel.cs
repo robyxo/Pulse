@@ -17,13 +17,22 @@ public partial class CalendarioViewModel : BaseViewModel
     public class RefreshGridMessage { }
 
     [ObservableProperty] private List<Lezioni> _lezioniSettimana = new();
-    [ObservableProperty] private DateTime _settimanaCorrente = DateTime.Now;
     [ObservableProperty] private TimeSpan _oraInizio = new(8, 0, 0);
     [ObservableProperty] private TimeSpan _oraFine = new(24, 0, 0);
     [ObservableProperty] private int _intervalloMinuti = 30;
     [ObservableProperty] private List<TimeSpan> _slotOrari = new();
     [ObservableProperty] private bool _orarioScaglionatoAttivo;
     [ObservableProperty] private OpzioneIntervallo? _intervalloSelezionato;
+
+    // Colori dei rettangoli delle lezioni: quello del corso (default) o quello della sala.
+    public const string ColoriPerCorsi = "Corsi";
+    public const string ColoriPerSale = "Sale";
+
+    public List<string> OpzioniColori { get; } = new() { ColoriPerCorsi, ColoriPerSale };
+
+    [ObservableProperty] private string _coloriPer = ColoriPerCorsi;
+
+    public bool ColoriPerSala => ColoriPer == ColoriPerSale;
 
     public List<OpzioneIntervallo> OpzioniIntervallo { get; } = new()
     {
@@ -61,6 +70,10 @@ public partial class CalendarioViewModel : BaseViewModel
 
         IntervalloSelezionato = OpzioniIntervallo.FirstOrDefault(o => o.Minuti == IntervalloMinuti) ?? OpzioniIntervallo.First();
 
+        // Ultima scelta dei colori, se valida; altrimenti per corso.
+        string coloriSalvati = Preferences.Get("Calendario_ColoriPer", ColoriPerCorsi);
+        ColoriPer = OpzioniColori.Contains(coloriSalvati) ? coloriSalvati : ColoriPerCorsi;
+
         GeneraSlotOrari();
     }
 
@@ -82,6 +95,13 @@ public partial class CalendarioViewModel : BaseViewModel
     {
         Preferences.Set("Calendario_OraFine", value.ToString());
         AggiornaVista();
+    }
+
+    partial void OnColoriPerChanged(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return;
+        Preferences.Set("Calendario_ColoriPer", value);
+        WeakReferenceMessenger.Default.Send(new RefreshGridMessage());
     }
 
     partial void OnIntervalloSelezionatoChanged(OpzioneIntervallo? value)
@@ -120,15 +140,19 @@ public partial class CalendarioViewModel : BaseViewModel
         });
     }
 
-    [RelayCommand] private async Task SettimanaPrecedente() { SettimanaCorrente = SettimanaCorrente.AddDays(-7); await CaricaDatiAsync(); }
-    [RelayCommand] private async Task SettimanaSuccessiva() { SettimanaCorrente = SettimanaCorrente.AddDays(7); await CaricaDatiAsync(); }
-    [RelayCommand] private async Task VaiOggi() { SettimanaCorrente = DateTime.Now; await CaricaDatiAsync(); }
-
     public Color StringToColor(string colorString) => 
         Color.TryParse(colorString, out var c) ? c : Colors.Purple;
 
-    public string GetNomeGiorno(DayOfWeek giorno) => 
-        DateHelper.GetNomeGiornoCompletoIT(giorno, SettimanaCorrente);
+    // Solo il nome del giorno: senza settimane, la data non ha piu' senso.
+    public string GetNomeGiorno(DayOfWeek giorno) =>
+        DateHelper.GetNomeGiornoDaDb((int)giorno == 0 ? 7 : (int)giorno);
+
+    /// <summary>Scritta scura su colori chiari, bianca su quelli scuri.</summary>
+    public static Color ColoreTestoLeggibile(Color sfondo)
+    {
+        double luminosita = 0.299 * sfondo.Red + 0.587 * sfondo.Green + 0.114 * sfondo.Blue;
+        return luminosita > 0.6 ? Color.FromArgb("#1E293B") : Colors.White;
+    }
 
     // Passa la lezione intera alla pagina, così la pagina può accedere 
     // a Maestri, Allievi, Orari, ecc.
